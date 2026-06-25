@@ -8,13 +8,15 @@ import './Hero.css';
  * staggered title reveal. Falls back to a still poster if autoplay is blocked
  * or motion is reduced.
  */
-export function Hero({ reduced }) {
+export function Hero({ reduced, started }) {
   const innerRef = useRef(null);
   const videoRef = useRef(null);
   const [showPoster, setShowPoster] = useState(false);
 
   useHeroParallax({ innerRef, videoRef, enabled: !reduced });
 
+  // Hold playback until the preloader is done — the video must not run in the
+  // background behind the loader, it starts exactly when loading finishes.
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
@@ -22,17 +24,18 @@ export function Hero({ reduced }) {
       setShowPoster(true);
       return;
     }
+    if (!started) return;
     const playback = v.play?.();
     if (playback && typeof playback.catch === 'function') {
       playback.catch(() => setShowPoster(true));
     }
-  }, [reduced]);
+  }, [reduced, started]);
 
   const poster = asset('media/hero-poster.jpg');
 
   return (
     <section className="hero" id="top">
-      <video ref={videoRef} autoPlay muted loop playsInline poster={poster} preload="metadata">
+      <video ref={videoRef} muted loop playsInline poster={poster} preload="metadata">
         <source src={asset('media/hero.mp4')} type="video/mp4" />
       </video>
       <div

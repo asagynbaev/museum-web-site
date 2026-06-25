@@ -58,7 +58,7 @@ export default function App() {
       <Header headerRef={headerRef} />
       <WayfindingRail halls={halls} active={activeHall} railFillRef={railFillRef} />
 
-      <Hero reduced={reduced} />
+      <Hero reduced={reduced} started={finished} />
       <Manifesto reduced={reduced} />
       <div className="divider" />
       <Halls reduced={reduced} hallRefs={hallRefs} />
