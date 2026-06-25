@@ -1,5 +1,6 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { Loader } from './components/Loader.jsx';
 import { AmbientLayers } from './components/AmbientLayers.jsx';
 import { Header } from './components/Header.jsx';
 import { WayfindingRail } from './components/WayfindingRail.jsx';
@@ -10,11 +11,25 @@ import { Visit } from './components/Visit.jsx';
 import { Footer } from './components/Footer.jsx';
 
 import { halls } from './data/halls.js';
+import { preloadAssets } from './data/preloadAssets.js';
 import { useReducedMotion } from './hooks/useReducedMotion.js';
+import { usePreloader } from './hooks/usePreloader.js';
 import { useScrollEffects } from './hooks/useScrollEffects.js';
 
 export default function App() {
   const reduced = useReducedMotion();
+
+  // Intro preloader — warms the media cache top-to-bottom before reveal.
+  const { progress, label, finished } = usePreloader(preloadAssets);
+  const [loaderGone, setLoaderGone] = useState(false);
+
+  // Lock page scroll while the loader is covering the page.
+  useEffect(() => {
+    document.body.style.overflow = loaderGone ? '' : 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [loaderGone]);
 
   // Shared refs the scroll logic writes to directly (no re-render on scroll).
   const headerRef = useRef(null);
@@ -30,6 +45,15 @@ export default function App() {
 
   return (
     <>
+      {!loaderGone && (
+        <Loader
+          progress={progress}
+          label={label}
+          finished={finished}
+          onDone={() => setLoaderGone(true)}
+        />
+      )}
+
       <AmbientLayers progressRef={progressRef} reduced={reduced} />
       <Header headerRef={headerRef} />
       <WayfindingRail halls={halls} active={activeHall} railFillRef={railFillRef} />

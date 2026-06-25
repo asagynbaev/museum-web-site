@@ -23,12 +23,14 @@ src/
   main.jsx               точка входа, подключает глобальные стили
   App.jsx                композиция страницы + общий scroll-state
   data/halls.js          данные семи залов (единый источник правды)
+  data/preloadAssets.js  список медиа в порядке сверху вниз для прелоадера
   lib/asset.js           резолвинг путей к /public с учётом base URL
   styles/
     tokens.css           CSS-переменные (цвета, шрифты, размеры)
     base.css             reset, body, утилиты (.wrap, .mono, .reveal, .divider)
     animations.css       @keyframes + prefers-reduced-motion
   hooks/
+    usePreloader.js      предзагрузка медиа сверху вниз + тайминг лоадера (3–5 с)
     useReducedMotion.js  отслеживает системную настройку «меньше движения»
     useInView.js         IntersectionObserver → [ref, inView]
     useScrollEffects.js  шапка, прогресс-бар, заливка rail, активный зал
@@ -37,6 +39,7 @@ src/
     useMotes.js          canvas-частицы (пылинки)
     useCursorGlow.js     свечение за курсором
   components/
+    Loader.jsx           экран загрузки: предзагружает медиа, потом плавно уходит
     AmbientLayers.jsx    grain / motes / cursor glow / mobile progress
     Header.jsx           фиксированная шапка
     WayfindingRail.jsx   боковой навигатор по залам
