@@ -1,0 +1,116 @@
+/* All shared keyframes + the reduced-motion escape hatch. */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes kenburns {
+  from {
+    transform: scale(1.04) translate(0, 0);
+  }
+  to {
+    transform: scale(1.16) translate(-2%, -2.5%);
+  }
+}
+
+@keyframes huecycle {
+  to {
+    filter: hue-rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.42;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes sweep {
+  0% {
+    left: -40%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes lineUp {
+  to {
+    transform: none;
+  }
+}
+
+@keyframes cue {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+}
+
+/* Respect users who asked the OS to reduce motion. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+  #motes,
+  #cursorglow {
+    display: none;
+  }
+  .hero video {
+    display: none;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+  .hall .media {
+    transform: none;
+  }
+  h1.hero-title .ln i {
+    transform: none;
+  }
+  .eyebrow,
+  .hero-sub,
+  .scrollcue {
+    opacity: 1;
+  }
+}

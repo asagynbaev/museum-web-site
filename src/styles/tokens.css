@@ -1,0 +1,21 @@
+/* Design tokens — colours, type and layout shared across the whole site. */
+:root {
+  --ink: #141009;
+  --ink-2: #1b1610;
+  --surface: #211b13;
+
+  --bone: #ebe1cd;
+  --bone-dim: rgba(235, 225, 205, 0.58);
+  --bone-faint: rgba(235, 225, 205, 0.3);
+
+  --gold: #c99a5b;
+  --gold-2: #e2bd84;
+  --clay: #b5402e;
+  --line: rgba(235, 225, 205, 0.12);
+
+  --display: "Unbounded", "Arial Black", system-ui, sans-serif;
+  --body: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "Golos Text", system-ui, sans-serif;
+
+  --maxw: 1320px;
+}

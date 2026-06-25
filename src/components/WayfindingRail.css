@@ -1,0 +1,96 @@
+.rail {
+  position: fixed;
+  left: 34px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.rail-wrap {
+  height: min(58vh, 520px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.rail .track {
+  position: relative;
+  width: 1px;
+  background: var(--line);
+  flex: 1;
+}
+.rail .fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 0;
+  background: linear-gradient(180deg, var(--gold-2), var(--clay));
+  box-shadow: 0 0 8px var(--gold);
+}
+
+/* Nodes are absolutely positioned along the track via an inline `top`. */
+.rnode {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+.rdot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--bone-faint);
+  transition: 0.35s;
+  flex: none;
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.rnode .rlab {
+  position: absolute;
+  left: 18px;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: 0.35s;
+}
+.rnode:hover .rlab {
+  opacity: 1;
+  transform: none;
+}
+.rnode.active .rdot {
+  background: var(--clay);
+  width: 11px;
+  height: 11px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--clay) 24%, transparent);
+}
+.rnode.active .rlab {
+  opacity: 1;
+  transform: none;
+  color: var(--gold-2);
+}
+.rail .cap {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  color: var(--bone-faint);
+}
+.rail .cap.top {
+  margin-bottom: 16px;
+}
+.rail .cap.bot {
+  margin-top: 16px;
+}
+
+@media (max-width: 1080px) {
+  .rail {
+    display: none;
+  }
+}
