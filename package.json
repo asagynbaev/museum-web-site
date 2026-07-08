@@ -1,9 +1,9 @@
 {
-  "name": "muzey-sveta",
+  "name": "ai-museum",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Музей света · Парк высоких технологий КР — иммерсивный лендинг на React + Vite",
+  "description": "AI Museum · Парк высоких технологий КР — иммерсивный лендинг на React + Vite",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

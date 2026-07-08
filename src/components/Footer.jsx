@@ -9,7 +9,7 @@ export function Footer() {
           <a className="f-brand" href="#top">
             <Logo />
             <span className="bt">
-              <b>Музей света</b>
+              <b>AI Museum</b>
               <span>Парк высоких технологий КР</span>
             </span>
           </a>

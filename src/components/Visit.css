@@ -51,6 +51,21 @@
   font-size: 0.95rem;
   margin-top: 10px;
 }
+.v-map {
+  display: inline-block;
+  margin-top: 16px;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-2);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.3s, color 0.3s;
+}
+.v-map:hover {
+  color: var(--gold);
+  border-color: color-mix(in srgb, var(--gold) 55%, transparent);
+}
 .v-cell .row {
   display: flex;
   justify-content: space-between;
@@ -105,5 +120,19 @@
 @media (max-width: 820px) {
   .v-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .v-cta {
+    gap: 12px;
+  }
+  .v-cta .btn {
+    flex: 1 1 100%;
+    text-align: center;
+  }
+  .v-cta .mono {
+    flex: 1 1 100%;
+    margin-top: 4px;
   }
 }

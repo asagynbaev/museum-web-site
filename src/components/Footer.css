@@ -24,6 +24,7 @@ footer {
   font-size: 1.5rem;
   font-weight: 600;
   display: block;
+  color: #fff;
 }
 .f-brand .bt span {
   font-family: var(--mono);
@@ -68,4 +69,17 @@ footer {
   letter-spacing: 0.12em;
   color: var(--bone-faint);
   text-transform: uppercase;
+}
+
+@media (max-width: 560px) {
+  .f-top {
+    flex-direction: column;
+    gap: 34px;
+  }
+  .f-links {
+    gap: 44px;
+  }
+  .f-bot {
+    gap: 10px;
+  }
 }

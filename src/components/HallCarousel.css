@@ -1,0 +1,25 @@
+.carousel {
+  position: absolute;
+  inset: 0;
+}
+.carousel-slide {
+  opacity: 0;
+  transition: opacity 1.4s ease-in-out;
+  will-change: opacity;
+}
+.carousel-slide.active {
+  opacity: 1;
+}
+/* Ken-Burns runs only on the visible slide so idle slides stay cheap. */
+.carousel-slide.pan.active {
+  animation: kenburns 12s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel-slide {
+    transition: none;
+  }
+  .carousel-slide.pan.active {
+    animation: none;
+  }
+}

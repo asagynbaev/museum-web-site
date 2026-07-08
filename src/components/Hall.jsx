@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { HallCarousel } from './HallCarousel.jsx';
 import './Hall.css';
 
 /**
@@ -6,7 +7,7 @@ import './Hall.css';
  * maths) and adds `.in` when scrolled into view, which cascades the staggered
  * text reveal. Background is either a looping video or a parallaxed still.
  */
-export function Hall({ hall, index, registerRef }) {
+export function Hall({ hall, index, registerRef, reduced }) {
   const ref = useRef(null);
   const [inView, setInView] = useState(false);
 
@@ -39,11 +40,20 @@ export function Hall({ hall, index, registerRef }) {
     <section className={className} id={hall.id} ref={ref} style={{ '--accent': hall.accent }}>
       <div className="layer">
         <div className="pllx" data-speed={hall.speed}>
-          {hall.media.type === 'video' ? (
+          {hall.media.type === 'video' && (
             <video className="media" autoPlay muted loop playsInline poster={hall.media.poster}>
               <source src={hall.media.src} type="video/mp4" />
             </video>
-          ) : (
+          )}
+          {hall.media.type === 'carousel' && (
+            <HallCarousel
+              images={hall.media.images}
+              interval={hall.media.interval}
+              kb={hall.kb}
+              reduced={reduced}
+            />
+          )}
+          {hall.media.type === 'image' && (
             <div
               className={`media${hall.kb ? ' kb' : ''}`}
               style={{ backgroundImage: `url('${hall.media.src}')` }}

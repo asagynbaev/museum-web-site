@@ -71,10 +71,14 @@
   height: 11px;
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--clay) 24%, transparent);
 }
+/* Активную точку подсвечиваем, но подпись показываем только при наведении —
+   иначе длинный лейбл налезает на заголовок зала. */
 .rnode.active .rlab {
+  color: var(--gold-2);
+}
+.rnode.active:hover .rlab {
   opacity: 1;
   transform: none;
-  color: var(--gold-2);
 }
 .rail .cap {
   font-family: var(--mono);

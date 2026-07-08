@@ -36,7 +36,7 @@ export function Loader({ progress, label, finished, onDone }) {
         </div>
 
         <div className="loader-brand">
-          <b>Музей света</b>
+          <b>AI Museum</b>
           <span className="mono">Парк высоких технологий · КР</span>
         </div>
 

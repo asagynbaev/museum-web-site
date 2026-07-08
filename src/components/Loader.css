@@ -59,6 +59,7 @@
   font-weight: 600;
   font-size: 1.3rem;
   letter-spacing: 0.01em;
+  color: #fff;
 }
 .loader-brand .mono {
   color: var(--bone-dim);

@@ -26,7 +26,7 @@ body::after {
   inset: 0;
   pointer-events: none;
   z-index: 60;
-  background: radial-gradient(130% 100% at 50% 0%, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+  background: radial-gradient(145% 115% at 50% 0%, transparent 68%, rgba(0, 0, 0, 0.28) 100%);
   mix-blend-mode: multiply;
 }
 

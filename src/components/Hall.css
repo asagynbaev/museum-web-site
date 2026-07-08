@@ -52,29 +52,27 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: rgba(5, 6, 10, 0.3);
+  background: rgba(5, 6, 10, 0.1);
 }
+/* Мягкий градиент только со стороны текста — картинка остаётся яркой.
+   Основную читаемость даёт «плашка» под текстом (.content::before). */
 .hall.left .tint {
   background: linear-gradient(
-      90deg,
-      rgba(5, 6, 10, 0.96) 0%,
-      rgba(5, 6, 10, 0.88) 28%,
-      rgba(5, 6, 10, 0.5) 56%,
-      rgba(5, 6, 10, 0.22) 82%,
-      rgba(5, 6, 10, 0.5) 100%
-    ),
-    rgba(5, 6, 10, 0.16);
+    90deg,
+    rgba(5, 6, 10, 0.52) 0%,
+    rgba(5, 6, 10, 0.24) 34%,
+    rgba(5, 6, 10, 0.06) 62%,
+    transparent 88%
+  );
 }
 .hall.right .tint {
   background: linear-gradient(
-      270deg,
-      rgba(5, 6, 10, 0.96) 0%,
-      rgba(5, 6, 10, 0.88) 28%,
-      rgba(5, 6, 10, 0.5) 56%,
-      rgba(5, 6, 10, 0.22) 82%,
-      rgba(5, 6, 10, 0.5) 100%
-    ),
-    rgba(5, 6, 10, 0.16);
+    270deg,
+    rgba(5, 6, 10, 0.52) 0%,
+    rgba(5, 6, 10, 0.24) 34%,
+    rgba(5, 6, 10, 0.06) 62%,
+    transparent 88%
+  );
 }
 .hall .glow {
   position: absolute;
@@ -98,21 +96,23 @@
 }
 .hall .content {
   position: relative;
-  width: min(500px, 90%);
-  padding: clamp(80px, 12vh, 140px) 0;
+  width: min(520px, 92%);
+  /* Внутренние отступы = поля плашки. Держим компактно, чтобы плашка
+     облегала текст, а не растягивалась на весь экран. */
+  padding: clamp(30px, 4vh, 46px) clamp(28px, 2.6vw, 40px);
   z-index: 1;
 }
+/* Акцентная «плашка» плотно под текстом: контраст без затемнения всей сцены. */
 .hall .content::before {
   content: "";
   position: absolute;
   z-index: -1;
-  inset: -30px -90px -30px -150px;
-  background: radial-gradient(
-    125% 108% at 0% 50%,
-    rgba(5, 6, 10, 0.95),
-    rgba(5, 6, 10, 0.62) 42%,
-    transparent 78%
-  );
+  inset: 0;
+  border-radius: 16px;
+  background: rgba(9, 10, 14, 0.4);
+  backdrop-filter: blur(12px) saturate(1.05);
+  border: 1px solid rgba(235, 225, 205, 0.09);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
 }
 .hall.left .content {
   margin-left: clamp(20px, 6vw, 96px);
@@ -123,15 +123,6 @@
   margin-right: clamp(20px, 6vw, 96px);
   margin-left: auto;
   text-align: right;
-}
-.hall.right .content::before {
-  inset: -30px -150px -30px -90px;
-  background: radial-gradient(
-    125% 108% at 100% 50%,
-    rgba(5, 6, 10, 0.95),
-    rgba(5, 6, 10, 0.62) 42%,
-    transparent 78%
-  );
 }
 
 .h-num {
@@ -161,11 +152,13 @@
 .h-name {
   font-family: var(--display);
   font-weight: 700;
-  font-size: clamp(2.4rem, 6.2vw, 5.4rem);
-  line-height: 1;
-  margin: 20px 0 8px;
+  /* Немного меньше — чтобы длинные названия помещались в плашку. */
+  font-size: clamp(2rem, 5vw, 4.2rem);
+  line-height: 1.02;
+  margin: 18px 0 8px;
   letter-spacing: -0.022em;
-  text-shadow: 0 0 38px color-mix(in srgb, var(--accent) 55%, transparent);
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45),
+    0 0 38px color-mix(in srgb, var(--accent) 55%, transparent);
 }
 .h-alt {
   font-family: var(--mono);
@@ -181,6 +174,7 @@
   font-size: 1.06rem;
   line-height: 1.62;
   max-width: 40ch;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
 }
 .hall.right .h-desc {
   margin-left: auto;
@@ -237,8 +231,9 @@
   }
   .hall .content::before,
   .hall.right .content::before {
-    inset: -20px -34px;
-    background: linear-gradient(180deg, rgba(5, 6, 10, 0.42), rgba(5, 6, 10, 0.92));
+    inset: 0;
+    border-radius: 14px;
+    background: rgba(9, 10, 14, 0.46);
   }
   .hall.right .h-num,
   .hall.right .h-spec {
@@ -249,6 +244,6 @@
   }
   .hall.left .tint,
   .hall.right .tint {
-    background: linear-gradient(180deg, rgba(5, 6, 10, 0.5), rgba(5, 6, 10, 0.9));
+    background: linear-gradient(180deg, rgba(5, 6, 10, 0.12), rgba(5, 6, 10, 0.5));
   }
 }

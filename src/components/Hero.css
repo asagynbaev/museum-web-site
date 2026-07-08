@@ -20,19 +20,20 @@
   position: absolute;
   inset: 0;
   z-index: 1;
+  /* Затемнение только внизу — под текстом; верх картинки остаётся ярким. */
   background: linear-gradient(
     180deg,
-    rgba(6, 7, 11, 0.55) 0%,
-    rgba(6, 7, 11, 0.18) 32%,
-    rgba(6, 7, 11, 0.35) 62%,
-    rgba(6, 7, 11, 0.94) 100%
+    rgba(6, 7, 11, 0.28) 0%,
+    rgba(6, 7, 11, 0.02) 28%,
+    rgba(6, 7, 11, 0.12) 52%,
+    rgba(6, 7, 11, 0.72) 100%
   );
 }
 .hero .scrim2 {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: radial-gradient(120% 80% at 75% 40%, transparent 40%, rgba(6, 7, 11, 0.6) 100%);
+  background: radial-gradient(120% 80% at 75% 40%, transparent 52%, rgba(6, 7, 11, 0.32) 100%);
 }
 .hero-inner {
   position: relative;
@@ -66,6 +67,7 @@ h1.hero-title {
   line-height: 1.02;
   letter-spacing: -0.025em;
   max-width: 15ch;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.5);
 }
 h1.hero-title .ln {
   display: block;
@@ -93,6 +95,7 @@ h1.hero-title em {
   max-width: 46ch;
   font-size: clamp(1rem, 1.5vw, 1.18rem);
   color: var(--bone-dim);
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.5);
   opacity: 0;
   animation: fadeUp 1s 0.95s forwards;
 }
@@ -125,4 +128,17 @@ h1.hero-title em {
   background: var(--gold-2);
   transform: translateX(-50%);
   animation: cue 1.7s infinite;
+}
+
+@media (max-width: 560px) {
+  .eyebrow {
+    margin-bottom: 20px;
+    font-size: 0.62rem;
+  }
+  .hero-sub {
+    margin-top: 22px;
+  }
+  .scrollcue {
+    margin-top: 32px;
+  }
 }

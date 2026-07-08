@@ -14,7 +14,13 @@ export const preloadAssets = [
     if (hall.media.poster) {
       items.push({ url: hall.media.poster, type: 'image', label: hall.name });
     }
-    items.push({ url: hall.media.src, type: hall.media.type, label: hall.name });
+    if (hall.media.type === 'carousel') {
+      hall.media.images.forEach((url) => {
+        items.push({ url, type: 'image', label: hall.name });
+      });
+    } else {
+      items.push({ url: hall.media.src, type: hall.media.type, label: hall.name });
+    }
     return items;
   }),
 ];

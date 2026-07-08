@@ -7,9 +7,9 @@ import { asset } from '../lib/asset.js';
  *
  *  - side:    which edge the text column hugs ('left' | 'right')
  *  - accent:  per-hall light colour, exposed to CSS as `--accent`
- *  - portal:  adds a hue-cycling animation to the background (hall 02 only)
- *  - kb:      slow Ken-Burns drift on a still background image
- *  - media:   either a looping video or a still image
+ *  - kb:      slow Ken-Burns drift on the background image(s)
+ *  - media:   a still image ('image') or an auto-advancing set of stills
+ *             ('carousel'); high-quality WebP backgrounds
  *  - speed:   parallax factor for the background layer
  */
 export const halls = [
@@ -18,6 +18,7 @@ export const halls = [
     num: '01',
     side: 'left',
     accent: '#3fe0a0',
+    kb: true,
     name: 'Эволюция',
     alt: 'Большой зал',
     desc:
@@ -26,9 +27,14 @@ export const halls = [
       'Зал дышит и меняет цвет вместе с вами.',
     specs: ['360° проекция', 'пол и стены', 'генеративный свет'],
     media: {
-      type: 'video',
-      src: asset('media/hall1.mp4'),
-      poster: asset('media/hall1-poster.jpg'),
+      type: 'carousel',
+      interval: 4600,
+      images: [
+        asset('media/hall1-1.webp'),
+        asset('media/hall1-2.webp'),
+        asset('media/hall1-3.webp'),
+        asset('media/hall1-4.webp'),
+      ],
     },
     speed: 0.12,
   },
@@ -37,7 +43,7 @@ export const halls = [
     num: '02',
     side: 'right',
     accent: '#4d7cff',
-    portal: true,
+    kb: true,
     name: 'Портал',
     alt: 'Коридор',
     desc:
@@ -45,7 +51,15 @@ export const halls = [
       'медленно меняют цвет и растворяют само ощущение стен. ' +
       'Здесь вы оставляете прошлый зал позади.',
     specs: ['переход', 'свет + дым', 'смена цвета'],
-    media: { type: 'image', src: asset('media/hall2.jpg') },
+    media: {
+      type: 'carousel',
+      interval: 4600,
+      images: [
+        asset('media/hall2-1.webp'),
+        asset('media/hall2-2.webp'),
+        asset('media/hall2-3.webp'),
+      ],
+    },
     speed: 0.16,
   },
   {
@@ -61,7 +75,15 @@ export const halls = [
       'отражения, у которого нет дна, — и не сразу понимаете, где заканчиваетесь вы ' +
       'и начинается свет.',
     specs: ['бесконечное отражение', 'зеркальные сферы'],
-    media: { type: 'image', src: asset('media/hall3.jpg') },
+    media: {
+      type: 'carousel',
+      interval: 4600,
+      images: [
+        asset('media/hall3-1.webp'),
+        asset('media/hall3-2.webp'),
+        asset('media/hall3-3.webp'),
+      ],
+    },
     speed: 0.16,
   },
   {
@@ -77,7 +99,15 @@ export const halls = [
       'взлетает, бежит, кружит над юртами и вершинами. ' +
       'Искусство, которое отвечает на прикосновение.',
     specs: ['интерактив', 'дополненная реальность', 'сканирование рисунка'],
-    media: { type: 'image', src: asset('media/hall4.jpg') },
+    media: {
+      type: 'carousel',
+      interval: 4600,
+      images: [
+        asset('media/hall4-1.webp'),
+        asset('media/hall4-2.webp'),
+        asset('media/hall4-3.webp'),
+      ],
+    },
     speed: 0.16,
   },
   {
@@ -93,7 +123,7 @@ export const halls = [
       'свет колышется как на дне озера. ' +
       'Священное море Кыргызстана — на расстоянии вытянутой руки.',
     specs: ['вода и лёд', 'проекция на 4 стены'],
-    media: { type: 'image', src: asset('media/hall5.jpg') },
+    media: { type: 'image', src: asset('media/hall5.webp') },
     speed: 0.16,
   },
   {
@@ -108,7 +138,14 @@ export const halls = [
       'Лицо, собранное из тысяч точек света, смотрит на вас и отвечает. Здесь технологии ' +
       'обретают голос — и говорят по-кыргызски. Точка, где наследие встречается с будущим.',
     specs: ['живой портрет', 'голосовой ИИ', 'кыргызский язык'],
-    media: { type: 'image', src: asset('media/hall6.jpg') },
+    media: {
+      type: 'carousel',
+      interval: 4600,
+      images: [
+        asset('media/hall6-1.webp'),
+        asset('media/hall6-2.webp'),
+      ],
+    },
     speed: 0.16,
   },
   {
@@ -124,7 +161,14 @@ export const halls = [
       'среди лепестков. Зал, из которого не хочется уходить, — ' +
       'и которым заканчивается путешествие.',
     specs: ['сад света', 'интерактивные бабочки'],
-    media: { type: 'image', src: asset('media/hall7.jpg') },
+    media: {
+      type: 'carousel',
+      interval: 4600,
+      images: [
+        asset('media/hall7-1.webp'),
+        asset('media/hall7-2.webp'),
+      ],
+    },
     speed: 0.16,
   },
 ];

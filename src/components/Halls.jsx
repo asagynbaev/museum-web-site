@@ -20,7 +20,7 @@ export function Halls({ reduced, hallRefs }) {
       {halls.map((hall, i) => (
         <Fragment key={hall.id}>
           {i > 0 && <div className="divider" />}
-          <Hall hall={hall} index={i} registerRef={registerRef} />
+          <Hall hall={hall} index={i} registerRef={registerRef} reduced={reduced} />
         </Fragment>
       ))}
     </main>

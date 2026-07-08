@@ -1,5 +1,9 @@
-.manifesto {
-  padding: clamp(90px, 15vh, 180px) 0 clamp(70px, 11vh, 140px);
+/* Секция имеет классы `.manifesto.wrap`; целимся в оба, иначе горизонтальный
+   `padding` из `.wrap` (та же специфичность, но позже в каскаде) обнуляет
+   вертикальные отступы. Горизонталь оставляем как в `.wrap`. */
+.manifesto.wrap {
+  /* Больше «воздуха» после Hero. Высокий минимум, а не только vh. */
+  padding: clamp(160px, 22vh, 300px) clamp(20px, 5vw, 64px) clamp(70px, 11vh, 140px);
   position: relative;
 }
 .manifesto .lead {

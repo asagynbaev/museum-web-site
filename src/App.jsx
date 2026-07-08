@@ -9,6 +9,7 @@ import { Manifesto } from './components/Manifesto.jsx';
 import { Halls } from './components/Halls.jsx';
 import { Visit } from './components/Visit.jsx';
 import { Footer } from './components/Footer.jsx';
+import { BackToTop } from './components/BackToTop.jsx';
 
 import { halls } from './data/halls.js';
 import { preloadAssets } from './data/preloadAssets.js';
@@ -65,6 +66,7 @@ export default function App() {
       <div className="divider" />
       <Visit />
       <Footer />
+      <BackToTop />
     </>
   );
 }
