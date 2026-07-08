@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLang } from '../i18n/LanguageProvider.jsx';
 import './BackToTop.css';
 
 /**
@@ -7,6 +8,7 @@ import './BackToTop.css';
  * layout until visible so it never intercepts taps at the top of the page.
  */
 export function BackToTop() {
+  const { t } = useLang();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -28,12 +30,12 @@ export function BackToTop() {
       type="button"
       className={`to-top${visible ? ' show' : ''}`}
       onClick={toTop}
-      aria-label="Наверх"
+      aria-label={t.backToTop}
       aria-hidden={!visible}
       tabIndex={visible ? 0 : -1}
     >
       <span className="to-top-arrow" aria-hidden="true" />
-      <span className="to-top-label mono">Наверх</span>
+      <span className="to-top-label mono">{t.backToTop}</span>
     </button>
   );
 }

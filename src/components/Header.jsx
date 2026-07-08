@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Logo } from './Logo.jsx';
+import { useLang } from '../i18n/LanguageProvider.jsx';
+import { LANGS } from '../i18n/translations.js';
 import './Header.css';
 
 /**
@@ -8,6 +10,7 @@ import './Header.css';
  * On mobile the nav collapses behind a burger toggle.
  */
 export function Header({ headerRef }) {
+  const { t, lang, setLang } = useLang();
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 
@@ -31,14 +34,14 @@ export function Header({ headerRef }) {
         <Logo spin />
         <span className="bt">
           <b>AI Museum</b>
-          <span>Парк высоких технологий · КР</span>
+          <span>{t.brandSub}</span>
         </span>
       </a>
 
       <button
         type="button"
         className="burger"
-        aria-label={open ? 'Закрыть меню' : 'Открыть меню'}
+        aria-label={open ? t.a11y.closeMenu : t.a11y.openMenu}
         aria-expanded={open}
         aria-controls="main-nav"
         onClick={() => setOpen((o) => !o)}
@@ -49,12 +52,24 @@ export function Header({ headerRef }) {
       </button>
 
       <nav id="main-nav" className={open ? 'open' : ''}>
-        <a className="nl" href="#halls" onClick={close}>Залы</a>
-        <a className="nl" href="#visit" onClick={close}>Визит</a>
-        <a className="nl" href="#visit" onClick={close}>Контакты</a>
-        <a className="ticket" href="#visit" onClick={close}>Билеты</a>
+        <a className="nl" href="#halls" onClick={close}>{t.nav.halls}</a>
+        <a className="nl" href="#visit" onClick={close}>{t.nav.visit}</a>
+        <a className="nl" href="#visit" onClick={close}>{t.nav.contacts}</a>
+        <a className="ticket" href="#visit" onClick={close}>{t.nav.tickets}</a>
         <span className="lang">
-          <b>RU</b> · KG · EN
+          {LANGS.map((l, i) => (
+            <Fragment key={l.code}>
+              {i > 0 && <span className="lang-sep"> · </span>}
+              <button
+                type="button"
+                className={`lang-btn${lang === l.code ? ' on' : ''}`}
+                aria-pressed={lang === l.code}
+                onClick={() => setLang(l.code)}
+              >
+                {l.label}
+              </button>
+            </Fragment>
+          ))}
         </span>
       </nav>
     </header>

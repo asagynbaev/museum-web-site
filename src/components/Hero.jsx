@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useHeroParallax } from '../hooks/useHeroParallax.js';
 import { asset } from '../lib/asset.js';
+import { useLang } from '../i18n/LanguageProvider.jsx';
+import { Rich } from '../i18n/Rich.jsx';
 import './Hero.css';
 
 /**
@@ -9,6 +11,7 @@ import './Hero.css';
  * or motion is reduced.
  */
 export function Hero({ reduced, started }) {
+  const { t } = useLang();
   const innerRef = useRef(null);
   const videoRef = useRef(null);
   const [showPoster, setShowPoster] = useState(false);
@@ -49,23 +52,19 @@ export function Hero({ reduced, started }) {
       <div className="scrim2" />
 
       <div className="hero-inner wrap" ref={innerRef}>
-        <div className="eyebrow mono">Парк высоких технологий · Бишкек</div>
+        <div className="eyebrow mono">{t.hero.eyebrow}</div>
         <h1 className="hero-title">
-          <span className="ln">
-            <i>Память,</i>
-          </span>
-          <span className="ln">
-            <i>
-              написанная <em>светом</em>
-            </i>
-          </span>
+          {t.hero.title.map((line, i) => (
+            <span className="ln" key={i}>
+              <i>
+                <Rich segments={line} />
+              </i>
+            </span>
+          ))}
         </h1>
-        <p className="hero-sub">
-          Иммерсивный музей из семи залов, где древние образы Кыргызстана — петроглифы, барс,
-          беркут, Ысык-Көл — оживают в цифровом свете.
-        </p>
+        <p className="hero-sub">{t.hero.sub}</p>
         <div className="scrollcue mono">
-          <span className="ar" /> Пройти семь залов
+          <span className="ar" /> {t.hero.scrollcue}
         </div>
       </div>
     </section>

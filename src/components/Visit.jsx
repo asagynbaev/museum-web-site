@@ -1,4 +1,6 @@
 import { Reveal } from './Reveal.jsx';
+import { useLang } from '../i18n/LanguageProvider.jsx';
+import { Rich } from '../i18n/Rich.jsx';
 import './Visit.css';
 
 // Маршрут до музея в 2ГИС. Пока — поиск по названию площадки в Бишкеке;
@@ -9,82 +11,63 @@ const ROUTE_URL =
 /**
  * Planning section: location, hours and pricing in a three-up grid, plus the
  * primary calls to action. Placeholder values (— сом, точный адрес) are kept
- * from the source so they're easy to fill in later.
+ * so they're easy to fill in later.
  */
 export function Visit() {
+  const { t } = useLang();
+  const v = t.visit;
+
   return (
     <section className="visit" id="visit">
       <div className="wrap">
         <Reveal as="h2" className="lead">
-          Спланируйте <em>визит</em>
+          <Rich segments={v.title} />
         </Reveal>
 
         <Reveal className="v-grid">
           <div className="v-cell">
-            <h4>Где</h4>
-            <div className="big">Парк высоких технологий</div>
+            <h4>{v.whereH}</h4>
+            <div className="big">{v.whereBig}</div>
             <p>
-              Бишкек, Кыргызская Республика
+              {v.whereCity}
               <br />
-              <span style={{ color: 'var(--bone-faint)' }}>— укажите точный адрес —</span>
+              <span style={{ color: 'var(--bone-faint)' }}>{v.addrPlaceholder}</span>
             </p>
-            <a
-              className="v-map"
-              href={ROUTE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Открыть в 2ГИС →
+            <a className="v-map" href={ROUTE_URL} target="_blank" rel="noopener noreferrer">
+              {v.openMap}
             </a>
           </div>
 
           <div className="v-cell">
-            <h4>Часы работы</h4>
-            <div className="row">
-              <span>Вторник — Пятница</span>
-              <span>10:00–20:00</span>
-            </div>
-            <div className="row">
-              <span>Суббота — Воскресенье</span>
-              <span>10:00–21:00</span>
-            </div>
-            <div className="row">
-              <span>Понедельник</span>
-              <span>выходной</span>
-            </div>
+            <h4>{v.hoursH}</h4>
+            {v.days.map(([label, value]) => (
+              <div className="row" key={label}>
+                <span>{label}</span>
+                <span>{value}</span>
+              </div>
+            ))}
           </div>
 
           <div className="v-cell">
-            <h4>Билеты</h4>
-            <div className="row">
-              <span>Взрослый</span>
-              <span>— сом</span>
-            </div>
-            <div className="row">
-              <span>Детский / студент</span>
-              <span>— сом</span>
-            </div>
-            <div className="row">
-              <span>Семейный (2+2)</span>
-              <span>— сом</span>
-            </div>
+            <h4>{v.ticketsH}</h4>
+            {v.tickets.map(([label, value]) => (
+              <div className="row" key={label}>
+                <span>{label}</span>
+                <span>{value}</span>
+              </div>
+            ))}
           </div>
         </Reveal>
 
         <Reveal className="v-cta">
           <a className="btn solid" href="#visit">
-            Купить билет
+            {v.buy}
           </a>
-          <a
-            className="btn ghost"
-            href={ROUTE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Построить маршрут
+          <a className="btn ghost" href={ROUTE_URL} target="_blank" rel="noopener noreferrer">
+            {v.route}
           </a>
           <span className="mono" style={{ color: 'var(--bone-faint)' }}>
-            Длительность · ~60 мин · 7 залов
+            {v.duration}
           </span>
         </Reveal>
       </div>

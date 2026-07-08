@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Logo } from './Logo.jsx';
+import { useLang } from '../i18n/LanguageProvider.jsx';
 import './Loader.css';
 
 /**
@@ -9,7 +10,11 @@ import './Loader.css';
  * so the parent can unmount it.
  */
 export function Loader({ progress, label, finished, onDone }) {
+  const { t } = useLang();
   const [hide, setHide] = useState(false);
+
+  // `label` is a translation key: 'intro' / 'hero' → t.loader.*, hallN → hall name.
+  const zone = t.halls[label]?.name ?? t.loader[label] ?? '';
 
   useEffect(() => {
     if (!finished) return;
@@ -37,7 +42,7 @@ export function Loader({ progress, label, finished, onDone }) {
 
         <div className="loader-brand">
           <b>AI Museum</b>
-          <span className="mono">Парк высоких технологий · КР</span>
+          <span className="mono">{t.brandSub}</span>
         </div>
 
         <div className="loader-bar">
@@ -45,7 +50,7 @@ export function Loader({ progress, label, finished, onDone }) {
         </div>
 
         <div className="loader-meta mono">
-          <span className="loader-now">{label}</span>
+          <span className="loader-now">{zone}</span>
           <span className="loader-pct">{pct}%</span>
         </div>
       </div>

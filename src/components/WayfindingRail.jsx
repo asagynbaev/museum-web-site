@@ -1,3 +1,4 @@
+import { useLang } from '../i18n/LanguageProvider.jsx';
 import './WayfindingRail.css';
 
 /**
@@ -6,11 +7,12 @@ import './WayfindingRail.css';
  * the current hall's node.
  */
 export function WayfindingRail({ halls, active, railFillRef }) {
+  const { t } = useLang();
   const total = halls.length;
 
   return (
     <aside className="rail" aria-hidden="true">
-      <span className="cap top">Маршрут</span>
+      <span className="cap top">{t.rail.caption}</span>
       <div className="rail-wrap">
         <div className="track" id="track">
           <div className="fill" ref={railFillRef} />
@@ -23,7 +25,7 @@ export function WayfindingRail({ halls, active, railFillRef }) {
             >
               <span className="rdot" />
               <span className="rlab">
-                {String(i + 1).padStart(2, '0')} · {hall.name}
+                {String(i + 1).padStart(2, '0')} · {t.halls[hall.id].name}
               </span>
             </a>
           ))}

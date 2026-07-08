@@ -113,9 +113,33 @@ nav a.nl:hover::after {
   font-size: 0.66rem;
   letter-spacing: 0.12em;
   color: var(--bone-faint);
+  display: inline-flex;
+  align-items: center;
 }
-.lang b {
+.lang-sep {
+  color: var(--bone-faint);
+}
+.lang-btn {
+  background: none;
+  border: 0;
+  padding: 2px 1px;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+  cursor: pointer;
+  transition: color 0.3s;
+}
+.lang-btn:hover {
+  color: var(--bone-dim);
+}
+.lang-btn.on {
   color: var(--gold-2);
+  font-weight: 700;
+}
+.lang-btn:focus-visible {
+  outline: 1px solid var(--gold-2);
+  outline-offset: 2px;
 }
 
 /* Burger toggle — hidden on desktop, shown when the inline nav collapses. */

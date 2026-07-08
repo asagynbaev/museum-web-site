@@ -1,20 +1,23 @@
 import { useState } from 'react';
 import { Reveal } from './Reveal.jsx';
 import { CountUp } from './CountUp.jsx';
+import { useLang } from '../i18n/LanguageProvider.jsx';
+import { Rich } from '../i18n/Rich.jsx';
 import './Manifesto.css';
 
-const STATS = [
-  { target: 7, pad: 2, label: 'Залов' },
-  { target: 60, prefix: '~', label: 'Минут пути' },
-  { target: 360, suffix: '°', label: 'Проекция' },
+const STAT_META = [
+  { target: 7, pad: 2 },
+  { target: 60, prefix: '~' },
+  { target: 360, suffix: '°' },
 ];
 
 function Stats({ reduced }) {
+  const { t } = useLang();
   const [start, setStart] = useState(false);
   return (
     <Reveal className="stats" onReveal={() => setStart(true)}>
-      {STATS.map((s) => (
-        <div className="stat" key={s.label}>
+      {STAT_META.map((s, i) => (
+        <div className="stat" key={t.manifesto.stats[i]}>
           <div className="n">
             <CountUp
               target={s.target}
@@ -25,7 +28,7 @@ function Stats({ reduced }) {
               reduced={reduced}
             />
           </div>
-          <div className="l mono">{s.label}</div>
+          <div className="l mono">{t.manifesto.stats[i]}</div>
         </div>
       ))}
     </Reveal>
@@ -33,24 +36,18 @@ function Stats({ reduced }) {
 }
 
 export function Manifesto({ reduced }) {
+  const { t } = useLang();
   return (
     <section className="manifesto wrap">
       <div className="mani-grid">
         <div>
           <Reveal as="p" className="lead">
-            От наскальных знаков <em>Саймалуу-Таша</em> до искусственного интеллекта — семь
-            пространств, собранных из света, воды и движения.
+            <Rich segments={t.manifesto.lead} />
           </Reveal>
         </div>
         <div className="mani-body">
-          <Reveal as="p">
-            Это не выставка, на которую смотрят. Музей реагирует на каждого, кто входит: проекции
-            текут под ногами, рисунки оживают на стенах, отражения уходят в бесконечность.
-          </Reveal>
-          <Reveal as="p">
-            Каждый зал — отдельный мир со своим светом, цветом и ритмом. Путь длиной примерно в час
-            ведёт от истоков до будущего.
-          </Reveal>
+          <Reveal as="p">{t.manifesto.body1}</Reveal>
+          <Reveal as="p">{t.manifesto.body2}</Reveal>
         </div>
       </div>
       <Stats reduced={reduced} />

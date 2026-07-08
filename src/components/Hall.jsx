@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { HallCarousel } from './HallCarousel.jsx';
+import { useLang } from '../i18n/LanguageProvider.jsx';
 import './Hall.css';
 
 /**
@@ -8,6 +9,8 @@ import './Hall.css';
  * text reveal. Background is either a looping video or a parallaxed still.
  */
 export function Hall({ hall, index, registerRef, reduced }) {
+  const { t } = useLang();
+  const tx = t.halls[hall.id];
   const ref = useRef(null);
   const [inView, setInView] = useState(false);
 
@@ -66,12 +69,12 @@ export function Hall({ hall, index, registerRef, reduced }) {
       <div className="glow" />
 
       <div className="content">
-        <div className="h-num reveal">Зал {hall.num}</div>
-        <h2 className="h-name reveal">{hall.name}</h2>
-        <div className="h-alt reveal">{hall.alt}</div>
-        <p className="h-desc reveal">{hall.desc}</p>
+        <div className="h-num reveal">{t.hall.zone} {hall.num}</div>
+        <h2 className="h-name reveal">{tx.name}</h2>
+        <div className="h-alt reveal">{tx.alt}</div>
+        <p className="h-desc reveal">{tx.desc}</p>
         <div className="h-spec reveal">
-          {hall.specs.map((spec) => (
+          {tx.specs.map((spec) => (
             <span key={spec}>{spec}</span>
           ))}
         </div>
