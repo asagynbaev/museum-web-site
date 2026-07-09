@@ -1,35 +1,44 @@
-import { useEffect, useState } from 'react';
 import './HallCarousel.css';
 
 /**
- * Cross-fading image carousel for a hall background — the A/B alternative to a
- * single still or a low-quality GIF. Slides advance automatically and loop.
+ * Cross-fading image background for a hall. The slow zoom (Ken-Burns) lives on
+ * the container, not on individual slides, so it stays continuous across slide
+ * changes — no snap back to the original size when the active slide swaps.
  *
- *  - images:   ordered list of background URLs (use high-quality WebP)
- *  - interval: ms between slides (default 4200)
- *  - kb:       adds a slow Ken-Burns drift to the active slide
- *  - reduced:  when true, holds on the first slide (no auto-advance)
+ *  - images:   ordered list of background URLs (high-quality WebP)
+ *  - index:    which slide is currently shown (owned by the parent hall)
+ *  - kb:       enable the slow zoom
+ *  - reduced:  reduced-motion — no zoom, no transition
  */
-export function HallCarousel({ images, interval = 4200, kb = false, reduced = false }) {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    if (reduced || images.length < 2) return undefined;
-    const id = setInterval(() => {
-      setIndex((i) => (i + 1) % images.length);
-    }, interval);
-    return () => clearInterval(id);
-  }, [images.length, interval, reduced]);
-
+export function HallCarousel({ images, index, kb = false, reduced = false }) {
   return (
-    <div className="carousel" aria-hidden="true">
+    <div className={`carousel${kb && !reduced ? ' pan' : ''}`} aria-hidden="true">
       {images.map((src, i) => (
         <div
           key={src}
-          className={`media carousel-slide${i === index ? ' active' : ''}${
-            kb && !reduced ? ' pan' : ''
-          }`}
+          className={`media carousel-slide${i === index ? ' active' : ''}`}
           style={{ backgroundImage: `url('${src}')` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Pagination dots below the slider — lets visitors flip slides manually. Not
+ * decorative, so (unlike the background) these are real, focusable buttons.
+ */
+export function CarouselDots({ count, active, onSelect, label = 'Slide', groupLabel }) {
+  return (
+    <div className="carousel-dots" role="group" aria-label={groupLabel}>
+      {Array.from({ length: count }, (_, i) => (
+        <button
+          key={i}
+          type="button"
+          className={`cdot${i === active ? ' on' : ''}`}
+          aria-label={`${label} ${i + 1}`}
+          aria-current={i === active}
+          onClick={() => onSelect(i)}
         />
       ))}
     </div>

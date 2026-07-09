@@ -2,7 +2,17 @@
   position: absolute;
   inset: 0;
 }
+/* Ken-Burns on the container → the zoom is continuous and shared by every
+   slide, so a slide swap never resets it back to the original size. */
+.carousel.pan {
+  transform-origin: 50% 50%;
+  will-change: transform;
+  animation: kenburns 18s ease-in-out infinite alternate;
+}
+
 .carousel-slide {
+  position: absolute;
+  inset: 0;
   opacity: 0;
   transition: opacity 1.4s ease-in-out;
   will-change: opacity;
@@ -10,16 +20,12 @@
 .carousel-slide.active {
   opacity: 1;
 }
-/* Ken-Burns runs only on the visible slide so idle slides stay cheap. */
-.carousel-slide.pan.active {
-  animation: kenburns 12s ease-in-out infinite alternate;
-}
 
 @media (prefers-reduced-motion: reduce) {
+  .carousel.pan {
+    animation: none;
+  }
   .carousel-slide {
     transition: none;
-  }
-  .carousel-slide.pan.active {
-    animation: none;
   }
 }

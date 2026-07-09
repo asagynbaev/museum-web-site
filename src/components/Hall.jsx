@@ -1,18 +1,35 @@
 import { useEffect, useRef, useState } from 'react';
-import { HallCarousel } from './HallCarousel.jsx';
+import { HallCarousel, CarouselDots } from './HallCarousel.jsx';
+import { useCarousel } from '../hooks/useCarousel.js';
+import { useSwipe } from '../hooks/useSwipe.js';
 import { useLang } from '../i18n/LanguageProvider.jsx';
 import './Hall.css';
 
 /**
  * One full-viewport hall. Registers its DOM node with App (for the scroll/rail
  * maths) and adds `.in` when scrolled into view, which cascades the staggered
- * text reveal. Background is either a looping video or a parallaxed still.
+ * text reveal. Background is a still image or an auto-advancing carousel with
+ * manual pagination dots.
  */
 export function Hall({ hall, index, registerRef, reduced }) {
   const { t } = useLang();
   const tx = t.halls[hall.id];
   const ref = useRef(null);
   const [inView, setInView] = useState(false);
+
+  const isCarousel = hall.media.type === 'carousel';
+  const slideCount = isCarousel ? hall.media.images.length : 0;
+  const swipeable = isCarousel && slideCount > 1;
+  // Hook is always called (stable order); a no-op for non-carousel halls.
+  const { index: slide, goTo, next, prev } = useCarousel(
+    slideCount,
+    hall.media.interval,
+    isCarousel && !reduced
+  );
+
+  // Swipe / drag to change slides (touch + mouse). Works even under reduced
+  // motion since it's manual navigation.
+  useSwipe(ref, { onLeft: next, onRight: prev, enabled: swipeable });
 
   useEffect(() => {
     const el = ref.current;
@@ -43,18 +60,8 @@ export function Hall({ hall, index, registerRef, reduced }) {
     <section className={className} id={hall.id} ref={ref} style={{ '--accent': hall.accent }}>
       <div className="layer">
         <div className="pllx" data-speed={hall.speed}>
-          {hall.media.type === 'video' && (
-            <video className="media" autoPlay muted loop playsInline poster={hall.media.poster}>
-              <source src={hall.media.src} type="video/mp4" />
-            </video>
-          )}
-          {hall.media.type === 'carousel' && (
-            <HallCarousel
-              images={hall.media.images}
-              interval={hall.media.interval}
-              kb={hall.kb}
-              reduced={reduced}
-            />
+          {isCarousel && (
+            <HallCarousel images={hall.media.images} index={slide} kb={hall.kb} reduced={reduced} />
           )}
           {hall.media.type === 'image' && (
             <div
@@ -67,6 +74,16 @@ export function Hall({ hall, index, registerRef, reduced }) {
       <div className="shimmer" />
       <div className="tint" />
       <div className="glow" />
+
+      {isCarousel && slideCount > 1 && (
+        <CarouselDots
+          count={slideCount}
+          active={slide}
+          onSelect={goTo}
+          label={t.carousel.slide}
+          groupLabel={tx.name}
+        />
+      )}
 
       <div className="content">
         <div className="h-num reveal">{t.hall.zone} {hall.num}</div>

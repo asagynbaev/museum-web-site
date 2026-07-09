@@ -95,8 +95,8 @@
   #cursorglow {
     display: none;
   }
-  .hero video {
-    display: none;
+  .hero-bg {
+    transform: none;
   }
   .reveal {
     opacity: 1;

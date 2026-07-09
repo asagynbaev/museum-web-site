@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useHeroParallax } from '../hooks/useHeroParallax.js';
 import { asset } from '../lib/asset.js';
 import { useLang } from '../i18n/LanguageProvider.jsx';
@@ -6,47 +6,25 @@ import { Rich } from '../i18n/Rich.jsx';
 import './Hero.css';
 
 /**
- * Full-viewport opening: looping background video, layered scrims and the
- * staggered title reveal. Falls back to a still poster if autoplay is blocked
- * or motion is reduced.
+ * Full-viewport opening: an optimized still background (lighter than video),
+ * layered scrims and the staggered title reveal. The background slowly scales
+ * up as the visitor scrolls (see useHeroParallax).
  */
-export function Hero({ reduced, started }) {
+export function Hero({ reduced }) {
   const { t } = useLang();
   const innerRef = useRef(null);
-  const videoRef = useRef(null);
-  const [showPoster, setShowPoster] = useState(false);
+  const bgRef = useRef(null);
 
-  useHeroParallax({ innerRef, videoRef, enabled: !reduced });
-
-  // Hold playback until the preloader is done — the video must not run in the
-  // background behind the loader, it starts exactly when loading finishes.
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (reduced) {
-      setShowPoster(true);
-      return;
-    }
-    if (!started) return;
-    const playback = v.play?.();
-    if (playback && typeof playback.catch === 'function') {
-      playback.catch(() => setShowPoster(true));
-    }
-  }, [reduced, started]);
+  useHeroParallax({ innerRef, bgRef, enabled: !reduced });
 
   const poster = asset('media/hero-poster.jpg');
 
   return (
     <section className="hero" id="top">
-      <video ref={videoRef} muted loop playsInline poster={poster} preload="metadata">
-        <source src={asset('media/hero.mp4')} type="video/mp4" />
-      </video>
       <div
-        className="poster"
-        style={{
-          background: `url('${poster}') center/cover`,
-          display: showPoster ? 'block' : 'none',
-        }}
+        className="hero-bg"
+        ref={bgRef}
+        style={{ backgroundImage: `url('${poster}')` }}
       />
       <div className="scrim" />
       <div className="scrim2" />

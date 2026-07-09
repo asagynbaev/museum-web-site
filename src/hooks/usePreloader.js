@@ -8,16 +8,6 @@ function loadImage(url) {
   });
 }
 
-function loadAsset(asset, signal) {
-  if (asset.type === 'video') {
-    // Pull the full bytes into cache; ignore aborts / offline errors.
-    return fetch(asset.url, { signal })
-      .then((res) => res.blob())
-      .catch(() => {});
-  }
-  return loadImage(asset.url);
-}
-
 /**
  * Preloads a list of assets sequentially (top-to-bottom) while reporting a
  * smooth progress value and the label of whatever is loading right now.
@@ -25,9 +15,8 @@ function loadAsset(asset, signal) {
  * Timing rules so the loader feels intentional, never janky, never stuck:
  *   - it shows for at least `minMs` even if the cache is already warm;
  *   - it reveals as soon as everything is loaded past that minimum;
- *   - it gives up waiting after `maxMs` so a slow video can't trap the visitor
- *     (the still poster covers anything not finished in time, and the remaining
- *      assets keep warming the cache in the background).
+ *   - it gives up waiting after `maxMs` so a slow asset can't trap the visitor
+ *     (the remaining images keep warming the cache in the background).
  *
  * The reveal decision runs on plain timers, not rAF, so it stays accurate even
  * when the browser throttles animation frames (background tab, headless, etc).
@@ -41,7 +30,6 @@ export function usePreloader(assets, { minMs = 3000, maxMs = 5000 } = {}) {
 
   useEffect(() => {
     const total = assets.length || 1;
-    const controller = new AbortController();
     const start = performance.now();
 
     let aborted = false;
@@ -75,7 +63,7 @@ export function usePreloader(assets, { minMs = 3000, maxMs = 5000 } = {}) {
       for (let i = 0; i < assets.length; i++) {
         if (aborted) return;
         if (!done) setLabel(assets[i].label);
-        await loadAsset(assets[i], controller.signal);
+        await loadImage(assets[i].url);
         if (aborted) return;
         realRef.current = (i + 1) / total;
       }
@@ -94,7 +82,6 @@ export function usePreloader(assets, { minMs = 3000, maxMs = 5000 } = {}) {
 
     return () => {
       aborted = true;
-      controller.abort();
       cancelAnimationFrame(raf);
       clearTimeout(minTimer);
       clearTimeout(maxTimer);

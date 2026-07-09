@@ -7,7 +7,14 @@ import { useEffect } from 'react';
  */
 export function useParallax(enabled = true) {
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      // Clear inline transforms if reduce-motion is toggled on mid-session so
+      // no hall background stays frozen mid-scroll.
+      document.querySelectorAll('.pllx').forEach((el) => {
+        el.style.transform = '';
+      });
+      return undefined;
+    }
 
     const layers = Array.from(document.querySelectorAll('.pllx'));
     if (!layers.length) return;

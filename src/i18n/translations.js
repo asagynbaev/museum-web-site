@@ -148,6 +148,7 @@ const ru = {
   rail: { caption: 'Маршрут' },
 
   backToTop: 'Наверх',
+  carousel: { slide: 'Слайд' },
 
   a11y: { openMenu: 'Открыть меню', closeMenu: 'Закрыть меню' },
   meta: {
@@ -298,6 +299,7 @@ const ky = {
   rail: { caption: 'Маршрут' },
 
   backToTop: 'Жогору',
+  carousel: { slide: 'Слайд' },
 
   a11y: { openMenu: 'Менюну ачуу', closeMenu: 'Менюну жабуу' },
   meta: {
@@ -446,6 +448,7 @@ const en = {
   rail: { caption: 'Route' },
 
   backToTop: 'Top',
+  carousel: { slide: 'Slide' },
 
   a11y: { openMenu: 'Open menu', closeMenu: 'Close menu' },
   meta: {

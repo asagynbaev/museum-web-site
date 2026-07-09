@@ -5,6 +5,9 @@
   align-items: center;
   overflow: hidden;
   isolation: isolate;
+  /* Vertical scroll + pinch-zoom stay native; horizontal swipes go to JS
+     (useSwipe) to flip carousel slides. */
+  touch-action: pan-y pinch-zoom;
 }
 .hall .layer {
   position: absolute;
@@ -125,6 +128,43 @@
   text-align: right;
 }
 
+/* Pagination dots — manual slide control, centred at the bottom of the hall. */
+.carousel-dots {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(20px, 4vh, 40px);
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(9, 10, 14, 0.32);
+  backdrop-filter: blur(8px);
+}
+.cdot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 1px solid rgba(235, 225, 205, 0.55);
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s, border-color 0.3s;
+}
+.cdot:hover {
+  border-color: var(--accent);
+}
+.cdot.on {
+  width: 24px;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.cdot:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
 .h-num {
   font-family: var(--mono);
   font-weight: 600;
@@ -224,16 +264,22 @@
 }
 
 @media (max-width: 820px) {
+  /* Anchor the text card to the bottom so the zone photo owns the top of the
+     screen. Otherwise the centred card covers the image on tall phones. */
+  .hall {
+    align-items: flex-end;
+  }
   .hall .content {
     width: auto;
-    margin: 0 clamp(20px, 6vw, 40px) !important;
+    margin: 0 clamp(16px, 5vw, 34px) clamp(46px, 7vh, 60px) !important;
+    padding: clamp(20px, 3vh, 28px) clamp(22px, 5vw, 30px);
     text-align: left !important;
   }
   .hall .content::before,
   .hall.right .content::before {
     inset: 0;
-    border-radius: 14px;
-    background: rgba(9, 10, 14, 0.46);
+    border-radius: 16px;
+    background: rgba(9, 10, 14, 0.52);
   }
   .hall.right .h-num,
   .hall.right .h-spec {
@@ -242,8 +288,34 @@
   .hall.right .h-desc {
     margin: 0;
   }
+
+  /* Compact typography keeps the card short → more image visible up top. */
+  .h-name {
+    margin: 10px 0 6px;
+  }
+  .h-alt {
+    margin-bottom: 14px;
+  }
+  .h-desc {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .h-spec {
+    margin-top: 16px;
+    gap: 8px;
+  }
+  .h-spec span {
+    padding: 6px 10px;
+  }
+
+  /* Bright at the top (image), darker toward the bottom where the card sits. */
   .hall.left .tint,
   .hall.right .tint {
-    background: linear-gradient(180deg, rgba(5, 6, 10, 0.12), rgba(5, 6, 10, 0.5));
+    background: linear-gradient(180deg, rgba(5, 6, 10, 0.04) 34%, rgba(5, 6, 10, 0.62) 100%);
+  }
+
+  /* Dots sit in the strip just below the card. */
+  .carousel-dots {
+    bottom: clamp(14px, 2.4vh, 22px);
   }
 }

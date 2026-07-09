@@ -25,7 +25,6 @@ export const halls = [
       type: 'carousel',
       interval: 4600,
       images: [
-        asset('media/hall1-1.webp'),
         asset('media/hall1-2.webp'),
         asset('media/hall1-3.webp'),
         asset('media/hall1-4.webp'),
