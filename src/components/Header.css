@@ -94,10 +94,13 @@ nav a.nl:hover::after {
 .ticket {
   font-family: var(--mono);
   font-size: 0.68rem;
+  font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   border: 1px solid var(--gold);
   color: var(--gold-2);
+  background: none;
+  cursor: pointer;
   padding: 9px 16px;
   border-radius: 2px;
   transition: 0.35s;

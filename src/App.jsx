@@ -8,17 +8,24 @@ import { Hero } from './components/Hero.jsx';
 import { Manifesto } from './components/Manifesto.jsx';
 import { Halls } from './components/Halls.jsx';
 import { Visit } from './components/Visit.jsx';
+import { Checkout } from './components/Checkout.jsx';
 import { Footer } from './components/Footer.jsx';
 import { BackToTop } from './components/BackToTop.jsx';
 
 import { halls } from './data/halls.js';
 import { preloadAssets } from './data/preloadAssets.js';
+import { useLang } from './i18n/LanguageProvider.jsx';
 import { useReducedMotion } from './hooks/useReducedMotion.js';
+import { useCheckout } from './hooks/useCheckout.js';
 import { usePreloader } from './hooks/usePreloader.js';
 import { useScrollEffects } from './hooks/useScrollEffects.js';
 
 export default function App() {
   const reduced = useReducedMotion();
+  const { lang } = useLang();
+
+  // Покупка билета живёт на уровне App: её открывают и шапка, и блок «Визит».
+  const checkout = useCheckout(lang);
 
   // Intro preloader — warms the media cache top-to-bottom before reveal.
   const { progress, label, finished } = usePreloader(preloadAssets);
@@ -56,7 +63,7 @@ export default function App() {
       )}
 
       <AmbientLayers progressRef={progressRef} reduced={reduced} />
-      <Header headerRef={headerRef} />
+      <Header headerRef={headerRef} onBuy={checkout.openCheckout} />
       <WayfindingRail halls={halls} active={activeHall} railFillRef={railFillRef} />
 
       <Hero reduced={reduced} />
@@ -64,9 +71,10 @@ export default function App() {
       <div className="divider" />
       <Halls reduced={reduced} hallRefs={hallRefs} />
       <div className="divider" />
-      <Visit />
+      <Visit checkout={checkout} />
       <Footer />
       <BackToTop />
+      <Checkout checkout={checkout} />
     </>
   );
 }

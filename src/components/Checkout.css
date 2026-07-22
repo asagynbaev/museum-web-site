@@ -1,0 +1,526 @@
+/* Окно покупки билета. Живёт над всем, включая виньетку body::after (z-index 60). */
+
+.co-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 4vh, 40px) 16px;
+  overflow-y: auto;
+  background: rgba(10, 8, 4, 0.72);
+  backdrop-filter: blur(10px) saturate(0.9);
+  animation: co-fade 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.co-panel {
+  position: relative;
+  width: 100%;
+  max-width: 452px;
+  margin: auto;
+  padding: clamp(30px, 4vw, 42px) clamp(22px, 3.4vw, 38px) clamp(26px, 3.4vw, 36px);
+  background: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  /* Тёплый ореол сверху — та же золотая подсветка, что у секций сайта. */
+  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(235, 225, 205, 0.05);
+  animation: co-rise 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.co-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 60% at 50% 0%, rgba(232, 169, 60, 0.09), transparent 62%);
+}
+
+.co-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--bone-faint);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+.co-close:hover {
+  color: var(--bone);
+}
+
+.co-eyebrow {
+  position: relative;
+  font-family: var(--mono);
+  font-size: 0.63rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-2);
+}
+
+.co-step {
+  position: relative;
+  animation: co-step 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.co-title {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(1.35rem, 3.6vw, 1.72rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  margin: 14px 0 0;
+}
+.co-sub {
+  margin-top: 9px;
+  color: var(--bone-dim);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+/* ── Корзина ───────────────────────────────────────────────────────────── */
+
+.co-rows {
+  margin-top: 26px;
+  border-top: 1px solid var(--line);
+}
+.co-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  transition: opacity 0.3s;
+}
+.co-row:not(.picked) {
+  opacity: 0.72;
+}
+.co-row-name {
+  font-size: 0.98rem;
+}
+.co-row-price {
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--bone-faint);
+}
+.co-row.picked .co-row-price {
+  color: var(--gold-2);
+}
+
+.co-skeleton {
+  height: 152px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(
+      100deg,
+      transparent 20%,
+      rgba(235, 225, 205, 0.05) 42%,
+      transparent 64%
+    )
+    0 0 / 220% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+.co-stepper {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+.co-stepper button {
+  width: 34px;
+  height: 34px;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: var(--gold-2);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s;
+}
+.co-stepper button:hover:not(:disabled) {
+  background: rgba(232, 169, 60, 0.14);
+}
+.co-stepper button:disabled {
+  color: var(--bone-faint);
+  cursor: default;
+}
+.co-stepper span {
+  min-width: 22px;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.co-field {
+  display: block;
+  margin-top: 24px;
+}
+.co-field > span {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.63rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-2);
+  margin-bottom: 9px;
+}
+.co-field input {
+  width: 100%;
+  padding: 13px 14px;
+  font-family: var(--body);
+  font-size: 0.96rem;
+  color: var(--bone);
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.co-field input::placeholder {
+  color: var(--bone-faint);
+}
+.co-field input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--gold) 60%, transparent);
+  box-shadow: 0 0 0 3px rgba(232, 169, 60, 0.1);
+}
+.co-field small {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: var(--bone-dim);
+}
+
+.co-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.co-total span {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bone-dim);
+}
+.co-total strong {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--gold-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.co-cta {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  padding: 16px;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #1a1206;
+  background: var(--gold);
+  border: 1px solid var(--gold);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: 0.35s;
+}
+.co-cta:hover:not(:disabled) {
+  background: var(--gold-2);
+  box-shadow: 0 0 28px rgba(232, 169, 60, 0.4);
+}
+.co-cta:disabled {
+  color: var(--bone-faint);
+  background: transparent;
+  border-color: var(--line);
+  cursor: not-allowed;
+}
+
+.co-link {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 6px;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+.co-link:hover {
+  color: var(--bone-dim);
+}
+
+.co-alert {
+  margin-top: 18px;
+  padding: 12px 14px;
+  font-size: 0.87rem;
+  line-height: 1.45;
+  color: #f0c4bb;
+  background: rgba(181, 64, 46, 0.14);
+  border: 1px solid rgba(181, 64, 46, 0.42);
+  border-radius: 2px;
+}
+
+/* ── QR ────────────────────────────────────────────────────────────────── */
+
+.co-qr-plate {
+  position: relative;
+  width: max-content;
+  margin: 26px auto 0;
+  padding: 18px;
+  background: var(--bone);
+  border-radius: 4px;
+  box-shadow: 0 0 44px rgba(232, 169, 60, 0.16);
+  overflow: hidden;
+}
+.co-qr {
+  display: block;
+  width: 220px;
+  height: 220px;
+}
+/* Луч сканера — единственное движение на экране ожидания. */
+.co-scan {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 32%;
+  background: linear-gradient(180deg, transparent, rgba(20, 16, 9, 0.14), transparent);
+  animation: co-scan 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.co-amount {
+  margin-top: 20px;
+  font-family: var(--display);
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-align: center;
+  color: var(--bone);
+  font-variant-numeric: tabular-nums;
+}
+.co-amount span {
+  font-size: 0.9rem;
+  color: var(--gold-2);
+}
+
+/* Ссылка «открыть приложение» нужна там, где сканировать себя же нечем. */
+.co-openapp {
+  display: none;
+  margin-top: 18px;
+  padding: 15px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--gold-2);
+  border: 1px solid var(--gold);
+  border-radius: 2px;
+  transition: background 0.3s;
+}
+.co-openapp:hover {
+  background: rgba(232, 169, 60, 0.12);
+}
+/* Сенсорный ввод ИЛИ узкий экран: на телефоне свой же QR не отсканируешь,
+   нужна прямая ссылка в приложение банка. Ширину проверяем отдельно —
+   pointer-медиазапрос врёт на гибридных устройствах. */
+@media (hover: none) and (pointer: coarse) {
+  .co-openapp {
+    display: block;
+  }
+}
+@media (max-width: 680px) {
+  .co-openapp {
+    display: block;
+  }
+}
+
+.co-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 22px;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bone-dim);
+}
+.co-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: co-pulse 1.7s ease-in-out infinite;
+}
+.co-status.busy {
+  color: var(--gold-2);
+}
+.co-status.busy .co-dot {
+  animation-duration: 0.75s;
+}
+
+.co-timer {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  text-align: center;
+  color: var(--bone-dim);
+}
+.co-timer strong {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--bone);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Итог: билет или ошибка ────────────────────────────────────────────── */
+
+.co-done {
+  text-align: center;
+}
+.co-check,
+.co-cross {
+  margin: 22px auto 0;
+  width: 44px;
+  height: 44px;
+}
+.co-check {
+  color: var(--gold-2);
+}
+.co-cross {
+  color: var(--clay);
+}
+.co-check path {
+  stroke-dasharray: 34;
+  animation: co-draw 0.55s 0.15s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.co-ticket {
+  margin-top: 24px;
+  padding: 18px;
+  background: var(--ink);
+  border: 1px dashed color-mix(in srgb, var(--gold) 42%, transparent);
+  border-radius: 3px;
+}
+.co-ticket-label {
+  font-family: var(--mono);
+  font-size: 0.61rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+}
+.co-ticket-code {
+  margin-top: 7px;
+  font-family: var(--display);
+  font-size: clamp(1.1rem, 4.4vw, 1.42rem);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--gold-2);
+}
+
+.co-recap {
+  margin-top: 18px;
+  text-align: left;
+}
+.co-recap-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--bone-dim);
+}
+.co-recap-row:last-child {
+  border-bottom: 0;
+}
+
+/* ── Движение ──────────────────────────────────────────────────────────── */
+
+@keyframes co-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes co-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+}
+@keyframes co-step {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes co-scan {
+  0%,
+  100% {
+    transform: translateY(-100%);
+  }
+  50% {
+    transform: translateY(320%);
+  }
+}
+@keyframes co-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+@keyframes co-draw {
+  from {
+    stroke-dashoffset: 34;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .co-scan {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .co-qr {
+    width: 188px;
+    height: 188px;
+  }
+  .co-panel {
+    max-width: none;
+  }
+}

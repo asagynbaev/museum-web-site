@@ -13,9 +13,18 @@ const ROUTE_URL =
  * primary calls to action. Placeholder values (— сом, точный адрес) are kept
  * so they're easy to fill in later.
  */
-export function Visit() {
-  const { t } = useLang();
+export function Visit({ checkout }) {
+  const { t, lang } = useLang();
   const v = t.visit;
+
+  // Цены приходят с сервера — он же считает сумму заказа, так что витрина и
+  // касса не могут разъехаться. Пока прайс не загрузился, показываем прочерки.
+  const priceList = checkout.tariffs.length
+    ? checkout.tariffs.map((tariff) => [
+        t.checkout.tariffs[tariff.id],
+        `${new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'ru-RU').format(tariff.price)} ${t.checkout.som}`,
+      ])
+    : Object.entries(t.checkout.tariffs).map(([, label]) => [label, v.pricePending]);
 
   return (
     <section className="visit" id="visit">
@@ -50,7 +59,7 @@ export function Visit() {
 
           <div className="v-cell">
             <h4>{v.ticketsH}</h4>
-            {v.tickets.map(([label, value]) => (
+            {priceList.map(([label, value]) => (
               <div className="row" key={label}>
                 <span>{label}</span>
                 <span>{value}</span>
@@ -60,9 +69,9 @@ export function Visit() {
         </Reveal>
 
         <Reveal className="v-cta">
-          <a className="btn solid" href="#visit">
+          <button className="btn solid" type="button" onClick={checkout.openCheckout}>
             {v.buy}
-          </a>
+          </button>
           <a className="btn ghost" href={ROUTE_URL} target="_blank" rel="noopener noreferrer">
             {v.route}
           </a>

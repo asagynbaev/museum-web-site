@@ -13,7 +13,17 @@ npm run build    # продакшн-сборка в dist/
 npm run preview  # локальный предпросмотр собранной версии
 ```
 
-Требуется Node 18+.
+Требуется Node 18+ (для билетного сервера — 20.6+).
+
+Продажа билетов работает поверх отдельного сервиса в [`server/`](server/README.md).
+Без него сайт открывается и живёт как обычно, только вместо цен будут прочерки,
+а кнопка «Купить билет» покажет ошибку. Чтобы поднять всё целиком:
+
+```bash
+cd server && cp .env.example .env && npm install
+npm run mock     # заглушка банка  :8788
+npm run dev      # билетный API    :8787
+```
 
 ## Структура
 
@@ -25,6 +35,7 @@ src/
   data/halls.js          данные семи залов (единый источник правды)
   data/preloadAssets.js  список медиа в порядке сверху вниз для прелоадера
   lib/asset.js           резолвинг путей к /public с учётом base URL
+  lib/api.js             клиент билетного API (server/)
   styles/
     tokens.css           CSS-переменные (цвета, шрифты, размеры)
     base.css             reset, body, утилиты (.wrap, .mono, .reveal, .divider)
@@ -38,6 +49,7 @@ src/
     useHeroParallax.js   параллакс и зум hero
     useMotes.js          canvas-частицы (пылинки)
     useCursorGlow.js     свечение за курсором
+    useCheckout.js       покупка билета: корзина → QR → оплаченный билет
   components/
     Loader.jsx           экран загрузки: предзагружает медиа, потом плавно уходит
     AmbientLayers.jsx    grain / motes / cursor glow / mobile progress
@@ -46,7 +58,8 @@ src/
     Hero.jsx             первый экран с видео
     Manifesto.jsx        манифест + счётчики (CountUp)
     Halls.jsx / Hall.jsx залы (рендерятся из data/halls.js)
-    Visit.jsx            планирование визита
+    Visit.jsx            планирование визита (цены тянутся из server/)
+    Checkout.jsx         окно покупки билета
     Footer.jsx           подвал
     Logo.jsx             SVG-знак (с вращением и без)
     Reveal.jsx           обёртка для scroll-reveal
@@ -60,6 +73,11 @@ src/
 ## Замечания по контенту
 
 В разметке остались плейсхолдеры из оригинала, которые стоит заполнить:
-цены билетов (`— сом`), точный адрес, телефон и e-mail в подвале.
+точный адрес, телефон и e-mail в подвале.
+
+**Цены билетов теперь задаются на сервере** — в `server/.env` (`PRICE_ADULT` и
+соседние). Там сейчас стоят условные 800 / 500 / 2200 сом: их надо заменить на
+настоящие до запуска продаж. Витрина и касса берут прайс из одного места, поэтому
+разъехаться они не могут.
 
 Исходный одностраничный файл сохранён в [`reference/muzey-sveta.html`](reference/muzey-sveta.html).

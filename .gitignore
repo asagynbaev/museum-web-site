@@ -16,6 +16,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# server secrets and local database
+server/.env
+server/data
+
 # editor / OS
 .vscode/*
 !.vscode/extensions.json

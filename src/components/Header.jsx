@@ -9,7 +9,7 @@ import './Header.css';
  * condensed (`scrolled`) and hide-on-scroll (`hide`) states without re-render.
  * On mobile the nav collapses behind a burger toggle.
  */
-export function Header({ headerRef }) {
+export function Header({ headerRef, onBuy }) {
   const { t, lang, setLang } = useLang();
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
@@ -55,7 +55,16 @@ export function Header({ headerRef }) {
         <a className="nl" href="#halls" onClick={close}>{t.nav.halls}</a>
         <a className="nl" href="#visit" onClick={close}>{t.nav.visit}</a>
         <a className="nl" href="#visit" onClick={close}>{t.nav.contacts}</a>
-        <a className="ticket" href="#visit" onClick={close}>{t.nav.tickets}</a>
+        <button
+          type="button"
+          className="ticket"
+          onClick={() => {
+            close();
+            onBuy();
+          }}
+        >
+          {t.nav.tickets}
+        </button>
         <span className="lang">
           {LANGS.map((l, i) => (
             <Fragment key={l.code}>
