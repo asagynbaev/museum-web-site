@@ -4,20 +4,20 @@
 
 | | |
 |---|---|
+| Сайт | **https://museum.eaysdev.online** (Let's Encrypt, http → https редиректом) |
 | Сервер | `84.54.12.242` (Debian 12, hostname `kit-forum.kg`) |
-| Сайт | http://84.54.12.242:8090 — **временно по IP, домена ещё нет** |
 | Код | `/opt/museum`, пользователь `museum`, ветка `main` |
 | API | `museum-api.service` → `127.0.0.1:8787` |
-| nginx | `/etc/nginx/sites-available/museum`, слушает `8090` |
+| nginx | `/etc/nginx/sites-available/museum` — только `server_name museum.eaysdev.online` |
 | Бэкапы | `/etc/cron.d/museum-backup` → `/var/backups/museum/`, 30 дней |
 
-Порты 80/443 на этой машине занимает **другой проект (atria, `*.eaysdev.online`)** —
-его конфиги трогать нельзя, поэтому музей пока висит на 8090. Когда появится домен:
-добавить в блок музея `listen 80` + `server_name`, прогнать `certbot --nginx`,
-поменять `PUBLIC_URL` в `server/.env` и перезапустить `museum-api`.
+На этой же машине живёт **другой проект — atria** (`*.eaysdev.online`, docker `atria-api`
+и `atria-db`). 80/443 общие, поэтому музей описан отдельным файлом и ловит трафик строго
+по своему `server_name`; конфиги atria не трогаем.
 
-Что ещё не сделано: **IP не в белом списке KICB** (банк отдаёт 403 на своём nginx)
-и **не настроен SMTP** (билеты печатаются в `journalctl -u museum-api`).
+Что ещё не сделано: **IP `84.54.12.242` не в белом списке KICB** (банк отдаёт 403 со своего
+nginx, ещё до приложения) и **не настроен SMTP** — билеты печатаются в
+`journalctl -u museum-api`, на почту покупателю ничего не уходит.
 
 Дальше — общая инструкция, если разворачивать с нуля на чистой машине.
 
