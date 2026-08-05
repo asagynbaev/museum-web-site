@@ -23,6 +23,7 @@ export function useCheckout(lang) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState('cart');
   const [tariffs, setTariffs] = useState([]);
+  const [tariffsFailed, setTariffsFailed] = useState(false);
   const [qty, setQty] = useState({});
   const [email, setEmail] = useState('');
   const [order, setOrder] = useState(null);
@@ -36,8 +37,10 @@ export function useCheckout(lang) {
     api
       .tariffs(ctrl.signal)
       .then(setTariffs)
-      .catch(() => {
-        /* витрина переживёт: покажет прочерки вместо цен */
+      .catch((err) => {
+        // Витрина переживёт — покажет прочерки вместо цен. А вот кассе
+        // без прайса делать нечего: там об этом надо сказать словами.
+        if (err.name !== 'AbortError') setTariffsFailed(true);
       });
     return () => ctrl.abort();
   }, []);
@@ -212,6 +215,7 @@ export function useCheckout(lang) {
     open,
     step,
     tariffs,
+    tariffsFailed,
     qty,
     setTariffQty,
     count,

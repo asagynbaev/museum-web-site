@@ -85,53 +85,9 @@ KICB_TERMINAL_PUBLIC_KEY_FILE=keys/kicb-terminal-public.pem
 
 ## Деплой на VPS
 
-```bash
-# на сервере
-git clone <repo> /opt/museum && cd /opt/museum/server
-npm ci --omit=dev
-cp .env.example .env && nano .env      # заполнить боевые значения
-```
-
-`/etc/systemd/system/museum-api.service`:
-
-```ini
-[Unit]
-Description=AI Museum ticket API
-After=network.target
-
-[Service]
-Type=simple
-User=museum
-WorkingDirectory=/opt/museum/server
-ExecStart=/usr/bin/node --env-file=.env src/index.js
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-systemctl enable --now museum-api
-```
-
-nginx — статика сайта плюс проксирование `/api`:
-
-```nginx
-server {
-    server_name museum.kg;
-
-    root /opt/museum/dist;
-    location / { try_files $uri $uri/ /index.html; }
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:8787;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
+Пошаговая инструкция и готовые конфиги (systemd + nginx) — в [`deploy/`](../deploy/README.md).
+Коротко: сайт и API живут на одной машине, nginx отдаёт `dist/` и проксирует `/api`
+на `127.0.0.1:8787`, поэтому пути на фронте относительные и CORS не нужен.
 
 Сервер читает `X-Forwarded-For` (`trustProxy`), поэтому лимиты считаются по реальному IP,
 а не по адресу nginx.

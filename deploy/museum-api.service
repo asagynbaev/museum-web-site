@@ -1,0 +1,30 @@
+; systemd-юнит билетного API. Копируется в /etc/systemd/system/museum-api.service
+;
+;   sudo cp deploy/museum-api.service /etc/systemd/system/
+;   sudo systemctl daemon-reload
+;   sudo systemctl enable --now museum-api
+;   journalctl -u museum-api -f     # логи
+
+[Unit]
+Description=AI Museum ticket API (KICB QR)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=museum
+Group=museum
+WorkingDirectory=/opt/museum/server
+ExecStart=/usr/bin/node --env-file=.env src/index.js
+Restart=always
+RestartSec=5
+
+# Секреты и база лежат в рабочем каталоге, наружу процессу лезть незачем.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/museum/server/data
+
+[Install]
+WantedBy=multi-user.target

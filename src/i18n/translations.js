@@ -174,6 +174,7 @@ const ru = {
       declined: 'Платёж не прошёл — деньги не списаны.',
       expired: 'Время на оплату вышло. Создайте новый QR.',
       lost: 'Заказ не найден. Начните заново.',
+      unavailable: 'Онлайн-касса пока недоступна. Билеты можно купить на входе в музей.',
     },
   },
 
@@ -385,6 +386,7 @@ const ky = {
       declined: 'Төлөм өткөн жок — акча алынган жок.',
       expired: 'Төлөө убактысы бүттү. Жаңы QR түзүңүз.',
       lost: 'Буйрутма табылган жок. Кайра баштаңыз.',
+      unavailable: 'Онлайн-касса азырынча иштебейт. Билеттерди музейдин кире беришинен алсаңыз болот.',
     },
   },
 
@@ -594,6 +596,7 @@ const en = {
       declined: 'The payment did not go through — you were not charged.',
       expired: 'The payment window has closed. Create a new QR.',
       lost: 'Order not found. Please start over.',
+      unavailable: 'Online ticketing is not available yet. Tickets can be bought at the museum entrance.',
     },
   },
 

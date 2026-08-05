@@ -113,7 +113,7 @@ export function Checkout({ checkout }) {
 /* ── Шаг 1: корзина ───────────────────────────────────────────────────── */
 
 function CartStep({ checkout, c, lang, titleId }) {
-  const { tariffs, qty, setTariffQty, count, total, email, setEmail, submit, busy, error } =
+  const { tariffs, tariffsFailed, qty, setTariffQty, count, total, email, setEmail, submit, busy, error } =
     checkout;
 
   const emailValid = EMAIL_RE.test(email.trim());
@@ -132,7 +132,13 @@ function CartStep({ checkout, c, lang, titleId }) {
       </h3>
 
       <div className="co-rows">
-        {tariffs.length === 0 && <div className="co-skeleton" aria-hidden="true" />}
+        {/* Без прайса покупать нечего: пока он едет — скелетон, если не доехал — текст. */}
+        {tariffs.length === 0 &&
+          (tariffsFailed ? (
+            <div className="co-alert co-alert-row">{c.errors.unavailable}</div>
+          ) : (
+            <div className="co-skeleton" aria-hidden="true" />
+          ))}
 
         {tariffs.map((tariff) => {
           const n = qty[tariff.id] || 0;
