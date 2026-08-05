@@ -10,7 +10,8 @@
   "scripts": {
     "start": "node --env-file=.env src/index.js",
     "dev": "node --env-file=.env --watch src/index.js",
-    "mock": "node --env-file=.env src/mock/kicb-mock.js"
+    "dev:mock": "node --env-file=.env.mock --watch src/index.js",
+    "mock": "node --env-file=.env.mock src/mock/kicb-mock.js"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",

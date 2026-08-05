@@ -26,3 +26,6 @@ server/data
 .idea
 .DS_Store
 Thumbs.db
+
+# локальные заметки с доступами
+Креды.txt

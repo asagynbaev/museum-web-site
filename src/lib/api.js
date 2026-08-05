@@ -51,5 +51,9 @@ export const api = {
 
   cancelOrder: (id) => request(`/orders/${id}/cancel`, { method: 'POST' }).then((r) => r.order),
 
+  /** Проверка билета по коду — сюда ведёт QR из письма. */
+  ticket: (code, signal) =>
+    request(`/tickets/${encodeURIComponent(code)}`, { signal }).then((r) => r.ticket),
+
   qrUrl: (id) => `${BASE}/api/orders/${id}/qr.svg`,
 };

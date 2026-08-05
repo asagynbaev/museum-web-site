@@ -1,0 +1,176 @@
+/* Экран проверки билета. Открывается по QR из письма, вместо лендинга. */
+
+.tk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  min-height: 100dvh;
+  padding: 40px 18px;
+  background: radial-gradient(120% 70% at 50% 0%, rgba(232, 169, 60, 0.07), transparent 60%);
+}
+
+.tk-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: var(--bone-dim);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 0.63rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  transition: color 0.3s;
+}
+.tk-brand:hover {
+  color: var(--bone);
+}
+.tk-brand svg {
+  width: 30px;
+  height: 30px;
+}
+
+.tk-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  padding: clamp(28px, 5vw, 40px) clamp(22px, 4vw, 34px);
+  text-align: center;
+  background: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(235, 225, 205, 0.05);
+  animation: tk-rise 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tk-card.is-loading {
+  display: grid;
+  place-items: center;
+  gap: 16px;
+  min-height: 220px;
+}
+
+.tk-mark.ok {
+  color: var(--gold-2);
+}
+.tk-mark.no {
+  color: var(--clay);
+}
+
+.tk-eyebrow {
+  margin-top: 14px;
+  font-family: var(--mono);
+  font-size: 0.63rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-2);
+}
+
+.tk-title {
+  margin: 10px 0 0;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(1.4rem, 4.4vw, 1.8rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+.tk-code {
+  margin-top: 20px;
+  font-family: var(--mono);
+  font-size: clamp(1.15rem, 4.6vw, 1.42rem);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--gold-2);
+}
+.tk-code-dim {
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  color: var(--bone-faint);
+}
+
+.tk-rows {
+  margin: 24px 0 0;
+  border-top: 1px solid var(--line);
+  text-align: left;
+}
+.tk-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.92rem;
+}
+.tk-row dt {
+  color: var(--bone-dim);
+}
+.tk-row dd {
+  margin: 0;
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.tk-note {
+  margin: 22px 0 0;
+  color: var(--bone-dim);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.tk-status {
+  margin: 0;
+  color: var(--bone-dim);
+  font-size: 0.9rem;
+}
+
+.tk-spinner {
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--line);
+  border-top-color: var(--gold-2);
+  border-radius: 50%;
+  animation: tk-spin 0.9s linear infinite;
+}
+
+@keyframes tk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes tk-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+}
+
+.tk-home {
+  color: var(--bone-faint);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 3px;
+  transition: color 0.3s, border-color 0.3s;
+}
+.tk-home:hover {
+  color: var(--bone);
+  border-color: var(--bone-faint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tk-card,
+  .tk-spinner {
+    animation-duration: 0.01ms;
+  }
+  .tk-spinner {
+    animation-iteration-count: 1;
+  }
+}

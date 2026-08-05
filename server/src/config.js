@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
@@ -33,9 +35,29 @@ if (mode !== 'mock' && mode !== 'live') {
   throw new Error(`KICB_MODE должен быть "mock" или "live", получено "${mode}"`);
 }
 
-// PEM в .env приходится хранить одной строкой, поэтому \n разворачиваем обратно.
-const publicKeyRaw = process.env.KICB_TERMINAL_PUBLIC_KEY || '';
-const publicKey = publicKeyRaw.replaceAll(String.raw`\n`, '\n').trim();
+/**
+ * Публичный ключ терминала. Удобнее держать его файлом (банк присылает .pem
+ * как есть), но переменной с экранированными \n тоже можно — пригодится там,
+ * где файлы класть некуда.
+ */
+function readTerminalPublicKey() {
+  const file = process.env.KICB_TERMINAL_PUBLIC_KEY_FILE;
+  if (file) {
+    // Путь относительный — от корня server/, чтобы не зависеть от cwd юнита.
+    const path = resolve(fileURLToPath(new URL('..', import.meta.url)), file);
+    try {
+      return readFileSync(path, 'utf8').trim();
+    } catch (cause) {
+      throw new Error(`Не удалось прочитать KICB_TERMINAL_PUBLIC_KEY_FILE (${path}): ${cause.message}`);
+    }
+  }
+  return (process.env.KICB_TERMINAL_PUBLIC_KEY || '').replaceAll(String.raw`\n`, '\n').trim();
+}
+
+const publicKey = readTerminalPublicKey();
+if (publicKey && !publicKey.includes('BEGIN PUBLIC KEY')) {
+  throw new Error('Публичный ключ терминала не похож на PEM: нет заголовка BEGIN PUBLIC KEY');
+}
 
 const smtpHost = process.env.SMTP_HOST || '';
 

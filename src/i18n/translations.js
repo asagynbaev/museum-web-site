@@ -188,6 +188,21 @@ const ru = {
     bottom2: 'Свет · Вода · Память · Технология',
   },
 
+  ticket: {
+    eyebrow: 'Билет',
+    checking: 'Проверяем билет…',
+    validTitle: 'Билет действителен',
+    validNote: 'Покажите этот экран на входе. Билет действителен на одно посещение.',
+    unknownTitle: 'Билет не найден',
+    unknownNote: 'Такого билета нет или он не оплачен. Проверьте код в письме.',
+    errorTitle: 'Не удалось проверить',
+    errorNote: 'Нет связи с сервером. Обновите страницу через минуту.',
+    seats: 'Мест',
+    paid: 'Оплачено',
+    paidAt: 'Дата оплаты',
+    toSite: 'На сайт музея',
+  },
+
   loader: { intro: 'Вступление', hero: 'Память, написанная светом' },
 
   rail: { caption: 'Маршрут' },
@@ -384,6 +399,21 @@ const ky = {
     bottom2: 'Жарык · Суу · Эс-тутум · Технология',
   },
 
+  ticket: {
+    eyebrow: 'Билет',
+    checking: 'Билет текшерилүүдө…',
+    validTitle: 'Билет жарактуу',
+    validNote: 'Кирүүдө ушул экранды көрсөтүңүз. Билет бир жолу баруу үчүн жарактуу.',
+    unknownTitle: 'Билет табылган жок',
+    unknownNote: 'Мындай билет жок же төлөнгөн эмес. Каттагы кодду текшериңиз.',
+    errorTitle: 'Текшерүү мүмкүн болбоду',
+    errorNote: 'Сервер менен байланыш жок. Бир мүнөттөн кийин баракты жаңыртыңыз.',
+    seats: 'Орун',
+    paid: 'Төлөндү',
+    paidAt: 'Төлөм күнү',
+    toSite: 'Музей сайтына',
+  },
+
   loader: { intro: 'Кириш', hero: 'Жарык менен жазылган эс-тутум' },
 
   rail: { caption: 'Маршрут' },
@@ -576,6 +606,21 @@ const en = {
     colContacts: 'Contacts',
     bottom1: '© 2026 High Technology Park of the Kyrgyz Republic',
     bottom2: 'Light · Water · Memory · Technology',
+  },
+
+  ticket: {
+    eyebrow: 'Ticket',
+    checking: 'Checking the ticket…',
+    validTitle: 'Ticket is valid',
+    validNote: 'Show this screen at the entrance. Valid for a single visit.',
+    unknownTitle: 'Ticket not found',
+    unknownNote: 'No such ticket, or it has not been paid. Check the code in your email.',
+    errorTitle: 'Could not verify',
+    errorNote: 'No connection to the server. Refresh the page in a minute.',
+    seats: 'Seats',
+    paid: 'Paid',
+    paidAt: 'Payment date',
+    toSite: 'To the museum site',
   },
 
   loader: { intro: 'Intro', hero: 'Memory written in light' },

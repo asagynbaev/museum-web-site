@@ -21,11 +21,13 @@ src/mock/            заглушка банка для разработки
 ## Запуск локально
 
 ```bash
-cp .env.example .env
 npm install
-npm run mock     # окно 1 — заглушка банка на :8788
-npm run dev      # окно 2 — API на :8787
+npm run mock      # окно 1 — заглушка банка на :8788
+npm run dev:mock  # окно 2 — API на :8787 (конфиг .env.mock, секретов не нужно)
 ```
+
+`npm run dev` / `npm start` читают `server/.env` — там боевые доступы KICB,
+в git этот файл не попадает. Шаблон — `.env.example`.
 
 Vite проксирует `/api` на `:8787`, так что сайт (`npm run dev` в корне) заводится без настройки.
 
@@ -48,24 +50,35 @@ MOCK_HOST=0.0.0.0 MOCK_PUBLIC_URL=http://192.168.0.10:8788 npm run mock
 | `GET` | `/api/orders/:id` | статус заказа (сайт опрашивает раз в 2 с) |
 | `GET` | `/api/orders/:id/qr.svg` | QR картинкой |
 | `POST` | `/api/orders/:id/cancel` | отменить неоплаченный QR |
-| `GET` | `/api/tickets/:code` | проверка билета — по этой ссылке ведёт QR из письма |
+| `GET` | `/api/tickets/:code` | проверка билета — этот ответ показывает страница `/ticket/:code`, куда ведёт QR из письма |
 
 `POST /api/orders` принимает только `{ items: [{tariff, qty}], email, lang }`.
 Цену и сумму клиент прислать не может — их считает сервер по `src/tariffs.js`.
 
-## Переход на боевой KICB
+## Боевой KICB
 
-Когда банк выдаст доступ:
+Сейчас в `.env` прописан **тестовый контур банка**:
 
-1. `KICB_MODE=live`, `KICB_BASE_URL=https://…` (боевой адрес даёт банк),
-   `KICB_LOGIN`, `KICB_PASSWORD`, `KICB_TERMINAL_ID`.
-2. **Если работаете через IPSec VPN** (раздел 4.1 доки) — `KICB_TERMINAL_PUBLIC_KEY`
-   оставьте пустым, `terminalId` уйдёт открытым текстом внутри туннеля.
-3. **Если без VPN** (раздел 4.2) — банк должен внести статический IP сервера в белый
-   список и выдать публичный RSA-ключ терминала. Положите его в
-   `KICB_TERMINAL_PUBLIC_KEY`, и `terminalId` будет шифроваться RSA/OAEP-SHA256 → base64.
-4. Проверьте, что в логе на старте написано то, что вы ожидаете:
+```
+KICB_MODE=live
+KICB_BASE_URL=https://api-dev.kicb.net
+KICB_LOGIN / KICB_PASSWORD          доступы от банка
+KICB_TERMINAL_ID                    пока тестовый 1Test1Test из доки
+KICB_TERMINAL_PUBLIC_KEY_FILE=keys/kicb-terminal-public.pem
+```
+
+1. **Без VPN** (раздел 4.2 доки) — банк вносит статический IP сервера в белый список
+   и выдаёт публичный RSA-ключ терминала. Ключ лежит файлом в `keys/`, путь в
+   `KICB_TERMINAL_PUBLIC_KEY_FILE` (считается от корня `server/`); `terminalId`
+   уходит зашифрованным RSA/OAEP-SHA256 → base64. Тот же PEM можно задать одной
+   строкой в `KICB_TERMINAL_PUBLIC_KEY` — тогда переносы пишутся как `\n`.
+2. **Через IPSec VPN** (раздел 4.1) — обе переменные с ключом оставьте пустыми,
+   `terminalId` уйдёт открытым текстом внутри туннеля.
+3. Проверьте, что в логе на старте написано то, что вы ожидаете:
    `KICB: режим live, https://…, terminalId шифруется RSA`.
+4. `Банк недоступен: fetch failed` в логе означает, что до `api-dev.kicb.net` нет
+   сети: IP машины не в белом списке банка (с домашнего интернета так и будет).
+   На витрине это выглядит как «Банк временно недоступен».
 
 ⚠️ Serverless (Vercel/Netlify functions) не подойдёт: у них плавающий исходящий IP,
 белый список банка такое не переживёт. Нужен VPS с фиксированным адресом.
