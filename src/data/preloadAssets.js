@@ -11,6 +11,7 @@ import { asset } from '../lib/asset.js';
 // t.halls[hallN].name.
 export const preloadAssets = [
   { url: asset('media/hero-poster.jpg'), type: 'image', label: 'intro' },
+  { url: asset('media/hero.mp4'), type: 'video', label: 'hero' },
   ...halls.flatMap((hall) => {
     if (hall.media.type === 'carousel') {
       return hall.media.images.map((url) => ({ url, type: 'image', label: hall.id }));

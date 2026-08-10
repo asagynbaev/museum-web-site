@@ -8,6 +8,17 @@ function loadImage(url) {
   });
 }
 
+function loadAsset(asset, signal) {
+  if (asset.type === 'video') {
+    // Тянем байты целиком в кэш: hero-видео должно пойти сразу, как уедет
+    // лоадер, а не догружаться на глазах. Обрывы и офлайн игнорируем.
+    return fetch(asset.url, { signal })
+      .then((res) => res.blob())
+      .catch(() => {});
+  }
+  return loadImage(asset.url);
+}
+
 /**
  * Preloads a list of assets sequentially (top-to-bottom) while reporting a
  * smooth progress value and the label of whatever is loading right now.
@@ -32,6 +43,7 @@ export function usePreloader(assets, { minMs = 3000, maxMs = 5000 } = {}) {
     const total = assets.length || 1;
     const start = performance.now();
 
+    const ctrl = new AbortController();
     let aborted = false;
     let done = false;
     let minPassed = false;
@@ -63,7 +75,7 @@ export function usePreloader(assets, { minMs = 3000, maxMs = 5000 } = {}) {
       for (let i = 0; i < assets.length; i++) {
         if (aborted) return;
         if (!done) setLabel(assets[i].label);
-        await loadImage(assets[i].url);
+        await loadAsset(assets[i], ctrl.signal);
         if (aborted) return;
         realRef.current = (i + 1) / total;
       }
@@ -82,6 +94,7 @@ export function usePreloader(assets, { minMs = 3000, maxMs = 5000 } = {}) {
 
     return () => {
       aborted = true;
+      ctrl.abort();
       cancelAnimationFrame(raf);
       clearTimeout(minTimer);
       clearTimeout(maxTimer);

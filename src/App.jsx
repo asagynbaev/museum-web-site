@@ -66,7 +66,7 @@ export default function App() {
       <Header headerRef={headerRef} onBuy={checkout.openCheckout} />
       <WayfindingRail halls={halls} active={activeHall} railFillRef={railFillRef} />
 
-      <Hero reduced={reduced} />
+      <Hero reduced={reduced} started={loaderGone} />
       <Manifesto reduced={reduced} />
       <div className="divider" />
       <Halls reduced={reduced} hallRefs={hallRefs} />
