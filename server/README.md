@@ -63,7 +63,7 @@ MOCK_HOST=0.0.0.0 MOCK_PUBLIC_URL=http://192.168.0.10:8788 npm run mock
 KICB_MODE=live
 KICB_BASE_URL=https://api-dev.kicb.net
 KICB_LOGIN / KICB_PASSWORD          доступы от банка
-KICB_TERMINAL_ID                    пока тестовый 1Test1Test из доки
+KICB_TERMINAL_ID                    боевой, выдан банком (в .env на сервере)
 KICB_TERMINAL_PUBLIC_KEY_FILE=keys/kicb-terminal-public.pem
 ```
 
