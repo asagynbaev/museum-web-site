@@ -18,6 +18,15 @@ export const QR_STATUS = {
   IN_PROGRESS: 4,
 };
 
+/** Имена статусов для логов: «4» в логе ни о чём не говорит. */
+export const QR_STATUS_NAME = {
+  0: 'NotFound',
+  1: 'Initialize',
+  2: 'Success',
+  3: 'Failed',
+  4: 'InProgress',
+};
+
 /** Коды ответа из раздела 5. */
 const CODE_MESSAGES = {
   0: 'Ok',

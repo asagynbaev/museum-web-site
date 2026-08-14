@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 
 import { config } from './config.js';
 import { orders } from './db.js';
-import { kicb, KicbError, QR_STATUS } from './kicb.js';
+import { kicb, KicbError, QR_STATUS, QR_STATUS_NAME } from './kicb.js';
 import { sendTicket } from './mailer.js';
 import { priceCart, CURRENCY } from './tariffs.js';
 
@@ -10,6 +10,12 @@ import { priceCart, CURRENCY } from './tariffs.js';
 const CHECK_THROTTLE_MS = 1500;
 /** Статус 0 (NotFound) сразу после создания — банк ещё не разнёс QR. Ждём. */
 const NOT_FOUND_GRACE_MS = 60_000;
+/**
+ * Сколько ещё ждём заказ, который на момент истечения QR был в InProgress:
+ * человек уже подтверждает списание в приложении банка, и отмена в этот момент
+ * рискует снять деньги без билета.
+ */
+const IN_FLIGHT_GRACE_MS = 5 * 60_000;
 
 const TERMINAL_STATUSES = new Set(['paid', 'failed', 'expired', 'cancelled']);
 
@@ -83,12 +89,21 @@ export async function syncOrder(order) {
   if (!order || TERMINAL_STATUSES.has(order.status)) return order;
 
   // Время QR вышло — гасим его в банке, чтобы не оплатили просроченный.
-  if (Date.now() > order.expires_at) {
+  // Но не тогда, когда банк уже говорит «платёж идёт»: человек стоит в
+  // приложении банка и подтверждает списание, обрывать его на полпути нельзя —
+  // деньги могут уйти, а билета не будет. Такому заказу даём отдельный запас.
+  const inFlight = order.kicb_status === QR_STATUS.IN_PROGRESS;
+  const deadline = order.expires_at + (inFlight ? IN_FLIGHT_GRACE_MS : 0);
+
+  if (Date.now() > deadline) {
     try {
       await kicb.abortPayment(order.id);
     } catch (err) {
       // QR мог уже протухнуть на стороне банка — это не повод падать.
       if (!(err instanceof KicbError)) throw err;
+    }
+    if (inFlight) {
+      console.warn(`Заказ ${order.id}: платёж висел в InProgress дольше запаса, гасим QR`);
     }
     return orders.setStatus(order.id, 'expired', { kicbStatus: order.kicb_status });
   }
@@ -107,6 +122,13 @@ export async function syncOrder(order) {
       kicbStatus: order.kicb_status,
       error: err.message,
     });
+  }
+
+  // Историю платежа в БД не храним — достаточно следа в журнале: по нему потом
+  // видно, дошёл ли банк до Success и на каком шаге всё встало.
+  if (state.status !== order.kicb_status) {
+    const was = QR_STATUS_NAME[order.kicb_status] ?? order.kicb_status ?? '—';
+    console.info(`Заказ ${order.id}: банк ${was} → ${QR_STATUS_NAME[state.status] ?? state.status}`);
   }
 
   switch (state.status) {
