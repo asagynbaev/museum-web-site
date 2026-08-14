@@ -19,6 +19,16 @@ const transport = config.smtp
 
 export const mailerReady = Boolean(transport);
 
+/**
+ * Проверка связи с почтовым сервером: логин, пароль, порт, TLS.
+ * Используется командой `npm run mail:test` — лучше узнать о неверном пароле
+ * из терминала, чем по жалобе покупателя без билета.
+ */
+export async function verifyMailer() {
+  if (!transport) throw new Error('SMTP не настроен: SMTP_HOST в .env пуст');
+  return transport.verify();
+}
+
 /** Тексты письма. Держим их здесь, а не в i18n фронта: письмо шлёт сервер. */
 const STRINGS = {
   ru: {
