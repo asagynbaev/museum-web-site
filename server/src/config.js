@@ -79,6 +79,9 @@ export const config = {
 
   orderTtlMs: int('ORDER_TTL_SECONDS', 600) * 1000,
 
+  // Пароль к админке. Не задан — раздел просто выключен, а не открыт всем.
+  adminToken: process.env.ADMIN_TOKEN || null,
+
   // Цены храним в тыйынах: целые числа не дают накопиться ошибке float.
   prices: {
     adult: int('PRICE_ADULT', 800) * 100,

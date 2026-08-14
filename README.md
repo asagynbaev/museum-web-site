@@ -65,6 +65,7 @@ src/
     Visit.jsx            планирование визита (цены тянутся из server/)
     Checkout.jsx         окно покупки билета
     TicketPage.jsx       проверка билета на /ticket/:code (сюда ведёт QR из письма)
+    AdminPage.jsx        касса на /admin: статусы оплат, поиск, сверка с банком
     Footer.jsx           подвал
     Logo.jsx             SVG-знак (с вращением и без)
     Reveal.jsx           обёртка для scroll-reveal

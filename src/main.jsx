@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
+import { AdminPage } from './components/AdminPage.jsx';
 import { TicketPage } from './components/TicketPage.jsx';
 import { LanguageProvider } from './i18n/LanguageProvider.jsx';
 
@@ -9,14 +10,22 @@ import './styles/tokens.css';
 import './styles/base.css';
 import './styles/animations.css';
 
-// Единственный «маршрут» на сайте — проверка билета по QR из письма.
-// Роутер ради одного адреса тащить незачем: хватает разбора pathname.
-const ticketCode = /^\/ticket\/([A-Za-z0-9-]{1,32})\/?$/.exec(window.location.pathname)?.[1];
+// Маршрутов на сайте всего два — проверка билета по QR из письма и служебная
+// касса. Роутер ради них тащить незачем: хватает разбора pathname.
+const path = window.location.pathname;
+const ticketCode = /^\/ticket\/([A-Za-z0-9-]{1,32})\/?$/.exec(path)?.[1];
+const isAdmin = /^\/admin\/?$/.test(path);
+
+function Route() {
+  if (ticketCode) return <TicketPage code={ticketCode.toUpperCase()} />;
+  if (isAdmin) return <AdminPage />;
+  return <App />;
+}
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <LanguageProvider>
-      {ticketCode ? <TicketPage code={ticketCode.toUpperCase()} /> : <App />}
+      <Route />
     </LanguageProvider>
   </React.StrictMode>
 );

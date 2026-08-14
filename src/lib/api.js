@@ -15,12 +15,16 @@ export class ApiError extends Error {
   }
 }
 
-async function request(path, { method = 'GET', body, signal } = {}) {
+async function request(path, { method = 'GET', body, signal, token } = {}) {
+  const headers = {};
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  if (token) headers.Authorization = `Bearer ${token}`;
+
   let res;
   try {
     res = await fetch(`${BASE}/api${path}`, {
       method,
-      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+      headers,
       body: body === undefined ? undefined : JSON.stringify(body),
       signal,
     });
@@ -56,4 +60,16 @@ export const api = {
     request(`/tickets/${encodeURIComponent(code)}`, { signal }).then((r) => r.ticket),
 
   qrUrl: (id) => `${BASE}/api/orders/${id}/qr.svg`,
+
+  /** Админка. Пароль (ADMIN_TOKEN с сервера) уходит заголовком, не в URL. */
+  admin: {
+    orders: ({ token, status = '', q = '', limit = 50, signal }) => {
+      const params = new URLSearchParams({ limit: String(limit) });
+      if (status) params.set('status', status);
+      if (q) params.set('q', q);
+      return request(`/admin/orders?${params}`, { token, signal });
+    },
+
+    sync: (id, token) => request(`/admin/orders/${id}/sync`, { method: 'POST', token }),
+  },
 };

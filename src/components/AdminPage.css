@@ -1,0 +1,326 @@
+/* Служебная страница кассы. Та же палитра, что у сайта, но плотнее и без
+   украшений: сюда смотрят по делу. */
+
+.ad {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 18px 60px;
+  font-size: 0.92rem;
+}
+
+.ad-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ad-eyebrow {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-2);
+}
+
+.ad-title {
+  margin: 8px 0 0;
+  font-family: var(--display);
+  font-size: clamp(1.4rem, 3.6vw, 1.85rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* ── Сводка ─────────────────────────────────────────────────────────────── */
+
+.ad-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 20px 0;
+}
+.ad-stat {
+  padding: 14px 16px;
+  background: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+.ad-stat span {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--bone-dim);
+}
+.ad-stat b {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.32rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--gold-2);
+}
+
+/* ── Фильтры ────────────────────────────────────────────────────────────── */
+
+.ad-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.ad-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ad-chip {
+  padding: 7px 13px;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--bone-dim);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.ad-chip:hover:not(:disabled) {
+  color: var(--bone);
+  border-color: var(--bone-faint);
+}
+.ad-chip.on {
+  color: var(--ink);
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.ad-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ad-search {
+  flex: 1 1 260px;
+  max-width: 340px;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--bone);
+  background: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+.ad-search:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+/* ── Таблица ────────────────────────────────────────────────────────────── */
+
+.ad-table {
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  overflow-x: auto;
+}
+.ad-row {
+  display: grid;
+  grid-template-columns: minmax(190px, 1.4fr) 96px minmax(130px, 1fr) 96px minmax(150px, 1fr) minmax(150px, 1fr) 130px;
+  gap: 12px;
+  align-items: start;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.ad-row:last-child {
+  border-bottom: 0;
+}
+.ad-row-head {
+  position: sticky;
+  top: 0;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bone-faint);
+  background: var(--ink-2);
+}
+
+.ad-id {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  word-break: break-all;
+}
+.ad-id em,
+.ad-ticket em,
+.ad-err {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.72rem;
+  font-style: normal;
+  color: var(--bone-dim);
+}
+.ad-err {
+  color: #d98b7d;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ad-dim {
+  color: var(--bone-dim);
+}
+.ad-items {
+  color: var(--bone-dim);
+}
+.ad-amount {
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+.ad-ticket a {
+  font-family: var(--mono);
+  letter-spacing: 0.08em;
+  color: var(--gold-2);
+}
+
+.ad-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.ad-badge.is-paid {
+  color: #9fd6a6;
+  border-color: rgba(159, 214, 166, 0.4);
+  background: rgba(159, 214, 166, 0.1);
+}
+.ad-badge.is-pending,
+.ad-badge.is-processing {
+  color: var(--gold-2);
+  border-color: rgba(226, 189, 132, 0.4);
+  background: rgba(226, 189, 132, 0.1);
+}
+.ad-badge.is-failed,
+.ad-badge.is-expired,
+.ad-badge.is-cancelled {
+  color: #d98b7d;
+  border-color: rgba(181, 64, 46, 0.42);
+  background: rgba(181, 64, 46, 0.12);
+}
+
+.ad-empty {
+  padding: 34px;
+  text-align: center;
+  color: var(--bone-faint);
+}
+
+/* ── Кнопки, ошибки, подвал ─────────────────────────────────────────────── */
+
+.ad-btn {
+  padding: 9px 15px;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--bone);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.ad-btn:hover:not(:disabled) {
+  color: var(--gold-2);
+  border-color: var(--gold);
+}
+.ad-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.ad-btn.sm {
+  padding: 6px 10px;
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+.ad-btn.wide {
+  width: 100%;
+  margin-top: 18px;
+  padding: 12px;
+  color: var(--ink);
+  background: var(--gold);
+  border-color: var(--gold);
+  font-weight: 600;
+}
+
+.ad-error {
+  margin: 14px 0;
+  padding: 11px 14px;
+  font-size: 0.85rem;
+  color: #f0c4bb;
+  background: rgba(181, 64, 46, 0.14);
+  border: 1px solid rgba(181, 64, 46, 0.42);
+  border-radius: 2px;
+}
+
+.ad-foot {
+  margin-top: 18px;
+  font-size: 0.76rem;
+  color: var(--bone-faint);
+}
+
+/* ── Вход ───────────────────────────────────────────────────────────────── */
+
+.ad-login {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+}
+.ad-card {
+  width: 100%;
+  max-width: 340px;
+  padding: 30px 28px 28px;
+  background: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+.ad-field {
+  display: block;
+  margin-top: 22px;
+}
+.ad-field span {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bone-dim);
+}
+.ad-field input {
+  width: 100%;
+  padding: 11px 12px;
+  font: inherit;
+  color: var(--bone);
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+.ad-field input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+@media (max-width: 900px) {
+  /* На телефоне таблица не влезает — строки становятся карточками. */
+  .ad-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .ad-row-head {
+    display: none;
+  }
+  .ad-id {
+    grid-column: 1 / -1;
+  }
+}

@@ -50,7 +50,14 @@ MOCK_HOST=0.0.0.0 MOCK_PUBLIC_URL=http://192.168.0.10:8788 npm run mock
 | `GET` | `/api/orders/:id` | статус заказа (сайт опрашивает раз в 2 с) |
 | `GET` | `/api/orders/:id/qr.svg` | QR картинкой |
 | `POST` | `/api/orders/:id/cancel` | отменить неоплаченный QR |
+| `GET` | `/api/admin/orders` | лента заказов для кассы: фильтр `status`, поиск `q`, сводка за день |
+| `POST` | `/api/admin/orders/:id/sync` | спросить банк о заказе прямо сейчас |
 | `GET` | `/api/tickets/:code` | проверка билета — этот ответ показывает страница `/ticket/:code`, куда ведёт QR из письма |
+
+Раздел `/api/admin/*` закрыт паролем `ADMIN_TOKEN` из `.env` (заголовок
+`Authorization: Bearer …`, сравнение постоянного времени, 20 неудач с адреса
+за 15 минут — и адрес отдыхает). Если `ADMIN_TOKEN` пуст, раздел отвечает 503:
+выключен, а не открыт всем. Смотрит в него страница `/admin`.
 
 `POST /api/orders` принимает только `{ items: [{tariff, qty}], email, lang }`.
 Цену и сумму клиент прислать не может — их считает сервер по `src/tariffs.js`.

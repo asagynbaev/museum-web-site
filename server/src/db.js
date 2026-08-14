@@ -78,6 +78,25 @@ const stmts = {
   pendingMail: db.prepare(
     "SELECT * FROM orders WHERE status = 'paid' AND mail_sent_at IS NULL AND mail_attempts < 5 LIMIT 50"
   ),
+
+  // ── Админка ─────────────────────────────────────────────────────────────
+  recentOrders: db.prepare(`
+    SELECT * FROM orders
+    WHERE (@status IS NULL OR status = @status)
+    ORDER BY created_at DESC
+    LIMIT @limit
+  `),
+  searchOrders: db.prepare(`
+    SELECT * FROM orders
+    WHERE id LIKE @like OR email LIKE @like OR ticket_code LIKE @likeUpper
+    ORDER BY created_at DESC
+    LIMIT @limit
+  `),
+  statusCounts: db.prepare('SELECT status, COUNT(*) AS n FROM orders GROUP BY status'),
+  paidSince: db.prepare(`
+    SELECT COUNT(*) AS n, COALESCE(SUM(amount), 0) AS amount, COALESCE(SUM(seats), 0) AS seats
+    FROM orders WHERE status = 'paid' AND paid_at >= ?
+  `),
 };
 
 /** Разворачивает строку БД в объект с распарсенной корзиной. */
@@ -136,4 +155,21 @@ export const orders = {
 
   openOrders: () => stmts.openOrders.all().map(hydrate),
   pendingMail: () => stmts.pendingMail.all().map(hydrate),
+
+  /** Лента для админки: последние заказы, при желании только одного статуса. */
+  recent({ status = null, limit = 50 } = {}) {
+    return stmts.recentOrders.all({ status, limit }).map(hydrate);
+  },
+
+  /** Поиск по номеру заказа, коду билета или почте — по куску строки. */
+  search(query, limit = 50) {
+    const like = `%${query}%`;
+    return stmts.searchOrders.all({ like, likeUpper: like.toUpperCase(), limit }).map(hydrate);
+  },
+
+  /** Сводка: сколько заказов в каждом статусе и что оплачено с момента `since`. */
+  stats(since) {
+    const byStatus = Object.fromEntries(stmts.statusCounts.all().map((r) => [r.status, r.n]));
+    return { byStatus, paidSince: stmts.paidSince.get(since) };
+  },
 };
