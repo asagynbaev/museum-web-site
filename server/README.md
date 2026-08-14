@@ -68,6 +68,7 @@ npm run mail:test -- you@example.com
 | `POST` | `/api/orders/:id/cancel` | отменить неоплаченный QR |
 | `GET` | `/api/admin/orders` | лента заказов для кассы: фильтр `status`, поиск `q`, сводка за день |
 | `POST` | `/api/admin/orders/:id/sync` | спросить банк о заказе прямо сейчас |
+| `POST` | `/api/admin/orders/:id/resend` | отправить письмо с билетом ещё раз |
 | `GET` | `/api/tickets/:code` | проверка билета — этот ответ показывает страница `/ticket/:code`, куда ведёт QR из письма |
 
 Раздел `/api/admin/*` закрыт паролем `ADMIN_TOKEN` из `.env` (заголовок
