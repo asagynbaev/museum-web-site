@@ -254,6 +254,22 @@
   font-weight: 600;
 }
 
+.ad-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ad-notice {
+  margin: 14px 0;
+  padding: 11px 14px;
+  font-size: 0.85rem;
+  color: #9fd6a6;
+  background: rgba(159, 214, 166, 0.1);
+  border: 1px solid rgba(159, 214, 166, 0.4);
+  border-radius: 2px;
+}
+
 .ad-error {
   margin: 14px 0;
   padding: 11px 14px;

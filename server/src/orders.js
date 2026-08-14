@@ -185,11 +185,41 @@ function deliverTicket(order) {
   if (!order?.ticket_code) return;
 
   sendTicket(order)
-    .then(() => orders.markMailSent(order.id))
+    .then((result) => {
+      // Без SMTP письмо только печатается в журнал. Отправленным его помечать
+      // нельзя: в админке появилось бы «письмо ушло», которого не было.
+      if (result?.mocked) {
+        orders.bumpMailAttempts(order.id, 'SMTP не настроен — письмо не отправлено');
+        return;
+      }
+      orders.markMailSent(order.id);
+    })
     .catch((err) => {
       console.error(`Не удалось отправить билет ${order.ticket_code}:`, err.message);
       orders.bumpMailAttempts(order.id, err.message);
     });
+}
+
+/**
+ * Отправка билета вручную из админки: «человек говорит, что письмо не дошло».
+ * Счётчик попыток обнуляем — это осознанное действие кассира, а не автоповтор.
+ */
+export async function resendTicket(order) {
+  if (order.status !== 'paid' || !order.ticket_code) {
+    const err = new Error('Билет ещё не выписан: заказ не оплачен');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const result = await sendTicket(order);
+  if (result?.mocked) {
+    const err = new Error('SMTP не настроен — письмо напечатано в журнал сервера');
+    err.statusCode = 409;
+    throw err;
+  }
+
+  orders.markMailSent(order.id);
+  return orders.byId(order.id);
 }
 
 /**

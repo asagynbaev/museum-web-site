@@ -71,5 +71,7 @@ export const api = {
     },
 
     sync: (id, token) => request(`/admin/orders/${id}/sync`, { method: 'POST', token }),
+
+    resend: (id, token) => request(`/admin/orders/${id}/resend`, { method: 'POST', token }),
   },
 };

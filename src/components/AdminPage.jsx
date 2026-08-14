@@ -57,6 +57,7 @@ export function AdminPage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(null);
+  const [notice, setNotice] = useState(null);
 
   // Фильтры меняются чаще, чем успевает отработать автообновление, — держим их
   // в ref, чтобы таймер всегда читал свежие значения и не тянул за собой рестарт.
@@ -109,19 +110,30 @@ export function AdminPage() {
     return () => clearInterval(timer);
   }, [authed, load]);
 
-  const syncOne = async (id) => {
+  /** Обе кнопки строки устроены одинаково: дёрнуть ручку и вклеить ответ. */
+  const act = async (id, run, fallbackError) => {
     setSyncing(id);
+    setNotice(null);
     try {
-      const { order } = await api.admin.sync(id, token);
+      const { order } = await run();
       setData((prev) => ({
         ...prev,
         orders: prev.orders.map((o) => (o.id === order.id ? order : o)),
       }));
+      return order;
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Не удалось спросить банк');
+      setError(err instanceof ApiError ? err.message : fallbackError);
+      return null;
     } finally {
       setSyncing(null);
     }
+  };
+
+  const syncOne = (id) => act(id, () => api.admin.sync(id, token), 'Не удалось спросить банк');
+
+  const resendOne = async (id) => {
+    const order = await act(id, () => api.admin.resend(id, token), 'Не удалось отправить письмо');
+    if (order) setNotice(`Письмо отправлено на ${order.email}`);
   };
 
   if (!authed) {
@@ -194,6 +206,7 @@ export function AdminPage() {
       </div>
 
       {error && <div className="ad-error">{error}</div>}
+      {notice && <div className="ad-notice">{notice}</div>}
 
       <div className="ad-table" role="table">
         <div className="ad-row ad-row-head" role="row">
@@ -241,7 +254,7 @@ export function AdminPage() {
                 <span className="ad-dim">—</span>
               )}
             </span>
-            <span>
+            <span className="ad-actions">
               <button
                 className="ad-btn sm"
                 type="button"
@@ -250,6 +263,17 @@ export function AdminPage() {
               >
                 {syncing === o.id ? '…' : 'Спросить банк'}
               </button>
+              {o.status === 'paid' && (
+                <button
+                  className="ad-btn sm"
+                  type="button"
+                  onClick={() => resendOne(o.id)}
+                  disabled={syncing === o.id}
+                  title="Отправить письмо с билетом ещё раз"
+                >
+                  Письмо
+                </button>
+              )}
             </span>
           </div>
         ))}

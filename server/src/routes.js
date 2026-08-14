@@ -4,7 +4,7 @@ import QRCode from 'qrcode';
 import { config } from './config.js';
 import { orders } from './db.js';
 import { KicbError } from './kicb.js';
-import { cancelOrder, createOrder, publicOrder, syncOrder } from './orders.js';
+import { cancelOrder, createOrder, publicOrder, resendTicket, syncOrder } from './orders.js';
 import { publicTariffs } from './tariffs.js';
 
 /**
@@ -188,6 +188,18 @@ export async function registerRoutes(app) {
 
     const order = await syncOrder(existing);
     req.log.info({ orderId: order.id, status: order.status }, 'ручная сверка из админки');
+    return { order: adminOrder(order) };
+  });
+
+  // Кнопка «отправить письмо ещё раз» — для случая «оплатил, а билет не пришёл».
+  app.post('/api/admin/orders/:id/resend', async (req, reply) => {
+    if (!adminAllowed(req, reply)) return undefined;
+
+    const existing = orders.byId(req.params.id);
+    if (!existing) return notFound(reply);
+
+    const order = await resendTicket(existing);
+    req.log.info({ orderId: order.id, email: order.email }, 'билет отправлен повторно');
     return { order: adminOrder(order) };
   });
 
