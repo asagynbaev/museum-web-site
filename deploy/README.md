@@ -21,6 +21,8 @@
   боевой `terminalId` и пароль лежат только в `/opt/museum/server/.env`;
 - IP `84.54.12.242` в белом списке банка (для тестового контура это было так;
   для боевого — подтвердить у банка, что тот же адрес разрешён и там);
+- ключ терминала обновлён на выданный вместе с боевым доступом
+  (`server/keys/kicb-terminal-public.pem`, прежний рядом в `.bak`);
 - прежний тестовый контур `https://api-dev.kicb.net` с terminalId `3CF669916E`
   отвалился на `GetLink`: `HTTP 500, code 5 InternalServiceError` на любой
   terminalId. На боевом это надо перепроверить первым же QR.
@@ -103,6 +105,17 @@ SMTP_USER=…
 SMTP_PASSWORD=…
 MAIL_FROM="AI Museum <tickets@museum.kg>"
 ```
+
+Публичный ключ терминала **в репозитории не лежит** (репа публичная) — его кладут
+на сервер руками, с машины, где он есть:
+
+```bash
+ssh root@СЕРВЕР 'cat > /opt/museum/server/keys/kicb-terminal-public.pem' < kicb-terminal-public.pem
+ssh root@СЕРВЕР 'chown museum:museum /opt/museum/server/keys/kicb-terminal-public.pem'
+```
+
+Ключ должен быть от того же терминала, что в `KICB_TERMINAL_ID`, иначе банк
+не расшифрует terminalId и ответит `code 2 DeviceNotFound`.
 
 `.env` в git не хранится и содержит пароли — права строго на владельца:
 

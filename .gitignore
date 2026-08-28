@@ -17,6 +17,8 @@ yarn-error.log*
 pnpm-debug.log*
 
 # server secrets and local database
+# ключи терминала KICB кладём на сервер руками — репозиторий публичный
+server/keys/*.pem
 server/.env*
 !server/.env.example
 !server/.env.mock

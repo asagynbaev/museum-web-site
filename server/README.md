@@ -91,8 +91,10 @@ KICB_TERMINAL_ID                    боевой, выдан банком (то�
 KICB_TERMINAL_PUBLIC_KEY_FILE=keys/kicb-terminal-public.pem
 ```
 
-Ключ в `keys/` должен быть от **того же** терминала, что в `KICB_TERMINAL_ID`:
-чужим ключом банк не расшифрует terminalId и ответит `code 2 DeviceNotFound`.
+Сам ключ в git **не хранится**: репозиторий публичный, а `server/keys/*.pem`
+в `.gitignore`. На новую машину его кладут руками (см. [`deploy/`](../deploy/README.md)).
+Ключ должен быть от **того же** терминала, что в `KICB_TERMINAL_ID`: чужим ключом
+банк не расшифрует terminalId и ответит `code 2 DeviceNotFound`.
 
 1. **Без VPN** (раздел 4.2 доки) — банк вносит статический IP сервера в белый список
    и выдаёт публичный RSA-ключ терминала. Ключ лежит файлом в `keys/`, путь в
