@@ -15,17 +15,22 @@
 и `atria-db`). 80/443 общие, поэтому музей описан отдельным файлом и ловит трафик строго
 по своему `server_name`; конфиги atria не трогаем.
 
-Состояние интеграции с KICB на 10.08.2026:
+Состояние интеграции с KICB на 28.08.2026:
 
-- IP `84.54.12.242` **в белом списке банка**, `POST /oauth2/token` отдаёт токен;
-- `terminalId` — боевой `3CF669916E` (выдан банком 10.08.2026);
-- `GetLink` **падает на стороне банка**: `HTTP 500, code 5 InternalServiceError`
-  на любой `terminalId`, включая заведомо несуществующий (по разделу 5 доки там
-  должен быть `code 2 DeviceNotFound`). `CheckStatus` при этом отвечает штатно —
-  значит дело не в наших доступах и не в запросе. Ждём банк.
+- контур **боевой**: `KICB_BASE_URL=https://api.kicb.net`, логин `plb_htp`,
+  боевой `terminalId` и пароль лежат только в `/opt/museum/server/.env`;
+- IP `84.54.12.242` в белом списке банка (для тестового контура это было так;
+  для боевого — подтвердить у банка, что тот же адрес разрешён и там);
+- прежний тестовый контур `https://api-dev.kicb.net` с terminalId `3CF669916E`
+  отвалился на `GetLink`: `HTTP 500, code 5 InternalServiceError` на любой
+  terminalId. На боевом это надо перепроверить первым же QR.
 
-Что ещё не сделано: **не настроен SMTP** — билеты печатаются в
-`journalctl -u museum-api`, на почту покупателю ничего не уходит.
+Что ещё не сделано перед открытием кассы:
+
+- **не настроен SMTP** — билеты печатаются в `journalctl -u museum-api`,
+  на почту покупателю ничего не уходит;
+- **цены тестовые** (`PRICE_ADULT=3`, `PRICE_REDUCED=1`, `PRICE_FAMILY=5`) —
+  с боевым терминалом это реальные продажи по 3 сома.
 
 Дальше — общая инструкция, если разворачивать с нуля на чистой машине.
 
@@ -79,7 +84,7 @@ sudo -u museum nano .env
 PUBLIC_URL=https://museum.kg          # настоящий домен: уходит в письма и в CORS
 
 KICB_MODE=live
-KICB_BASE_URL=https://api-dev.kicb.net   # боевой адрес банк даёт отдельно
+KICB_BASE_URL=https://api.kicb.net     # боевой; тестовый — https://api-dev.kicb.net
 KICB_LOGIN=…
 KICB_PASSWORD=…
 KICB_TERMINAL_ID=…                    # не 1Test1Test, а выданный банком
@@ -88,6 +93,8 @@ KICB_TERMINAL_PUBLIC_KEY_FILE=keys/kicb-terminal-public.pem
 PRICE_ADULT=3                         # тестовые 1/3/5 → заменить перед продажами
 PRICE_REDUCED=1
 PRICE_FAMILY=5
+
+ADMIN_TOKEN=…                         # пароль к /admin; пусто — раздел выключен
 
 SMTP_HOST=…                           # без SMTP письмо не уходит,
 SMTP_PORT=465                         # а печатается в лог — покупатель
@@ -116,7 +123,7 @@ journalctl -u museum-api -n 20
 В логе должно быть ровно это:
 
 ```
-KICB: режим live, https://api-dev.kicb.net, terminalId шифруется RSA
+KICB: режим live, https://api.kicb.net, terminalId шифруется RSA
 ```
 
 ## 5. nginx и TLS
@@ -139,6 +146,9 @@ sudo certbot --nginx -d ВАШ-ДОМЕН -d www.ВАШ-ДОМЕН
 ```bash
 curl -s ifconfig.me
 ```
+
+Боевой и тестовый контуры банк белит отдельно — адрес нужно отдать в KICB
+ещё раз, даже если на `api-dev` он уже работал.
 
 Пока IP не в списке, в логе будет `Банк недоступен: fetch failed`, а на сайте —
 «Банк временно недоступен».

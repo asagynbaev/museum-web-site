@@ -17,7 +17,9 @@ yarn-error.log*
 pnpm-debug.log*
 
 # server secrets and local database
-server/.env
+server/.env*
+!server/.env.example
+!server/.env.mock
 server/data
 
 # editor / OS

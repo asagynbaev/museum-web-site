@@ -81,15 +81,18 @@ npm run mail:test -- you@example.com
 
 ## Боевой KICB
 
-Сейчас в `.env` прописан **тестовый контур банка**:
+Сейчас в `.env` прописан **боевой контур банка**:
 
 ```
 KICB_MODE=live
-KICB_BASE_URL=https://api-dev.kicb.net
-KICB_LOGIN / KICB_PASSWORD          доступы от банка
-KICB_TERMINAL_ID                    боевой, выдан банком (в .env на сервере)
+KICB_BASE_URL=https://api.kicb.net  # тестовый контур — https://api-dev.kicb.net
+KICB_LOGIN / KICB_PASSWORD          боевые доступы от банка
+KICB_TERMINAL_ID                    боевой, выдан банком (только в .env)
 KICB_TERMINAL_PUBLIC_KEY_FILE=keys/kicb-terminal-public.pem
 ```
+
+Ключ в `keys/` должен быть от **того же** терминала, что в `KICB_TERMINAL_ID`:
+чужим ключом банк не расшифрует terminalId и ответит `code 2 DeviceNotFound`.
 
 1. **Без VPN** (раздел 4.2 доки) — банк вносит статический IP сервера в белый список
    и выдаёт публичный RSA-ключ терминала. Ключ лежит файлом в `keys/`, путь в
@@ -100,8 +103,9 @@ KICB_TERMINAL_PUBLIC_KEY_FILE=keys/kicb-terminal-public.pem
    `terminalId` уйдёт открытым текстом внутри туннеля.
 3. Проверьте, что в логе на старте написано то, что вы ожидаете:
    `KICB: режим live, https://…, terminalId шифруется RSA`.
-4. `Банк недоступен: fetch failed` в логе означает, что до `api-dev.kicb.net` нет
-   сети: IP машины не в белом списке банка (с домашнего интернета так и будет).
+4. `Банк недоступен: fetch failed` в логе означает, что до `api.kicb.net` нет
+   сети: IP машины не в белом списке банка (с домашнего интернета так и будет;
+   боевой и тестовый контуры банк белит отдельными заявками).
    На витрине это выглядит как «Банк временно недоступен».
 
 ⚠️ Serverless (Vercel/Netlify functions) не подойдёт: у них плавающий исходящий IP,
