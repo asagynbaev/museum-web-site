@@ -29,8 +29,10 @@
 
 Что ещё не сделано перед открытием кассы:
 
-- **не настроен SMTP** — билеты печатаются в `journalctl -u museum-api`,
-  на почту покупателю ничего не уходит;
+- **SMTP не вписан на сервере** — параметры Google Workspace известны и проверены
+  локально (`smtp.gmail.com:465`, ящик `events@htp.kg`, пароль приложения), но пока
+  их нет в `/opt/museum/server/.env`, билеты печатаются в `journalctl -u museum-api`
+  и на почту покупателю ничего не уходит;
 - **цены тестовые** (`PRICE_ADULT=3`, `PRICE_REDUCED=1`, `PRICE_FAMILY=5`) —
   с боевым терминалом это реальные продажи по 3 сома.
 
@@ -98,13 +100,21 @@ PRICE_FAMILY=5
 
 ADMIN_TOKEN=…                         # пароль к /admin; пусто — раздел выключен
 
-SMTP_HOST=…                           # без SMTP письмо не уходит,
+SMTP_HOST=smtp.gmail.com              # без SMTP письмо не уходит,
 SMTP_PORT=465                         # а печатается в лог — покупатель
 SMTP_SECURE=true                      # останется без билета на почте
-SMTP_USER=…
-SMTP_PASSWORD=…
-MAIL_FROM="AI Museum <tickets@museum.kg>"
+SMTP_USER=events@htp.kg
+SMTP_PASSWORD=…                       # пароль приложения Google, не пароль ящика
+MAIL_FROM="AI Museum <events@htp.kg>"
 ```
+
+Ящик музея — на Google Workspace, а он с 2022 года не принимает обычный пароль
+аккаунта: на `SMTP_PASSWORD` от почты Gmail отвечает
+`534-5.7.9 Application-specific password required`. Нужен пароль приложения на
+16 символов (myaccount.google.com/apppasswords, пробелы убрать), а `MAIL_FROM`
+должен совпадать с `SMTP_USER` или быть его алиасом в «Отправлять письма как»,
+иначе Gmail перепишет отправителя. Проверка — `npm run mail:test -- вы@почта`
+из `/opt/museum/server`.
 
 Публичный ключ терминала **в репозитории не лежит** (репа публичная) — его кладут
 на сервер руками, с машины, где он есть:

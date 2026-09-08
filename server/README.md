@@ -47,6 +47,13 @@ MOCK_HOST=0.0.0.0 MOCK_PUBLIC_URL=http://192.168.0.10:8788 npm run mock
 письмо не отправляется, а печатается в журнал — и заказ честно остаётся с пометкой
 «письмо не ушло»: в админке видно, кому билет так и не доехал.
 
+Ящик музея — на Google Workspace (`events@htp.kg`), поэтому в `.env` идут
+`SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_SECURE=true`, а в
+`SMTP_PASSWORD` — **пароль приложения** из [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
+(16 символов, пробелы убрать). Обычный пароль от аккаунта Google не примет и
+ответит `534-5.7.9 Application-specific password required`: пароли приложений
+включаются в админке Workspace и требуют двухэтапной проверки на ящике.
+
 Перед тем как полагаться на ящик, проверьте его:
 
 ```bash
