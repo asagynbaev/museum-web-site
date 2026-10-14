@@ -27,7 +27,7 @@ export function Footer() {
             </div>
             <div className="f-col">
               <h5>{f.colContacts}</h5>
-              <a href="#">+996 — — —</a>
+              <a href="tel:+996995262662">+996 995 262 662</a>
               <a href="#">info@—.kg</a>
               <a href="#">Instagram</a>
               <a href="#">Telegram</a>
