@@ -70,6 +70,24 @@ footer {
   color: var(--bone-faint);
   text-transform: uppercase;
 }
+.f-credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.f-credit svg {
+  width: 12px;
+  height: 12px;
+  fill: #e5484d;
+}
+.f-credit a {
+  color: var(--bone-dim);
+  text-transform: none;
+  transition: 0.3s;
+}
+.f-credit a:hover {
+  color: var(--gold-2);
+}
 
 @media (max-width: 560px) {
   .f-top {
