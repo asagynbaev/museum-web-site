@@ -23,7 +23,10 @@ export function Footer() {
               <a href="#halls">{f.linkHalls}</a>
               <a href="#visit">{f.linkVisit}</a>
               <a href="#visit">{f.linkTickets}</a>
-              <a href="#">{f.linkGroups}</a>
+              <a href={`mailto:events@htp.kg?subject=${encodeURIComponent(f.groupsSubject)}`}>
+                {f.linkGroups}
+              </a>
+              <span className="f-note">{f.groupsNote}</span>
             </div>
             <div className="f-col">
               <h5>{f.colContacts}</h5>
@@ -32,7 +35,6 @@ export function Footer() {
               <a href="https://www.instagram.com/ai_museum_kg" target="_blank" rel="noopener noreferrer">
                 Instagram
               </a>
-              <a href="#">Telegram</a>
             </div>
           </div>
         </div>
