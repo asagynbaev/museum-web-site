@@ -84,9 +84,9 @@ export const config = {
 
   // Цены храним в тыйынах: целые числа не дают накопиться ошибке float.
   prices: {
-    adult: int('PRICE_ADULT', 800) * 100,
-    reduced: int('PRICE_REDUCED', 500) * 100,
-    family: int('PRICE_FAMILY', 2200) * 100,
+    adult: int('PRICE_ADULT', 1600) * 100,
+    reduced: int('PRICE_REDUCED', 1200) * 100,
+    family: int('PRICE_FAMILY', 4800) * 100,
   },
 
   smtp: smtpHost

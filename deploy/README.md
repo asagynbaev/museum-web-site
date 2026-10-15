@@ -33,8 +33,8 @@
   локально (`smtp.gmail.com:465`, ящик `events@htp.kg`, пароль приложения), но пока
   их нет в `/opt/museum/server/.env`, билеты печатаются в `journalctl -u museum-api`
   и на почту покупателю ничего не уходит;
-- **цены тестовые** (`PRICE_ADULT=3`, `PRICE_REDUCED=1`, `PRICE_FAMILY=5`) —
-  с боевым терминалом это реальные продажи по 3 сома.
+- цены боевые с 15.10.2026: `PRICE_ADULT=1600`, `PRICE_REDUCED=1200`,
+  `PRICE_FAMILY=4800`.
 
 Дальше — общая инструкция, если разворачивать с нуля на чистой машине.
 
@@ -94,9 +94,9 @@ KICB_PASSWORD=…
 KICB_TERMINAL_ID=…                    # не 1Test1Test, а выданный банком
 KICB_TERMINAL_PUBLIC_KEY_FILE=keys/kicb-terminal-public.pem
 
-PRICE_ADULT=3                         # тестовые 1/3/5 → заменить перед продажами
-PRICE_REDUCED=1
-PRICE_FAMILY=5
+PRICE_ADULT=1600                      # взрослый
+PRICE_REDUCED=1200                    # детский / студенческий
+PRICE_FAMILY=4800                     # семейный 2+2 = три взрослых
 
 ADMIN_TOKEN=…                         # пароль к /admin; пусто — раздел выключен
 
