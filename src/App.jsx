@@ -59,6 +59,7 @@ export default function App() {
           label={label}
           finished={finished}
           onDone={() => setLoaderGone(true)}
+          reduced={reduced}
         />
       )}
 

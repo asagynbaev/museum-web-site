@@ -12,10 +12,7 @@ export function Footer() {
         <div className="f-top">
           <a className="f-brand" href="#top">
             <Logo />
-            <span className="bt">
-              <b>AI Museum</b>
-              <span>{t.brandSub.replace(' · ', ' ')}</span>
-            </span>
+            <span className="bt">{t.brandSub.replace(' · ', ' ')}</span>
           </a>
           <div className="f-links">
             <div className="f-col">

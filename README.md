@@ -32,7 +32,8 @@ npm run dev:mock  # билетный API поверх заглушки  :8787
 ## Структура
 
 ```
-public/media/            извлечённые ассеты (9 изображений + 2 видео)
+public/media/            фото залов и видео первого экрана
+public/media/brand/      логотип, знак «AI» и ролик с ним (экран загрузки)
 src/
   main.jsx               точка входа, подключает глобальные стили
   App.jsx                композиция страницы + общий scroll-state
@@ -41,7 +42,7 @@ src/
   lib/asset.js           резолвинг путей к /public с учётом base URL
   lib/api.js             клиент билетного API (server/)
   styles/
-    tokens.css           CSS-переменные (цвета, шрифты, размеры)
+    tokens.css           CSS-переменные: палитра снята с логотипа, шрифты, размеры
     base.css             reset, body, утилиты (.wrap, .mono, .reveal, .divider)
     animations.css       @keyframes + prefers-reduced-motion
   hooks/
@@ -55,7 +56,7 @@ src/
     useCursorGlow.js     свечение за курсором
     useCheckout.js       покупка билета: корзина → QR → оплаченный билет
   components/
-    Loader.jsx           экран загрузки: предзагружает медиа, потом плавно уходит
+    Loader.jsx           экран загрузки: ролик с «AI», пока предзагружаются медиа
     AmbientLayers.jsx    grain / motes / cursor glow / mobile progress
     Header.jsx           фиксированная шапка
     WayfindingRail.jsx   боковой навигатор по залам
@@ -67,7 +68,7 @@ src/
     TicketPage.jsx       проверка билета на /ticket/:code (сюда ведёт QR из письма)
     AdminPage.jsx        касса на /admin: статусы оплат, поиск, сверка с банком
     Footer.jsx           подвал
-    Logo.jsx             SVG-знак (с вращением и без)
+    Logo.jsx             логотип музея (полный или только «AI»)
     Reveal.jsx           обёртка для scroll-reveal
     CountUp.jsx          анимированный счётчик
 ```

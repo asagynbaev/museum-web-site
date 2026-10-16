@@ -23,7 +23,7 @@
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--gold-2);
+  color: var(--accent-2);
 }
 
 .ad-title {
@@ -52,7 +52,7 @@
   display: block;
   font-size: 0.72rem;
   letter-spacing: 0.06em;
-  color: var(--bone-dim);
+  color: var(--fg-dim);
 }
 .ad-stat b {
   display: block;
@@ -60,7 +60,7 @@
   font-size: 1.32rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: var(--gold-2);
+  color: var(--accent-2);
 }
 
 /* ── Фильтры ────────────────────────────────────────────────────────────── */
@@ -82,7 +82,7 @@
   padding: 7px 13px;
   font: inherit;
   font-size: 0.8rem;
-  color: var(--bone-dim);
+  color: var(--fg-dim);
   background: none;
   border: 1px solid var(--line);
   border-radius: 2px;
@@ -90,13 +90,13 @@
   transition: color 0.2s, border-color 0.2s, background 0.2s;
 }
 .ad-chip:hover:not(:disabled) {
-  color: var(--bone);
-  border-color: var(--bone-faint);
+  color: var(--fg);
+  border-color: var(--fg-faint);
 }
 .ad-chip.on {
   color: var(--ink);
-  background: var(--gold);
-  border-color: var(--gold);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 .ad-chip:disabled {
   opacity: 0.4;
@@ -109,14 +109,14 @@
   padding: 9px 12px;
   font: inherit;
   font-size: 0.85rem;
-  color: var(--bone);
+  color: var(--fg);
   background: var(--ink-2);
   border: 1px solid var(--line);
   border-radius: 2px;
 }
 .ad-search:focus {
   outline: none;
-  border-color: var(--gold);
+  border-color: var(--accent);
 }
 
 /* ── Таблица ────────────────────────────────────────────────────────────── */
@@ -144,7 +144,7 @@
   font-size: 0.68rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--bone-faint);
+  color: var(--fg-faint);
   background: var(--ink-2);
 }
 
@@ -160,7 +160,7 @@
   margin-top: 3px;
   font-size: 0.72rem;
   font-style: normal;
-  color: var(--bone-dim);
+  color: var(--fg-dim);
 }
 .ad-err {
   color: #d98b7d;
@@ -169,10 +169,10 @@
   white-space: nowrap;
 }
 .ad-dim {
-  color: var(--bone-dim);
+  color: var(--fg-dim);
 }
 .ad-items {
-  color: var(--bone-dim);
+  color: var(--fg-dim);
 }
 .ad-amount {
   font-family: var(--mono);
@@ -181,7 +181,7 @@
 .ad-ticket a {
   font-family: var(--mono);
   letter-spacing: 0.08em;
-  color: var(--gold-2);
+  color: var(--accent-2);
 }
 
 .ad-badge {
@@ -200,22 +200,22 @@
 }
 .ad-badge.is-pending,
 .ad-badge.is-processing {
-  color: var(--gold-2);
-  border-color: rgba(226, 189, 132, 0.4);
-  background: rgba(226, 189, 132, 0.1);
+  color: var(--accent-2);
+  border-color: rgba(56, 180, 170, 0.4);
+  background: rgba(56, 180, 170, 0.1);
 }
 .ad-badge.is-failed,
 .ad-badge.is-expired,
 .ad-badge.is-cancelled {
   color: #d98b7d;
-  border-color: rgba(181, 64, 46, 0.42);
-  background: rgba(181, 64, 46, 0.12);
+  border-color: rgba(255, 125, 90, 0.42);
+  background: rgba(255, 125, 90, 0.12);
 }
 
 .ad-empty {
   padding: 34px;
   text-align: center;
-  color: var(--bone-faint);
+  color: var(--fg-faint);
 }
 
 /* ── Кнопки, ошибки, подвал ─────────────────────────────────────────────── */
@@ -224,7 +224,7 @@
   padding: 9px 15px;
   font: inherit;
   font-size: 0.82rem;
-  color: var(--bone);
+  color: var(--fg);
   background: none;
   border: 1px solid var(--line);
   border-radius: 2px;
@@ -232,8 +232,8 @@
   transition: border-color 0.2s, color 0.2s;
 }
 .ad-btn:hover:not(:disabled) {
-  color: var(--gold-2);
-  border-color: var(--gold);
+  color: var(--accent-2);
+  border-color: var(--accent);
 }
 .ad-btn:disabled {
   opacity: 0.5;
@@ -249,8 +249,8 @@
   margin-top: 18px;
   padding: 12px;
   color: var(--ink);
-  background: var(--gold);
-  border-color: var(--gold);
+  background: var(--accent);
+  border-color: var(--accent);
   font-weight: 600;
 }
 
@@ -274,16 +274,16 @@
   margin: 14px 0;
   padding: 11px 14px;
   font-size: 0.85rem;
-  color: #f0c4bb;
-  background: rgba(181, 64, 46, 0.14);
-  border: 1px solid rgba(181, 64, 46, 0.42);
+  color: #ffbca8;
+  background: rgba(255, 125, 90, 0.14);
+  border: 1px solid rgba(255, 125, 90, 0.42);
   border-radius: 2px;
 }
 
 .ad-foot {
   margin-top: 18px;
   font-size: 0.76rem;
-  color: var(--bone-faint);
+  color: var(--fg-faint);
 }
 
 /* ── Вход ───────────────────────────────────────────────────────────────── */
@@ -311,20 +311,20 @@
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--bone-dim);
+  color: var(--fg-dim);
 }
 .ad-field input {
   width: 100%;
   padding: 11px 12px;
   font: inherit;
-  color: var(--bone);
+  color: var(--fg);
   background: var(--ink);
   border: 1px solid var(--line);
   border-radius: 2px;
 }
 .ad-field input:focus {
   outline: none;
-  border-color: var(--gold);
+  border-color: var(--accent);
 }
 
 @media (max-width: 900px) {

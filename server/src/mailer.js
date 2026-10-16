@@ -89,10 +89,10 @@ function renderHtml(order, s, verifyUrl) {
   const rows = order.items
     .map(
       (i) => `<tr>
-        <td style="padding:9px 0;border-bottom:1px solid #2a231a;color:#b7ad99">
+        <td style="padding:9px 0;border-bottom:1px solid #1d2230;color:#a9adb8">
           ${esc(s.tariffs[i.tariff] || i.tariff)} × ${i.qty}
         </td>
-        <td style="padding:9px 0;border-bottom:1px solid #2a231a;text-align:right;color:#e2bd84">
+        <td style="padding:9px 0;border-bottom:1px solid #1d2230;text-align:right;color:#6fd8cd">
           ${esc(som(i.price * i.qty))}
         </td>
       </tr>`
@@ -100,28 +100,28 @@ function renderHtml(order, s, verifyUrl) {
     .join('');
 
   const line = (label, value) => `<tr>
-      <td style="padding:9px 0;border-bottom:1px solid #2a231a;color:#b7ad99">${esc(label)}</td>
-      <td style="padding:9px 0;border-bottom:1px solid #2a231a;text-align:right;color:#ebe1cd">${esc(value)}</td>
+      <td style="padding:9px 0;border-bottom:1px solid #1d2230;color:#a9adb8">${esc(label)}</td>
+      <td style="padding:9px 0;border-bottom:1px solid #1d2230;text-align:right;color:#f2f2f2">${esc(value)}</td>
     </tr>`;
 
-  return `<!doctype html><html><body style="margin:0;padding:24px;background:#0f0c07;
-    font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ebe1cd">
+  return `<!doctype html><html><body style="margin:0;padding:24px;background:#05060a;
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#f2f2f2">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;margin:0 auto;
-         background:#171208;border:1px solid #2a231a;border-radius:14px">
+         background:#0b0d14;border:1px solid #1d2230;border-radius:14px">
     <tr><td style="padding:34px 32px 8px">
-      <div style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#c99a5b">AI Museum · Бишкек</div>
+      <div style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#38b4aa">AI Museum · Бишкек</div>
       <h1 style="margin:14px 0 8px;font-size:24px;font-weight:700;letter-spacing:-.01em">${esc(s.hi)}</h1>
-      <p style="margin:0;color:#b7ad99;font-size:15px;line-height:1.55">${esc(s.intro)}</p>
+      <p style="margin:0;color:#a9adb8;font-size:15px;line-height:1.55">${esc(s.intro)}</p>
     </td></tr>
 
     <tr><td style="padding:26px 32px 6px" align="center">
-      <div style="display:inline-block;background:#ebe1cd;padding:16px;border-radius:12px">
+      <div style="display:inline-block;background:#ffffff;padding:16px;border-radius:12px">
         <img src="cid:ticket-qr" width="216" height="216" alt="${esc(s.codeLabel)}" style="display:block">
       </div>
-      <div style="margin-top:16px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#8d8474">
+      <div style="margin-top:16px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#7f8592">
         ${esc(s.codeLabel)}
       </div>
-      <div style="margin-top:6px;font-size:22px;font-weight:700;letter-spacing:.16em;color:#e2bd84">
+      <div style="margin-top:6px;font-size:22px;font-weight:700;letter-spacing:.16em;color:#6fd8cd">
         ${esc(order.ticket_code)}
       </div>
     </td></tr>
@@ -130,8 +130,8 @@ function renderHtml(order, s, verifyUrl) {
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px">
         ${rows}
         <tr>
-          <td style="padding:13px 0;color:#ebe1cd;font-weight:600">${esc(s.totalLabel)}</td>
-          <td style="padding:13px 0;text-align:right;color:#e2bd84;font-weight:700;font-size:16px">
+          <td style="padding:13px 0;color:#f2f2f2;font-weight:600">${esc(s.totalLabel)}</td>
+          <td style="padding:13px 0;text-align:right;color:#6fd8cd;font-weight:700;font-size:16px">
             ${esc(som(order.amount))}
           </td>
         </tr>
@@ -142,9 +142,9 @@ function renderHtml(order, s, verifyUrl) {
     </td></tr>
 
     <tr><td style="padding:24px 32px 34px">
-      <a href="${esc(verifyUrl)}" style="display:block;padding:14px;border-radius:8px;background:#c99a5b;
-         color:#1a1206;text-align:center;text-decoration:none;font-weight:600;font-size:14px">${esc(s.openLink)}</a>
-      <p style="margin:18px 0 0;color:#7d7565;font-size:12px;line-height:1.6;text-align:center">${esc(s.footer)}</p>
+      <a href="${esc(verifyUrl)}" style="display:block;padding:14px;border-radius:999px;background:#ff7d5a;
+         color:#05060a;text-align:center;text-decoration:none;font-weight:600;font-size:14px">${esc(s.openLink)}</a>
+      <p style="margin:18px 0 0;color:#737885;font-size:12px;line-height:1.6;text-align:center">${esc(s.footer)}</p>
     </td></tr>
   </table>
 </body></html>`;
@@ -187,7 +187,7 @@ export async function sendTicket(order) {
     type: 'png',
     width: 432,
     margin: 1,
-    color: { dark: '#141009', light: '#ebe1cd' },
+    color: { dark: '#05060a', light: '#ffffff' },
   });
 
   const message = {

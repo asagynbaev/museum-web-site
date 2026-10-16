@@ -40,7 +40,7 @@ export function Visit({ checkout }) {
             <p>
               {v.whereCity}
               <br />
-              <span style={{ color: 'var(--bone-faint)' }}>{v.addrPlaceholder}</span>
+              <span style={{ color: 'var(--fg-faint)' }}>{v.addrPlaceholder}</span>
             </p>
             <a className="v-map" href={ROUTE_URL} target="_blank" rel="noopener noreferrer">
               {v.openMap}
@@ -75,7 +75,7 @@ export function Visit({ checkout }) {
           <a className="btn ghost" href={ROUTE_URL} target="_blank" rel="noopener noreferrer">
             {v.route}
           </a>
-          <span className="mono" style={{ color: 'var(--bone-faint)' }}>
+          <span className="mono" style={{ color: 'var(--fg-faint)' }}>
             {v.duration}
           </span>
         </Reveal>

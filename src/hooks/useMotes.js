@@ -41,7 +41,7 @@ export function useMotes(canvasRef, enabled = true) {
         }
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, 6.283);
-        ctx.fillStyle = `rgba(226, 189, 132, ${p.a})`;
+        ctx.fillStyle = `rgba(170, 232, 224, ${p.a})`;
         ctx.fill();
       }
       raf = requestAnimationFrame(frame);

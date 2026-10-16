@@ -114,7 +114,7 @@
   border-radius: 16px;
   background: rgba(9, 10, 14, 0.4);
   backdrop-filter: blur(12px) saturate(1.05);
-  border: 1px solid rgba(235, 225, 205, 0.09);
+  border: 1px solid rgba(242, 242, 242, 0.09);
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.3);
 }
 .hall.left .content {
@@ -146,7 +146,7 @@
   width: 9px;
   height: 9px;
   padding: 0;
-  border: 1px solid rgba(235, 225, 205, 0.55);
+  border: 1px solid rgba(242, 242, 242, 0.55);
   border-radius: 999px;
   background: transparent;
   cursor: pointer;
@@ -206,11 +206,11 @@
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--bone-faint);
+  color: var(--fg-faint);
   margin-bottom: 26px;
 }
 .h-desc {
-  color: var(--bone-dim);
+  color: var(--fg-dim);
   font-size: 1.06rem;
   line-height: 1.62;
   max-width: 40ch;
@@ -234,15 +234,15 @@
   font-size: 0.64rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--bone-dim);
+  color: var(--fg-dim);
   border: 1px solid var(--line);
   padding: 7px 12px;
-  border-radius: 2px;
+  border-radius: 999px;
   transition: 0.3s;
 }
 .h-spec span:hover {
   border-color: color-mix(in srgb, var(--accent) 60%, transparent);
-  color: var(--bone);
+  color: var(--fg);
 }
 
 /* Staggered reveal of the hall text once the section enters the viewport. */

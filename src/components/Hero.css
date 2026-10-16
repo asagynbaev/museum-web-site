@@ -51,7 +51,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  color: var(--gold-2);
+  color: var(--accent-2);
   margin-bottom: 26px;
   opacity: 0;
   animation: fadeUp 0.9s 0.2s forwards;
@@ -60,7 +60,8 @@
   content: "";
   width: 34px;
   height: 2px;
-  background: var(--clay);
+  border-radius: 2px;
+  background: var(--grad);
   opacity: 0.95;
 }
 
@@ -91,14 +92,19 @@ h1.hero-title .ln:nth-child(2) i {
 }
 h1.hero-title em {
   font-style: normal;
-  color: var(--gold-2);
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 2px 18px rgba(0, 0, 0, 0.45));
 }
 
 .hero-sub {
   margin-top: 30px;
   max-width: 46ch;
   font-size: clamp(1rem, 1.5vw, 1.18rem);
-  color: var(--bone-dim);
+  color: var(--fg-dim);
   text-shadow: 0 1px 14px rgba(0, 0, 0, 0.5);
   opacity: 0;
   animation: fadeUp 1s 0.95s forwards;
@@ -109,14 +115,14 @@ h1.hero-title em {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--bone-faint);
+  color: var(--fg-faint);
   opacity: 0;
   animation: fadeUp 1s 1.2s forwards;
 }
 .scrollcue .ar {
   width: 20px;
   height: 32px;
-  border: 1px solid var(--bone-faint);
+  border: 1px solid var(--fg-faint);
   border-radius: 11px;
   position: relative;
   flex: none;
@@ -129,7 +135,7 @@ h1.hero-title em {
   width: 3px;
   height: 6px;
   border-radius: 2px;
-  background: var(--gold-2);
+  background: var(--accent-2);
   transform: translateX(-50%);
   animation: cue 1.7s infinite;
 }

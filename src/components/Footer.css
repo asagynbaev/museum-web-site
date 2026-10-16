@@ -12,26 +12,21 @@ footer {
 }
 .f-brand {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 14px;
 }
-.f-brand svg {
-  width: 40px;
-  height: 40px;
-}
-.f-brand .bt b {
-  font-family: var(--display);
-  font-size: 1.5rem;
-  font-weight: 600;
+.f-brand .logo {
   display: block;
-  color: #fff;
+  height: 56px;
+  width: auto;
 }
-.f-brand .bt span {
+.f-brand .bt {
   font-family: var(--mono);
   font-size: 0.58rem;
   letter-spacing: 0.26em;
   text-transform: uppercase;
-  color: var(--bone-dim);
+  color: var(--fg-dim);
 }
 .f-links {
   display: flex;
@@ -42,18 +37,21 @@ footer {
   font-size: 0.62rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--bone-faint);
+  color: var(--fg-faint);
   margin-bottom: 16px;
 }
 .f-col a {
   display: block;
-  color: var(--bone-dim);
+  color: var(--fg-dim);
   font-size: 0.95rem;
   padding: 5px 0;
   transition: 0.3s;
 }
 .f-col a:hover {
-  color: var(--gold-2);
+  color: var(--accent-2);
+}
+.f-col a[href^="tel:"] {
+  white-space: nowrap;
 }
 .f-note {
   display: block;
@@ -61,7 +59,7 @@ footer {
   margin-top: 4px;
   font-size: 0.8rem;
   line-height: 1.5;
-  color: var(--bone-faint);
+  color: var(--fg-faint);
 }
 .f-bot {
   display: flex;
@@ -75,7 +73,7 @@ footer {
   font-family: var(--mono);
   font-size: 0.64rem;
   letter-spacing: 0.12em;
-  color: var(--bone-faint);
+  color: var(--fg-faint);
   text-transform: uppercase;
 }
 .f-credit {
@@ -89,12 +87,12 @@ footer {
   fill: #e5484d;
 }
 .f-credit a {
-  color: var(--bone-dim);
+  color: var(--fg-dim);
   text-transform: none;
   transition: 0.3s;
 }
 .f-credit a:hover {
-  color: var(--gold-2);
+  color: var(--accent-2);
 }
 
 @media (max-width: 560px) {

@@ -28,36 +28,14 @@ header.hide {
   align-items: center;
   gap: 13px;
 }
-.brand svg {
-  width: 30px;
-  height: 30px;
-  flex: none;
+.brand .logo {
+  display: block;
+  height: 38px;
+  width: auto;
+  transition: height 0.5s;
 }
-.brand svg .spin {
-  transform-origin: 50px 50px;
-  animation: spin 60s linear infinite;
-}
-.brand .bt {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.05;
-}
-.brand .bt b {
-  font-family: var(--display);
-  font-weight: 600;
-  font-size: 1.18rem;
-  letter-spacing: 0.01em;
-  /* Белый для читаемости поверх видео/светлых фонов Hero. */
-  color: #fff;
-  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.55);
-}
-.brand .bt span {
-  font-family: var(--mono);
-  font-size: 0.56rem;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: var(--bone-dim);
-  margin-top: 3px;
+header.scrolled .brand .logo {
+  height: 32px;
 }
 
 nav {
@@ -70,7 +48,7 @@ nav a.nl {
   font-size: 0.7rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--bone-dim);
+  color: var(--fg-dim);
   transition: color 0.3s;
   position: relative;
 }
@@ -81,11 +59,11 @@ nav a.nl::after {
   bottom: -5px;
   width: 0;
   height: 1px;
-  background: var(--gold);
+  background: var(--accent);
   transition: width 0.35s;
 }
 nav a.nl:hover {
-  color: var(--bone);
+  color: var(--fg);
 }
 nav a.nl:hover::after {
   width: 100%;
@@ -97,30 +75,30 @@ nav a.nl:hover::after {
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  border: 1px solid var(--gold);
-  color: var(--gold-2);
-  background: none;
+  border: 1px solid var(--coral);
+  color: var(--ink);
+  background: var(--coral);
   cursor: pointer;
-  padding: 9px 16px;
-  border-radius: 2px;
+  padding: 10px 20px;
+  border-radius: 999px;
   transition: 0.35s;
 }
 .ticket:hover {
-  background: var(--gold);
-  color: #1a1206;
-  box-shadow: 0 0 24px rgba(232, 169, 60, 0.4);
+  background: var(--coral-2);
+  border-color: var(--coral-2);
+  box-shadow: 0 0 26px rgba(255, 125, 90, 0.45);
 }
 
 .lang {
   font-family: var(--mono);
   font-size: 0.66rem;
   letter-spacing: 0.12em;
-  color: var(--bone-faint);
+  color: var(--fg-faint);
   display: inline-flex;
   align-items: center;
 }
 .lang-sep {
-  color: var(--bone-faint);
+  color: var(--fg-faint);
 }
 .lang-btn {
   background: none;
@@ -129,19 +107,19 @@ nav a.nl:hover::after {
   font: inherit;
   letter-spacing: inherit;
   text-transform: uppercase;
-  color: var(--bone-faint);
+  color: var(--fg-faint);
   cursor: pointer;
   transition: color 0.3s;
 }
 .lang-btn:hover {
-  color: var(--bone-dim);
+  color: var(--fg-dim);
 }
 .lang-btn.on {
-  color: var(--gold-2);
+  color: var(--accent-2);
   font-weight: 700;
 }
 .lang-btn:focus-visible {
-  outline: 1px solid var(--gold-2);
+  outline: 1px solid var(--accent-2);
   outline-offset: 2px;
 }
 
@@ -165,7 +143,7 @@ nav a.nl:hover::after {
   display: block;
   width: 24px;
   height: 2px;
-  background: var(--bone);
+  background: var(--fg);
   border-radius: 2px;
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s;
 }
@@ -222,7 +200,7 @@ header.menu-open .burger span:nth-child(3) {
     font-size: 1.24rem;
     letter-spacing: 0.08em;
     text-transform: none;
-    color: var(--bone);
+    color: var(--fg);
   }
   nav .nl::after {
     display: none;
@@ -245,10 +223,8 @@ header.menu-open .burger span:nth-child(3) {
     padding-left: 18px;
     padding-right: 18px;
   }
-  .brand .bt b {
-    font-size: 1.04rem;
-  }
-  .brand .bt span {
-    display: none;
+  .brand .logo,
+  header.scrolled .brand .logo {
+    height: 30px;
   }
 }

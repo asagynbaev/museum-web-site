@@ -31,11 +31,7 @@ export function Header({ headerRef, onBuy }) {
   return (
     <header id="hdr" ref={headerRef} className={open ? 'menu-open' : ''}>
       <a className="brand" href="#top" aria-label="AI Museum" onClick={close}>
-        <Logo spin />
-        <span className="bt">
-          <b>AI Museum</b>
-          <span>{t.brandSub}</span>
-        </span>
+        <Logo />
       </a>
 
       <button

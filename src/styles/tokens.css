@@ -1,17 +1,27 @@
-/* Design tokens — colours, type and layout shared across the whole site. */
+/* Design tokens — colours, type and layout shared across the whole site.
+   Палитра снята с логотипа: чёрный фон как в ролике с «AI», белый «MUSEUM»,
+   бирюзовый «htp//» и жидкая заливка букв (коралл → жёлтый → бирюза → кобальт). */
 :root {
-  --ink: #141009;
-  --ink-2: #1b1610;
-  --surface: #211b13;
+  --ink: #05060a;
+  --ink-2: #0b0d14;
+  --surface: #11141d;
 
-  --bone: #ebe1cd;
-  --bone-dim: rgba(235, 225, 205, 0.58);
-  --bone-faint: rgba(235, 225, 205, 0.3);
+  --fg: #f2f2f2;
+  --fg-dim: rgba(242, 242, 242, 0.62);
+  --fg-faint: rgba(242, 242, 242, 0.34);
 
-  --gold: #c99a5b;
-  --gold-2: #e2bd84;
-  --clay: #b5402e;
-  --line: rgba(235, 225, 205, 0.12);
+  /* Бирюза «htp//» — подписи, ссылки, активные состояния. */
+  --accent: #38b4aa;
+  --accent-2: #6fd8cd;
+  /* Коралл из заливки «AI» — главная кнопка и акценты в заголовках. */
+  --coral: #ff7d5a;
+  --coral-2: #ff9b7d;
+  --sun: #f5c84c;
+  --cyan: #49c6d6;
+  --cobalt: #3d6bff;
+  --grad: linear-gradient(90deg, var(--coral), var(--sun) 34%, var(--cyan) 67%, var(--cobalt));
+
+  --line: rgba(242, 242, 242, 0.1);
 
   --display: "Unbounded", "Arial Black", system-ui, sans-serif;
   --body: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;

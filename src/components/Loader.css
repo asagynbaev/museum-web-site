@@ -18,53 +18,20 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 26px;
-  width: min(86vw, 360px);
+  gap: 22px;
+  width: min(86vw, 440px);
   text-align: center;
 }
 
-/* Spinning ring orbiting the static museum mark. */
+/* Ролик снят на чистом чёрном: `lighten` растворяет его фон в --ink,
+   так что вокруг букв не видно прямоугольника кадра. */
 .loader-mark {
-  position: relative;
-  width: 104px;
-  height: 104px;
-  display: grid;
-  place-items: center;
-}
-.loader-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid var(--line);
-  border-top-color: var(--gold-2);
-  border-right-color: color-mix(in srgb, var(--gold-2) 40%, transparent);
-  animation: spin 1s linear infinite;
-}
-.loader-logo {
-  width: 52px;
-  height: 52px;
-}
-.loader-logo svg {
-  width: 100%;
-  height: 100%;
-}
-
-.loader-brand {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.loader-brand b {
-  font-family: var(--display);
-  font-weight: 600;
-  font-size: 1.3rem;
-  letter-spacing: 0.01em;
-  color: #fff;
-}
-.loader-brand .mono {
-  color: var(--bone-dim);
-  font-size: 0.58rem;
-  letter-spacing: 0.26em;
+  display: block;
+  width: min(92vw, 560px);
+  aspect-ratio: 1404 / 1080;
+  margin: -12% 0 -10%;
+  object-fit: contain;
+  mix-blend-mode: lighten;
 }
 
 .loader-bar {
@@ -77,8 +44,9 @@
 .loader-fill {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, var(--gold-2), var(--clay));
-  box-shadow: 0 0 10px var(--gold);
+  background: var(--grad);
+  background-size: 440px 100%;
+  box-shadow: 0 0 10px rgba(73, 198, 214, 0.5);
   transition: width 0.25s ease;
 }
 
@@ -87,12 +55,12 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  color: var(--bone-faint);
+  color: var(--fg-faint);
 }
 .loader-now {
-  color: var(--gold-2);
+  color: var(--accent-2);
 }
 .loader-pct {
-  color: var(--bone-dim);
+  color: var(--fg-dim);
   font-variant-numeric: tabular-nums;
 }

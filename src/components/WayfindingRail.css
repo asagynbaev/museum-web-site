@@ -26,8 +26,8 @@
   left: 0;
   width: 1px;
   height: 0;
-  background: linear-gradient(180deg, var(--gold-2), var(--clay));
-  box-shadow: 0 0 8px var(--gold);
+  background: linear-gradient(180deg, var(--coral), var(--sun) 34%, var(--cyan) 67%, var(--cobalt));
+  box-shadow: 0 0 8px rgba(73, 198, 214, 0.6);
 }
 
 /* Nodes are absolutely positioned along the track via an inline `top`. */
@@ -41,7 +41,7 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--bone-faint);
+  background: var(--fg-faint);
   transition: 0.35s;
   flex: none;
   position: absolute;
@@ -56,7 +56,7 @@
   font-size: 0.6rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--bone-faint);
+  color: var(--fg-faint);
   opacity: 0;
   transform: translateX(-6px);
   transition: 0.35s;
@@ -66,15 +66,15 @@
   transform: none;
 }
 .rnode.active .rdot {
-  background: var(--clay);
+  background: var(--coral);
   width: 11px;
   height: 11px;
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--clay) 24%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--coral) 24%, transparent);
 }
 /* Активную точку подсвечиваем, но подпись показываем только при наведении —
    иначе длинный лейбл налезает на заголовок зала. */
 .rnode.active .rlab {
-  color: var(--gold-2);
+  color: var(--accent-2);
 }
 .rnode.active:hover .rlab {
   opacity: 1;
@@ -84,7 +84,7 @@
   font-family: var(--mono);
   font-size: 0.58rem;
   letter-spacing: 0.2em;
-  color: var(--bone-faint);
+  color: var(--fg-faint);
 }
 .rail .cap.top {
   margin-bottom: 16px;

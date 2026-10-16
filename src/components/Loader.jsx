@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Logo } from './Logo.jsx';
+import { asset } from '../lib/asset.js';
 import { useLang } from '../i18n/LanguageProvider.jsx';
 import './Loader.css';
 
 /**
- * Full-screen intro overlay shown while media preloads. A spinning gold ring
- * orbits the museum mark; below it a thin bar fills and the name of the zone
- * currently loading is shown. When `finished`, it fades out and calls `onDone`
- * so the parent can unmount it.
+ * Full-screen intro overlay shown while media preloads. В центре крутится
+ * фирменный ролик с «AI» (его чёрный фон растворяется в фоне страницы), под ним
+ * тонкая полоса прогресса и название зоны, которая сейчас грузится. When
+ * `finished`, it fades out and calls `onDone` so the parent can unmount it.
  */
-export function Loader({ progress, label, finished, onDone }) {
+export function Loader({ progress, label, finished, onDone, reduced }) {
   const { t } = useLang();
   const [hide, setHide] = useState(false);
 
@@ -24,6 +24,7 @@ export function Loader({ progress, label, finished, onDone }) {
   }, [finished, onDone]);
 
   const pct = Math.round(progress * 100);
+  const poster = asset('media/brand/ai-mark-poster.jpg');
 
   return (
     <div
@@ -33,17 +34,20 @@ export function Loader({ progress, label, finished, onDone }) {
       aria-busy={!finished}
     >
       <div className="loader-inner">
-        <div className="loader-mark">
-          <span className="loader-ring" />
-          <span className="loader-logo">
-            <Logo />
-          </span>
-        </div>
-
-        <div className="loader-brand">
-          <b>AI Museum</b>
-          <span className="mono">{t.brandSub}</span>
-        </div>
+        {reduced ? (
+          <img className="loader-mark" src={poster} alt="AI Museum" />
+        ) : (
+          <video
+            className="loader-mark"
+            src={asset('media/brand/ai-mark.mp4')}
+            poster={poster}
+            autoPlay
+            muted
+            loop
+            playsInline
+            aria-label="AI Museum"
+          />
+        )}
 
         <div className="loader-bar">
           <span className="loader-fill" style={{ width: `${pct}%` }} />

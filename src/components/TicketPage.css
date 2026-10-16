@@ -8,14 +8,14 @@
   gap: 26px;
   min-height: 100dvh;
   padding: 40px 18px;
-  background: radial-gradient(120% 70% at 50% 0%, rgba(232, 169, 60, 0.07), transparent 60%);
+  background: radial-gradient(120% 70% at 50% 0%, rgba(56, 180, 170, 0.07), transparent 60%);
 }
 
 .tk-brand {
   display: flex;
   align-items: center;
   gap: 11px;
-  color: var(--bone-dim);
+  color: var(--fg-dim);
   text-decoration: none;
   font-family: var(--mono);
   font-size: 0.63rem;
@@ -25,11 +25,16 @@
   transition: color 0.3s;
 }
 .tk-brand:hover {
-  color: var(--bone);
+  color: var(--fg);
 }
-.tk-brand svg {
-  width: 30px;
-  height: 30px;
+.tk-brand {
+  flex-direction: column;
+  gap: 12px;
+}
+.tk-brand .logo {
+  display: block;
+  height: 44px;
+  width: auto;
 }
 
 .tk-card {
@@ -40,8 +45,8 @@
   text-align: center;
   background: var(--ink-2);
   border: 1px solid var(--line);
-  border-radius: 3px;
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(235, 225, 205, 0.05);
+  border-radius: 24px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(242, 242, 242, 0.05);
   animation: tk-rise 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tk-card.is-loading {
@@ -52,10 +57,10 @@
 }
 
 .tk-mark.ok {
-  color: var(--gold-2);
+  color: var(--accent-2);
 }
 .tk-mark.no {
-  color: var(--clay);
+  color: var(--coral);
 }
 
 .tk-eyebrow {
@@ -65,7 +70,7 @@
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--gold-2);
+  color: var(--accent-2);
 }
 
 .tk-title {
@@ -83,12 +88,12 @@
   font-size: clamp(1.15rem, 4.6vw, 1.42rem);
   font-weight: 700;
   letter-spacing: 0.18em;
-  color: var(--gold-2);
+  color: var(--accent-2);
 }
 .tk-code-dim {
   font-size: 0.8rem;
   letter-spacing: 0.14em;
-  color: var(--bone-faint);
+  color: var(--fg-faint);
 }
 
 .tk-rows {
@@ -106,7 +111,7 @@
   font-size: 0.92rem;
 }
 .tk-row dt {
-  color: var(--bone-dim);
+  color: var(--fg-dim);
 }
 .tk-row dd {
   margin: 0;
@@ -117,14 +122,14 @@
 
 .tk-note {
   margin: 22px 0 0;
-  color: var(--bone-dim);
+  color: var(--fg-dim);
   font-size: 0.85rem;
   line-height: 1.55;
 }
 
 .tk-status {
   margin: 0;
-  color: var(--bone-dim);
+  color: var(--fg-dim);
   font-size: 0.9rem;
 }
 
@@ -132,7 +137,7 @@
   width: 30px;
   height: 30px;
   border: 2px solid var(--line);
-  border-top-color: var(--gold-2);
+  border-top-color: var(--accent-2);
   border-radius: 50%;
   animation: tk-spin 0.9s linear infinite;
 }
@@ -150,7 +155,7 @@
 }
 
 .tk-home {
-  color: var(--bone-faint);
+  color: var(--fg-faint);
   text-decoration: none;
   font-family: var(--mono);
   font-size: 0.7rem;
@@ -161,8 +166,8 @@
   transition: color 0.3s, border-color 0.3s;
 }
 .tk-home:hover {
-  color: var(--bone);
-  border-color: var(--bone-faint);
+  color: var(--fg);
+  border-color: var(--fg-faint);
 }
 
 @media (prefers-reduced-motion: reduce) {
