@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { ArrowDown } from 'lucide-react';
 import { useHeroParallax } from '../hooks/useHeroParallax.js';
 import { asset } from '../lib/asset.js';
 import { useLang } from '../i18n/LanguageProvider.jsx';
@@ -65,7 +66,10 @@ export function Hero({ reduced, started }) {
         </h1>
         <p className="hero-sub">{t.hero.sub}</p>
         <div className="scrollcue mono">
-          <span className="ar" /> {t.hero.scrollcue}
+          <span className="ar">
+            <ArrowDown size={16} strokeWidth={1.5} aria-hidden />
+          </span>
+          {t.hero.scrollcue}
         </div>
       </div>
     </section>

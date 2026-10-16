@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useState } from 'react';
+import { Menu, Ticket, X } from 'lucide-react';
 import { Logo } from './Logo.jsx';
 import { useLang } from '../i18n/LanguageProvider.jsx';
 import { LANGS } from '../i18n/translations.js';
@@ -42,9 +43,7 @@ export function Header({ headerRef, onBuy }) {
         aria-controls="main-nav"
         onClick={() => setOpen((o) => !o)}
       >
-        <span />
-        <span />
-        <span />
+        {open ? <X size={26} strokeWidth={1.5} aria-hidden /> : <Menu size={26} strokeWidth={1.5} aria-hidden />}
       </button>
 
       <nav id="main-nav" className={open ? 'open' : ''}>
@@ -59,6 +58,7 @@ export function Header({ headerRef, onBuy }) {
             onBuy();
           }}
         >
+          <Ticket size={15} strokeWidth={1.75} aria-hidden />
           {t.nav.tickets}
         </button>
         <span className="lang">

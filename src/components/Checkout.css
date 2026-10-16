@@ -70,7 +70,7 @@
 
 .co-title {
   font-family: var(--display);
-  font-weight: 600;
+  font-weight: 400;
   font-size: clamp(1.35rem, 3.6vw, 1.72rem);
   line-height: 1.12;
   letter-spacing: -0.02em;
@@ -221,7 +221,7 @@
 .co-total strong {
   font-family: var(--display);
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.01em;
   color: var(--accent-2);
   font-variant-numeric: tabular-nums;
@@ -322,7 +322,7 @@
   margin-top: 20px;
   font-family: var(--display);
   font-size: 1.9rem;
-  font-weight: 600;
+  font-weight: 300;
   letter-spacing: -0.02em;
   text-align: center;
   color: var(--fg);
@@ -414,8 +414,8 @@
 .co-check,
 .co-cross {
   margin: 22px auto 0;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
 }
 .co-check {
   color: var(--accent-2);

@@ -191,12 +191,12 @@
 }
 .h-name {
   font-family: var(--display);
-  font-weight: 700;
+  font-weight: 300;
   /* Немного меньше — чтобы длинные названия помещались в плашку. */
   font-size: clamp(2rem, 5vw, 4.2rem);
   line-height: 1.02;
   margin: 18px 0 8px;
-  letter-spacing: -0.022em;
+  letter-spacing: -0.035em;
   text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45),
     0 0 38px color-mix(in srgb, var(--accent) 55%, transparent);
 }

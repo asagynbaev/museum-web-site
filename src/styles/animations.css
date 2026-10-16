@@ -70,21 +70,6 @@
     transform: none;
   }
 }
-
-@keyframes cue {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, 0);
-  }
-  40% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, 12px);
-  }
-}
-
 /* Respect users who asked the OS to reduce motion. */
 @media (prefers-reduced-motion: reduce) {
   * {

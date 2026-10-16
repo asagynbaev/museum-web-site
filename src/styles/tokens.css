@@ -23,9 +23,11 @@
 
   --line: rgba(242, 242, 242, 0.1);
 
-  --display: "Unbounded", "Arial Black", system-ui, sans-serif;
-  --body: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --mono: "Golos Text", system-ui, sans-serif;
+  /* Inter — ближайший свободный шрифт к надписям «MUSEUM / FUTURE» в логотипе:
+     крупное — тонким начертанием, подписи — капсом с разрядкой. */
+  --display: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "Inter", system-ui, sans-serif;
 
   --maxw: 1320px;
 }

@@ -1,3 +1,4 @@
+import { CircleCheck, CircleX } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Logo } from './Logo.jsx';
@@ -107,17 +108,7 @@ export function TicketPage({ code }) {
 function Mark({ ok = false }) {
   return (
     <div className={`tk-mark${ok ? ' ok' : ' no'}`} aria-hidden="true">
-      <svg viewBox="0 0 44 44" width="44" height="44">
-        <circle cx="22" cy="22" r="20" fill="none" stroke="currentColor" strokeWidth="1.2" opacity=".35" />
-        <path
-          d={ok ? 'M13 22.5l6 6 12-13' : 'M16 16l12 12M28 16L16 28'}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+      {ok ? <CircleCheck size={48} strokeWidth={1.25} /> : <CircleX size={48} strokeWidth={1.25} />}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { CircleCheck, CircleX, Minus, Plus, Smartphone, X } from 'lucide-react';
 import { useEffect, useId, useRef } from 'react';
 
 import { useLang } from '../i18n/LanguageProvider.jsx';
@@ -94,9 +95,7 @@ export function Checkout({ checkout }) {
         tabIndex={-1}
       >
         <button className="co-close" onClick={close} aria-label={c.close}>
-          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-            <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.4" fill="none" />
-          </svg>
+          <X size={20} strokeWidth={1.5} aria-hidden />
         </button>
 
         <div className="co-eyebrow">{c.eyebrow}</div>
@@ -158,7 +157,7 @@ function CartStep({ checkout, c, lang, titleId }) {
                   disabled={n === 0}
                   aria-label={`${c.minus} · ${c.tariffs[tariff.id]}`}
                 >
-                  −
+                  <Minus size={14} strokeWidth={1.75} aria-hidden />
                 </button>
                 <span aria-live="polite">{n}</span>
                 <button
@@ -167,7 +166,7 @@ function CartStep({ checkout, c, lang, titleId }) {
                   disabled={n >= tariff.maxQty}
                   aria-label={`${c.plus} · ${c.tariffs[tariff.id]}`}
                 >
-                  +
+                  <Plus size={14} strokeWidth={1.75} aria-hidden />
                 </button>
               </div>
             </div>
@@ -228,6 +227,7 @@ function QrStep({ checkout, c, lang, titleId }) {
       </div>
 
       <a className="co-openapp" href={order.qrLink} target="_blank" rel="noopener noreferrer">
+        <Smartphone size={16} strokeWidth={1.5} aria-hidden />
         {c.openApp}
       </a>
 
@@ -255,17 +255,7 @@ function DoneStep({ checkout, c, lang, titleId }) {
   return (
     <div className="co-step co-done">
       <div className="co-check" aria-hidden="true">
-        <svg viewBox="0 0 44 44" width="44" height="44">
-          <circle cx="22" cy="22" r="20" fill="none" stroke="currentColor" strokeWidth="1.2" opacity=".35" />
-          <path
-            d="M13 22.5l6 6 12-13"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <CircleCheck size={48} strokeWidth={1.25} />
       </div>
 
       <h3 className="co-title" id={titleId}>
@@ -306,16 +296,7 @@ function ErrorStep({ checkout, c, titleId }) {
   return (
     <div className="co-step co-done">
       <div className="co-cross" aria-hidden="true">
-        <svg viewBox="0 0 44 44" width="44" height="44">
-          <circle cx="22" cy="22" r="20" fill="none" stroke="currentColor" strokeWidth="1.2" opacity=".35" />
-          <path
-            d="M16 16l12 12M28 16L16 28"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-        </svg>
+        <CircleX size={48} strokeWidth={1.25} />
       </div>
 
       <h3 className="co-title" id={titleId}>

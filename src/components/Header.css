@@ -70,6 +70,9 @@ nav a.nl:hover::after {
 }
 
 .ticket {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--mono);
   font-size: 0.68rem;
   font-weight: 600;
@@ -137,26 +140,8 @@ nav a.nl:hover::after {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  color: var(--fg);
 }
-.burger span {
-  display: block;
-  width: 24px;
-  height: 2px;
-  background: var(--fg);
-  border-radius: 2px;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s;
-}
-header.menu-open .burger span:nth-child(1) {
-  transform: translateY(7px) rotate(45deg);
-}
-header.menu-open .burger span:nth-child(2) {
-  opacity: 0;
-}
-header.menu-open .burger span:nth-child(3) {
-  transform: translateY(-7px) rotate(-45deg);
-}
-
 @media (max-width: 880px) {
   .burger {
     display: flex;
@@ -196,13 +181,17 @@ header.menu-open .burger span:nth-child(3) {
     transform: none;
   }
 
-  nav .nl {
-    font-size: 1.24rem;
-    letter-spacing: 0.08em;
+  /* `nav a.nl`, а не `nav .nl`: иначе десктопное правило выше по
+     специфичности оставляет пункты мелкими и капсом. */
+  nav a.nl {
+    font-family: var(--display);
+    font-size: 1.9rem;
+    font-weight: 300;
+    letter-spacing: -0.02em;
     text-transform: none;
     color: var(--fg);
   }
-  nav .nl::after {
+  nav a.nl::after {
     display: none;
   }
 

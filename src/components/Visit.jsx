@@ -1,3 +1,4 @@
+import { ArrowUpRight, Clock, MapPin, Navigation, Ticket } from 'lucide-react';
 import { Reveal } from './Reveal.jsx';
 import { useLang } from '../i18n/LanguageProvider.jsx';
 import { Rich } from '../i18n/Rich.jsx';
@@ -35,7 +36,10 @@ export function Visit({ checkout }) {
 
         <Reveal className="v-grid">
           <div className="v-cell">
-            <h4>{v.whereH}</h4>
+            <h4>
+              <MapPin size={15} strokeWidth={1.5} aria-hidden />
+              {v.whereH}
+            </h4>
             <div className="big">{v.whereBig}</div>
             <p>
               {v.whereCity}
@@ -44,11 +48,15 @@ export function Visit({ checkout }) {
             </p>
             <a className="v-map" href={ROUTE_URL} target="_blank" rel="noopener noreferrer">
               {v.openMap}
+              <ArrowUpRight size={14} strokeWidth={1.75} aria-hidden />
             </a>
           </div>
 
           <div className="v-cell">
-            <h4>{v.hoursH}</h4>
+            <h4>
+              <Clock size={15} strokeWidth={1.5} aria-hidden />
+              {v.hoursH}
+            </h4>
             {v.days.map(([label, value]) => (
               <div className="row" key={label}>
                 <span>{label}</span>
@@ -58,7 +66,10 @@ export function Visit({ checkout }) {
           </div>
 
           <div className="v-cell">
-            <h4>{v.ticketsH}</h4>
+            <h4>
+              <Ticket size={15} strokeWidth={1.5} aria-hidden />
+              {v.ticketsH}
+            </h4>
             {priceList.map(([label, value]) => (
               <div className="row" key={label}>
                 <span>{label}</span>
@@ -70,9 +81,11 @@ export function Visit({ checkout }) {
 
         <Reveal className="v-cta">
           <button className="btn solid" type="button" onClick={checkout.openCheckout}>
+            <Ticket size={16} strokeWidth={1.75} aria-hidden />
             {v.buy}
           </button>
           <a className="btn ghost" href={ROUTE_URL} target="_blank" rel="noopener noreferrer">
+            <Navigation size={15} strokeWidth={1.75} aria-hidden />
             {v.route}
           </a>
           <span className="mono" style={{ color: 'var(--fg-faint)' }}>

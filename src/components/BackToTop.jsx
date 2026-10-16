@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ArrowUp } from 'lucide-react';
 import { useLang } from '../i18n/LanguageProvider.jsx';
 import './BackToTop.css';
 
@@ -34,7 +35,7 @@ export function BackToTop() {
       aria-hidden={!visible}
       tabIndex={visible ? 0 : -1}
     >
-      <span className="to-top-arrow" aria-hidden="true" />
+      <ArrowUp className="to-top-arrow" size={16} strokeWidth={1.75} aria-hidden />
       <span className="to-top-label mono">{t.backToTop}</span>
     </button>
   );

@@ -44,9 +44,9 @@ a {
 .mono {
   font-family: var(--mono);
   text-transform: uppercase;
-  letter-spacing: 0.13em;
-  font-size: 0.7rem;
-  font-weight: 600;
+  letter-spacing: 0.2em;
+  font-size: 0.68rem;
+  font-weight: 500;
 }
 
 .wrap {

@@ -114,7 +114,7 @@ const ru = {
     whereBig: 'Парк высоких технологий',
     whereCity: 'Бишкек, Кыргызская Республика',
     addrPlaceholder: '— укажите точный адрес —',
-    openMap: 'Открыть в 2ГИС →',
+    openMap: 'Открыть в 2ГИС',
     hoursH: 'Часы работы',
     days: [
       ['Вторник — Пятница', '10:00–20:00'],
@@ -328,7 +328,7 @@ const ky = {
     whereBig: 'Жогорку технологиялар паркы',
     whereCity: 'Бишкек, Кыргыз Республикасы',
     addrPlaceholder: '— так дарек көрсөтүлсүн —',
-    openMap: '2ГИСтен ачуу →',
+    openMap: '2ГИСтен ачуу',
     hoursH: 'Иштөө убактысы',
     days: [
       ['Шейшемби — Жума', '10:00–20:00'],
@@ -540,7 +540,7 @@ const en = {
     whereBig: 'High Technology Park',
     whereCity: 'Bishkek, Kyrgyz Republic',
     addrPlaceholder: '— exact address to be added —',
-    openMap: 'Open in 2GIS →',
+    openMap: 'Open in 2GIS',
     hoursH: 'Opening hours',
     days: [
       ['Tuesday — Friday', '10:00–20:00'],

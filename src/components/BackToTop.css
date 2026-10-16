@@ -43,17 +43,11 @@
 }
 
 .to-top-arrow {
-  width: 12px;
-  height: 12px;
   flex: none;
-  border-left: 1.6px solid var(--accent-2);
-  border-top: 1.6px solid var(--accent-2);
-  transform: rotate(45deg);
-  margin-top: 2px;
   transition: transform 0.3s;
 }
 .to-top:hover .to-top-arrow {
-  transform: rotate(45deg) translate(2px, 2px);
+  transform: translateY(-2px);
 }
 
 /* On phones keep only the arrow to stay out of the way of content. */
@@ -67,9 +61,6 @@
   }
   .to-top-label {
     display: none;
-  }
-  .to-top-arrow {
-    margin-top: 3px;
   }
 }
 

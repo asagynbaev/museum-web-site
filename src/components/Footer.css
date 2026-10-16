@@ -50,8 +50,15 @@ footer {
 .f-col a:hover {
   color: var(--accent-2);
 }
-.f-col a[href^="tel:"] {
+.f-col a.f-ic {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   white-space: nowrap;
+}
+.f-col a.f-ic svg {
+  flex: none;
+  color: var(--accent-2);
 }
 .f-note {
   display: block;
@@ -82,9 +89,7 @@ footer {
   gap: 6px;
 }
 .f-credit svg {
-  width: 12px;
-  height: 12px;
-  fill: #e5484d;
+  color: #e5484d;
 }
 .f-credit a {
   color: var(--fg-dim);
