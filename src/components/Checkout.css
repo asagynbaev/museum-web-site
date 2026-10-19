@@ -247,7 +247,7 @@
 .co-cta:hover:not(:disabled) {
   background: var(--coral-2);
   border-color: var(--coral-2);
-  box-shadow: 0 0 28px rgba(255, 125, 90, 0.4);
+  box-shadow: 0 0 28px rgba(242, 190, 103, 0.4);
 }
 .co-cta:disabled {
   color: var(--fg-faint);

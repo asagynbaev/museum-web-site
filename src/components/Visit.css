@@ -129,7 +129,7 @@
 .btn.solid:hover {
   background: var(--coral-2);
   border-color: var(--coral-2);
-  box-shadow: 0 0 28px rgba(255, 125, 90, 0.45);
+  box-shadow: 0 0 28px rgba(242, 190, 103, 0.45);
 }
 .btn.ghost {
   color: var(--accent-2);

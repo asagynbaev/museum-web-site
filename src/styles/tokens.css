@@ -1,33 +1,38 @@
 /* Design tokens — colours, type and layout shared across the whole site.
-   Палитра снята с логотипа: чёрный фон как в ролике с «AI», белый «MUSEUM»,
-   бирюзовый «htp//» и жидкая заливка букв (коралл → жёлтый → бирюза → кобальт). */
+   Палитра — из брендбука AI MUSEUM · htp// FUTURE (08, 16.10.2026):
+   ночная база, бирюзовый «htp//», фиолетовый и золотой как акценты знака. */
 :root {
-  --ink: #05060a;
-  --ink-2: #0b0d14;
-  --surface: #11141d;
+  --ink: #090c17;
+  --ink-2: #11162a;
+  --surface: #161c33;
 
-  --fg: #f2f2f2;
-  --fg-dim: rgba(242, 242, 242, 0.62);
-  --fg-faint: rgba(242, 242, 242, 0.34);
+  --fg: #f5f6f4;
+  --fg-dim: rgba(245, 246, 244, 0.64);
+  --fg-faint: rgba(245, 246, 244, 0.36);
 
-  /* Бирюза «htp//» — подписи, ссылки, активные состояния. */
-  --accent: #38b4aa;
-  --accent-2: #6fd8cd;
-  /* Коралл из заливки «AI» — главная кнопка и акценты в заголовках. */
-  --coral: #ff7d5a;
-  --coral-2: #ff9b7d;
-  --sun: #f5c84c;
-  --cyan: #49c6d6;
-  --cobalt: #3d6bff;
-  --grad: linear-gradient(90deg, var(--coral), var(--sun) 34%, var(--cyan) 67%, var(--cobalt));
+  /* Бирюзовый «htp//» — подписи, ссылки, активные состояния (#38B5AA). */
+  --accent: #38b5aa;
+  --accent-2: #74dbcf;
+  /* Фиолетовый и золотой из заливки «AI» — второй и третий акцент знака. */
+  --violet: #8568e8;
+  --violet-2: #a99cf2;
+  --gold: #f2be67;
+  --gold-2: #f6d28c;
 
-  --line: rgba(242, 242, 242, 0.1);
+  /* Исторические имена токенов сохранены ради остальных файлов: главная
+     кнопка и тёплые акценты теперь ведут на золотой, а не коралл. */
+  --coral: var(--gold);
+  --coral-2: var(--gold-2);
 
-  /* Inter — ближайший свободный шрифт к надписям «MUSEUM / FUTURE» в логотипе:
-     крупное — тонким начертанием, подписи — капсом с разрядкой. */
-  --display: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --mono: "Inter", system-ui, sans-serif;
+  --grad: linear-gradient(90deg, var(--accent), var(--violet) 50%, var(--gold));
+
+  --line: rgba(245, 246, 244, 0.1);
+
+  /* Manrope — целевая гарнитура бренда: Light в заголовках, Regular/Medium
+     в служебном тексте (см. брендбук, 08 / RULES). */
+  --display: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --body: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "Manrope", system-ui, sans-serif;
 
   --maxw: 1320px;
 }

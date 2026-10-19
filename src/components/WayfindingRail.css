@@ -26,8 +26,8 @@
   left: 0;
   width: 1px;
   height: 0;
-  background: linear-gradient(180deg, var(--coral), var(--sun) 34%, var(--cyan) 67%, var(--cobalt));
-  box-shadow: 0 0 8px rgba(73, 198, 214, 0.6);
+  background: linear-gradient(180deg, var(--accent), var(--violet) 50%, var(--gold));
+  box-shadow: 0 0 8px rgba(56, 181, 170, 0.6);
 }
 
 /* Nodes are absolutely positioned along the track via an inline `top`. */
