@@ -196,11 +196,15 @@ const ru = {
     checking: 'Проверяем билет…',
     validTitle: 'Билет действителен',
     validNote: 'Покажите этот экран на входе. Билет действителен на одно посещение.',
+    familyNote:
+      'Билет на несколько человек. На входе показывайте QR по одному разу на каждого — ' +
+      'не нужно проходить всей группой за один показ.',
     unknownTitle: 'Билет не найден',
     unknownNote: 'Такого билета нет или он не оплачен. Проверьте код в письме.',
     errorTitle: 'Не удалось проверить',
     errorNote: 'Нет связи с сервером. Обновите страницу через минуту.',
     seats: 'Мест',
+    entries: 'Прошло',
     paid: 'Оплачено',
     paidAt: 'Дата оплаты',
     toSite: 'На сайт музея',
@@ -410,11 +414,15 @@ const ky = {
     checking: 'Билет текшерилүүдө…',
     validTitle: 'Билет жарактуу',
     validNote: 'Кирүүдө ушул экранды көрсөтүңүз. Билет бир жолу баруу үчүн жарактуу.',
+    familyNote:
+      'Билет бир нече адамга жарактуу. Кирүүдө QR кодду ар бир адамга өзүнчө бир жолудан ' +
+      'көрсөтүңүз — баары бирге бир көрсөтүүдө өтпөйт.',
     unknownTitle: 'Билет табылган жок',
     unknownNote: 'Мындай билет жок же төлөнгөн эмес. Каттагы кодду текшериңиз.',
     errorTitle: 'Текшерүү мүмкүн болбоду',
     errorNote: 'Сервер менен байланыш жок. Бир мүнөттөн кийин баракты жаңыртыңыз.',
     seats: 'Орун',
+    entries: 'Өттү',
     paid: 'Төлөндү',
     paidAt: 'Төлөм күнү',
     toSite: 'Музей сайтына',
@@ -622,11 +630,15 @@ const en = {
     checking: 'Checking the ticket…',
     validTitle: 'Ticket is valid',
     validNote: 'Show this screen at the entrance. Valid for a single visit.',
+    familyNote:
+      'This ticket admits several people. At the entrance, scan the QR once per person — ' +
+      'not once for the whole group.',
     unknownTitle: 'Ticket not found',
     unknownNote: 'No such ticket, or it has not been paid. Check the code in your email.',
     errorTitle: 'Could not verify',
     errorNote: 'No connection to the server. Refresh the page in a minute.',
     seats: 'Seats',
+    entries: 'Entered',
     paid: 'Paid',
     paidAt: 'Payment date',
     toSite: 'To the museum site',

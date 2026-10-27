@@ -46,6 +46,9 @@ const STRINGS = {
     openLink: 'Открыть билет на сайте',
     footer: 'Билет действителен на одно посещение. Вопросы — просто ответьте на это письмо.',
     tariffs: { adult: 'Взрослый', reduced: 'Детский / студент', family: 'Семейный (2+2)' },
+    familyNote: (seats) =>
+      `Этот билет на ${seats} человек. На входе показывайте QR по одному разу на каждого — ` +
+      'не нужно проходить всей группой за один показ.',
   },
   ky: {
     subject: (code) => `AI Museum билетиңиз · ${code}`,
@@ -62,6 +65,9 @@ const STRINGS = {
     openLink: 'Билетти сайттан ачуу',
     footer: 'Билет бир жолу баруу үчүн жарактуу. Суроолор боюнча — ушул катка жооп жазыңыз.',
     tariffs: { adult: 'Чоңдор', reduced: 'Балдар / студент', family: 'Үй-бүлөлүк (2+2)' },
+    familyNote: (seats) =>
+      `Бул билет ${seats} адамга жарактуу. Кирүүдө QR кодду ар бир адамга өзүнчө бир ` +
+      'жолудан көрсөтүңүз — баары бирге бир көрсөтүүдө өтпөйт.',
   },
   en: {
     subject: (code) => `Your AI Museum ticket · ${code}`,
@@ -78,6 +84,9 @@ const STRINGS = {
     openLink: 'Open ticket on the website',
     footer: 'Valid for a single visit. Any questions — just reply to this email.',
     tariffs: { adult: 'Adult', reduced: 'Child / student', family: 'Family (2+2)' },
+    familyNote: (seats) =>
+      `This ticket admits ${seats} people. At the entrance, scan the QR once per person — ` +
+      'not once for the whole group.',
   },
 };
 
@@ -112,6 +121,12 @@ function renderHtml(order, s, verifyUrl) {
       <div style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#38b4aa">AI Museum · Бишкек</div>
       <h1 style="margin:14px 0 8px;font-size:24px;font-weight:700;letter-spacing:-.01em">${esc(s.hi)}</h1>
       <p style="margin:0;color:#a9adb8;font-size:15px;line-height:1.55">${esc(s.intro)}</p>
+      ${
+        order.seats > 1
+          ? `<p style="margin:14px 0 0;padding:12px 14px;background:#1a1f1a;border:1px solid #2a3a2a;
+               border-radius:10px;color:#f2be67;font-size:13px;line-height:1.5">${esc(s.familyNote(order.seats))}</p>`
+          : ''
+      }
     </td></tr>
 
     <tr><td style="padding:26px 32px 6px" align="center">
@@ -156,6 +171,7 @@ function renderText(order, s, verifyUrl) {
     s.hi,
     '',
     s.intro,
+    ...(order.seats > 1 ? ['', s.familyNote(order.seats)] : []),
     '',
     `${s.codeLabel}: ${order.ticket_code}`,
     '',

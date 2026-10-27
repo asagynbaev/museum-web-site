@@ -126,6 +126,15 @@
   font-size: 0.85rem;
   line-height: 1.55;
 }
+.tk-note-family {
+  margin-top: 12px;
+  padding: 12px 14px;
+  color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+  border-radius: 12px;
+  text-align: left;
+}
 
 .tk-status {
   margin: 0;

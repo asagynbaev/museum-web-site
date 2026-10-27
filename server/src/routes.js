@@ -291,6 +291,7 @@ export async function registerRoutes(app) {
         code: order.ticket_code,
         items: order.items.map((i) => ({ tariff: i.tariff, qty: i.qty })),
         seats: order.seats,
+        entriesUsed: order.entries_used,
         amount: order.amount / 100,
         currency: order.currency,
         paidAt: order.paid_at,

@@ -70,6 +70,12 @@ export function TicketPage({ code }) {
                 <dt>{s.seats}</dt>
                 <dd>{ticket.seats}</dd>
               </div>
+              {ticket.seats > 1 && (
+                <div className="tk-row">
+                  <dt>{s.entries}</dt>
+                  <dd>{ticket.entriesUsed} / {ticket.seats}</dd>
+                </div>
+              )}
               <div className="tk-row">
                 <dt>{s.paid}</dt>
                 <dd>
@@ -84,6 +90,7 @@ export function TicketPage({ code }) {
             </dl>
 
             <p className="tk-note">{s.validNote}</p>
+            {ticket.seats > 1 && <p className="tk-note tk-note-family">{s.familyNote}</p>}
           </>
         )}
 
