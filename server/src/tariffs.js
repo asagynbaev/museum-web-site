@@ -9,6 +9,11 @@ export const TARIFFS = [
   { id: 'adult', price: config.prices.adult, maxQty: 10, seats: 1 },
   { id: 'reduced', price: config.prices.reduced, maxQty: 10, seats: 1 },
   { id: 'family', price: config.prices.family, maxQty: 4, seats: 4 },
+  // Прогон боевого контура банка на минимальной сумме через обычную кассу,
+  // а не curl. `hidden` убирает её из publicTariffs() — обычный посетитель
+  // её никогда не увидит; фронт добавляет её в список сам, только если сайт
+  // открыт с ?testticket=1 (см. useCheckout.js).
+  { id: 'test', price: 100, maxQty: 1, seats: 1, hidden: true },
 ];
 
 const byId = new Map(TARIFFS.map((t) => [t.id, t]));
@@ -17,7 +22,7 @@ export const CURRENCY = 'KGS';
 
 /** Публичное представление прайса для витрины. */
 export function publicTariffs() {
-  return TARIFFS.map((t) => ({
+  return TARIFFS.filter((t) => !t.hidden).map((t) => ({
     id: t.id,
     price: t.price / 100,
     currency: CURRENCY,

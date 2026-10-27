@@ -4,6 +4,25 @@ import { api, ApiError } from '../lib/api.js';
 
 const RESUME_KEY = 'aim-order';
 
+// Тестовая позиция (боевой платёж на 1 сом) не приходит с сервера — она
+// скрыта в прайсе нарочно, чтобы обычный посетитель её не увидел. Открыть
+// сайт один раз с ?testticket=1 — и она появится в кассе и в блоке «Билеты»
+// в этом браузере навсегда (пока не очистят localStorage). Цена и лимиты
+// должны совпадать с `test`-тарифом в server/src/tariffs.js.
+const TEST_TICKET_KEY = 'aim-test-ticket';
+const TEST_TARIFF = { id: 'test', price: 1, currency: 'KGS', maxQty: 1, seats: 1 };
+
+function testTicketEnabled() {
+  try {
+    if (new URLSearchParams(window.location.search).has('testticket')) {
+      localStorage.setItem(TEST_TICKET_KEY, '1');
+    }
+    return localStorage.getItem(TEST_TICKET_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 /** Пока платёж не завершён — спрашиваем сервер часто, потом реже. */
 const POLL_FAST_MS = 2000;
 const POLL_SLOW_MS = 5000;
@@ -36,7 +55,7 @@ export function useCheckout(lang) {
     const ctrl = new AbortController();
     api
       .tariffs(ctrl.signal)
-      .then(setTariffs)
+      .then((list) => setTariffs(testTicketEnabled() ? [...list, TEST_TARIFF] : list))
       .catch((err) => {
         // Витрина переживёт — покажет прочерки вместо цен. А вот кассе
         // без прайса делать нечего: там об этом надо сказать словами.

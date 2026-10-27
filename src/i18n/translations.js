@@ -136,6 +136,7 @@ const ru = {
       adult: 'Взрослый',
       reduced: 'Детский / студент',
       family: 'Семейный (2+2)',
+      test: 'Тест (1 сом)',
     },
 
     cartTitle: 'Сколько вас будет?',
@@ -354,6 +355,7 @@ const ky = {
       adult: 'Чоңдор',
       reduced: 'Балдар / студент',
       family: 'Үй-бүлөлүк (2+2)',
+      test: 'Тест (1 сом)',
     },
 
     cartTitle: 'Канчооңуз болосуз?',
@@ -570,6 +572,7 @@ const en = {
       adult: 'Adult',
       reduced: 'Child / student',
       family: 'Family (2+2)',
+      test: 'Test (1 som)',
     },
 
     cartTitle: 'How many of you?',
