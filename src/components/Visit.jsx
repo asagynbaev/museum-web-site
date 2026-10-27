@@ -4,15 +4,14 @@ import { useLang } from '../i18n/LanguageProvider.jsx';
 import { Rich } from '../i18n/Rich.jsx';
 import './Visit.css';
 
-// Маршрут до музея в 2ГИС. Пока — поиск по названию площадки в Бишкеке;
-// когда появится точный адрес/карточка, заменить на прямую ссылку dir/points.
+// Маршрут до музея в 2ГИС — поиск по точному адресу.
 const ROUTE_URL =
-  'https://2gis.kg/bishkek/search/' + encodeURIComponent('Парк высоких технологий');
+  'https://2gis.kg/bishkek/search/' + encodeURIComponent('Бишкек, проспект Чуй, 265/1');
 
 /**
  * Planning section: location, hours and pricing in a three-up grid, plus the
- * primary calls to action. Placeholder values (— сом, точный адрес) are kept
- * so they're easy to fill in later.
+ * primary calls to action. Price placeholder (— сом) is kept until the
+ * server tariffs load, so it's easy to spot if that ever fails.
  */
 export function Visit({ checkout }) {
   const { t, lang } = useLang();
@@ -44,7 +43,7 @@ export function Visit({ checkout }) {
             <p>
               {v.whereCity}
               <br />
-              <span style={{ color: 'var(--fg-faint)' }}>{v.addrPlaceholder}</span>
+              <span style={{ color: 'var(--fg-faint)' }}>{v.address}</span>
             </p>
             <a className="v-map" href={ROUTE_URL} target="_blank" rel="noopener noreferrer">
               {v.openMap}
