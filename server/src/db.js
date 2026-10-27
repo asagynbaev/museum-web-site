@@ -6,6 +6,15 @@ import { config } from './config.js';
 
 mkdirSync(dirname(config.dbPath), { recursive: true });
 
+/**
+ * Код билета без дефисов, пробелов и регистра — так его понимает и турникет
+ * (сканирует как есть в поле «Card No.»), и старые коды с дефисами из писем,
+ * выпущенных до смены формата (см. `REPLACE(ticket_code, '-', '')` ниже).
+ */
+export function normaliseCode(raw) {
+  return String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
 export const db = new Database(config.dbPath);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
@@ -64,7 +73,9 @@ const stmts = {
             @seats, @items, @email, @lang, @qr_link)
   `),
   byId: db.prepare('SELECT * FROM orders WHERE id = ?'),
-  byTicket: db.prepare('SELECT * FROM orders WHERE ticket_code = ?'),
+  // Без дефисов с обеих сторон: коды, выпущенные до смены формата (с AIM-XXXX-XXXX),
+  // продолжают находиться по голому коду с турникета, новые коды дефисов и не имеют.
+  byTicket: db.prepare("SELECT * FROM orders WHERE REPLACE(ticket_code, '-', '') = ?"),
   countRecentByEmail: db.prepare(
     "SELECT COUNT(*) AS n FROM orders WHERE email = ? AND created_at > ? AND status IN ('pending','processing')"
   ),
@@ -100,7 +111,8 @@ const stmts = {
   gateCheckIn: db.prepare(`
     UPDATE orders
     SET entries_used = entries_used + @count, updated_at = @now
-    WHERE ticket_code = @ticket_code AND status = 'paid' AND entries_used + @count <= seats
+    WHERE REPLACE(ticket_code, '-', '') = @ticket_code
+      AND status = 'paid' AND entries_used + @count <= seats
   `),
 
   // ── Админка ─────────────────────────────────────────────────────────────
@@ -136,7 +148,7 @@ export const orders = {
   },
 
   byId: (id) => hydrate(stmts.byId.get(id)),
-  byTicket: (code) => hydrate(stmts.byTicket.get(code)),
+  byTicket: (code) => hydrate(stmts.byTicket.get(normaliseCode(code))),
 
   /** Сколько незакрытых заказов этот email создал за последние `windowMs`. */
   openCountForEmail(email, windowMs) {
@@ -182,7 +194,11 @@ export const orders = {
 
   /** Возвращает true, только если этот вызов реально списал вход(ы). */
   gateCheckIn(ticketCode, count) {
-    const res = stmts.gateCheckIn.run({ ticket_code: ticketCode, count, now: Date.now() });
+    const res = stmts.gateCheckIn.run({
+      ticket_code: normaliseCode(ticketCode),
+      count,
+      now: Date.now(),
+    });
     return res.changes === 1;
   },
 

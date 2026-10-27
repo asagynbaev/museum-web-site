@@ -195,11 +195,14 @@ function renderText(order, s, verifyUrl) {
  */
 export async function sendTicket(order) {
   const s = STRINGS[order.lang] || STRINGS.ru;
+  // Открыть билет на сайте — отдельная ссылка для человека (кнопка в письме),
+  // не то, что лежит в QR.
   const verifyUrl = `${config.publicUrl}/ticket/${order.ticket_code}`;
 
-  // QR билета кодирует ссылку проверки: контролёр на входе сканирует — и сразу
-  // видит статус, а не голый код, который надо куда-то вбивать.
-  const qrPng = await QRCode.toBuffer(verifyUrl, {
+  // QR несёт голый код билета, без URL и обвязки: турникетный считыватель
+  // кладёт весь скан как есть в поле «Card No.» и ругается на что угодно,
+  // кроме букв и цифр — так что отдаём ровно то, что ему нужно.
+  const qrPng = await QRCode.toBuffer(order.ticket_code, {
     type: 'png',
     width: 432,
     margin: 1,

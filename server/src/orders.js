@@ -24,12 +24,16 @@ function newOrderId() {
   return `aim-${Date.now().toString(36)}-${crypto.randomBytes(4).toString('hex')}`;
 }
 
-/** Код билета для человека: без похожих символов, читается вслух по телефону. */
+/**
+ * Код билета: без похожих символов, без дефисов и пробелов. Турникетный
+ * считыватель кладёт весь скан QR в поле «Card No.» как есть и ругается на
+ * что угодно, кроме букв и цифр, — поэтому чисто буквенно-цифровой код.
+ */
 function newTicketCode() {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const pick = (n) =>
     Array.from(crypto.randomBytes(n), (b) => alphabet[b % alphabet.length]).join('');
-  return `AIM-${pick(4)}-${pick(4)}`;
+  return `AIM${pick(4)}${pick(4)}`;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
