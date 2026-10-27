@@ -45,6 +45,17 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_orders_mail   ON orders (status, mail_sent_at);
 `);
 
+/**
+ * Миграция: счётчик входов по билету (турникет). `seats` — сколько человек
+ * билет пускает (семейный = 4), `entries_used` — сколько уже прошло. Колонку
+ * добавляем только если её ещё нет — так же безопасно для свежей базы и для
+ * боевой с уже купленными билетами.
+ */
+const orderColumns = db.prepare('PRAGMA table_info(orders)').all().map((c) => c.name);
+if (!orderColumns.includes('entries_used')) {
+  db.exec('ALTER TABLE orders ADD COLUMN entries_used INTEGER NOT NULL DEFAULT 0');
+}
+
 const stmts = {
   insert: db.prepare(`
     INSERT INTO orders (id, created_at, updated_at, expires_at, status, amount, currency,
@@ -78,6 +89,19 @@ const stmts = {
   pendingMail: db.prepare(
     "SELECT * FROM orders WHERE status = 'paid' AND mail_sent_at IS NULL AND mail_attempts < 5 LIMIT 50"
   ),
+
+  /**
+   * Турникет: списывает `count` входов одним атомарным UPDATE. Условие
+   * `entries_used + @count <= seats` — это и есть вся защита от повторного
+   * прохода: better-sqlite3 синхронный, так что между проверкой и записью
+   * не может влезть параллельный запрос (в отличие от «прочитать → решить →
+   * записать» в три шага, где гонка была бы возможна).
+   */
+  gateCheckIn: db.prepare(`
+    UPDATE orders
+    SET entries_used = entries_used + @count, updated_at = @now
+    WHERE ticket_code = @ticket_code AND status = 'paid' AND entries_used + @count <= seats
+  `),
 
   // ── Админка ─────────────────────────────────────────────────────────────
   recentOrders: db.prepare(`
@@ -155,6 +179,12 @@ export const orders = {
 
   openOrders: () => stmts.openOrders.all().map(hydrate),
   pendingMail: () => stmts.pendingMail.all().map(hydrate),
+
+  /** Возвращает true, только если этот вызов реально списал вход(ы). */
+  gateCheckIn(ticketCode, count) {
+    const res = stmts.gateCheckIn.run({ ticket_code: ticketCode, count, now: Date.now() });
+    return res.changes === 1;
+  },
 
   /** Лента для админки: последние заказы, при желании только одного статуса. */
   recent({ status = null, limit = 50 } = {}) {

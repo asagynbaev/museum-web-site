@@ -82,6 +82,10 @@ export const config = {
   // Пароль к админке. Не задан — раздел просто выключен, а не открыт всем.
   adminToken: process.env.ADMIN_TOKEN || null,
 
+  // Токен турникета/сканера (/api/gate/*). Отдельный от ADMIN_TOKEN: устройство
+  // на входе не должно уметь то же, что касса. Не задан — раздел выключен.
+  gateToken: process.env.GATE_TOKEN || null,
+
   // Цены храним в тыйынах: целые числа не дают накопиться ошибке float.
   prices: {
     adult: int('PRICE_ADULT', 1600) * 100,

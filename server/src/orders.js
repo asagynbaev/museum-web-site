@@ -50,6 +50,32 @@ export function normaliseEmail(raw) {
  */
 export async function createOrder({ items, email, lang }) {
   const cart = priceCart(items);
+  return createPricedOrder({ ...cart, email, lang });
+}
+
+/**
+ * То же самое, но без прайс-листа: админ сам называет сумму. Нужен, чтобы
+ * прогнать боевой контур банка на минимальной сумме (1 сом), не трогая
+ * настоящие цены на витрине. Доступ — только через /api/admin/*.
+ */
+export async function createTestOrder({ amountSom, email, lang }) {
+  const amount = Math.round(Number(amountSom) * 100);
+  if (!Number.isFinite(amount) || amount < 1 || amount > 100_000) {
+    const err = new Error('amountSom должен быть от 0.01 до 1000');
+    err.statusCode = 400;
+    throw err;
+  }
+  return createPricedOrder({
+    amount,
+    seats: 1,
+    items: [{ tariff: 'test', qty: 1, price: amount }],
+    email,
+    lang,
+  });
+}
+
+/** Общая часть createOrder/createTestOrder: бронь, звонок в банк, запись в базу. */
+async function createPricedOrder({ amount, seats, items, email, lang }) {
   const address = normaliseEmail(email);
 
   // Простой предохранитель от накрутки: не больше 5 живых заказов на адрес.
@@ -63,7 +89,7 @@ export async function createOrder({ items, email, lang }) {
   const id = newOrderId();
 
   // Сумма уходит в банк в сомах: decimal NUMERIC(10,2).
-  const link = await kicb.getLink({ id, amount: cart.amount / 100 });
+  const link = await kicb.getLink({ id, amount: amount / 100 });
 
   return orders.insert({
     id,
@@ -71,10 +97,10 @@ export async function createOrder({ items, email, lang }) {
     updated_at: now,
     expires_at: now + config.orderTtlMs,
     status: 'pending',
-    amount: cart.amount,
+    amount,
     currency: link.currency || CURRENCY,
-    seats: cart.seats,
-    items: cart.items,
+    seats,
+    items,
     email: address,
     lang: ['ru', 'ky', 'en'].includes(lang) ? lang : 'ru',
     qr_link: link.qrLink,
@@ -250,6 +276,55 @@ export function startReconciler({ intervalMs = 5000 } = {}) {
   const timer = setInterval(tick, intervalMs);
   timer.unref?.();
   return () => clearInterval(timer);
+}
+
+/** Вид билета для турникета: только то, что нужно показать на экране сканера. */
+function gateTicket(order) {
+  return {
+    code: order.ticket_code,
+    items: order.items.map((i) => ({ tariff: i.tariff, qty: i.qty })),
+    seats: order.seats,
+    entriesUsed: order.entries_used,
+    remaining: order.seats - order.entries_used,
+    paidAt: order.paid_at,
+  };
+}
+
+/**
+ * Прочитать билет по коду, не списывая вход. Для экрана турникета до
+ * подтверждения прохода («прислонили — увидели имя/остаток — пропустили»).
+ */
+export function gateLookup(code) {
+  const order = orders.byTicket(String(code || '').toUpperCase());
+  if (!order || order.status !== 'paid') return { ok: false, reason: 'not_found' };
+  return { ok: true, ticket: gateTicket(order) };
+}
+
+/**
+ * Списывает `count` входов по билету (семейный = до 4 раз одним кодом).
+ * Один SQL UPDATE решает и проверку, и списание — никакой гонки между
+ * «посмотрели остаток» и «списали» физически быть не может (см. db.js).
+ */
+export function gateCheckIn(code, { count = 1 } = {}) {
+  const ticketCode = String(code || '').toUpperCase();
+  const n = Math.max(1, Math.min(50, Math.trunc(count) || 1));
+
+  if (orders.gateCheckIn(ticketCode, n)) {
+    const order = orders.byTicket(ticketCode);
+    return { ok: true, ticket: gateTicket(order) };
+  }
+
+  // Не списалось — выясняем почему, отдельным чтением (не часть транзакции,
+  // просто для внятного ответа турникету: нет билета / не оплачен / мест не хватает).
+  const order = orders.byTicket(ticketCode);
+  if (!order || order.status !== 'paid') return { ok: false, reason: 'not_found' };
+
+  const remaining = order.seats - order.entries_used;
+  return {
+    ok: false,
+    reason: remaining <= 0 ? 'already_used' : 'insufficient_remaining',
+    ticket: gateTicket(order),
+  };
 }
 
 /** То, что можно показывать браузеру: без внутренних полей и ошибок банка. */
