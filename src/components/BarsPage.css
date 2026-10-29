@@ -1,0 +1,217 @@
+/* /bars — голосовой гид: барс в светлой студии (сцена непрозрачная, фон рисует
+   сам three.js, как на концепт-артах), вокруг — ночная база сайта. */
+
+.bp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(14px, 2.4vh, 22px);
+  min-height: 100dvh;
+  padding: 18px 16px 28px;
+  background: radial-gradient(110% 60% at 50% 0%, rgba(56, 180, 170, 0.08), transparent 62%), var(--ink);
+}
+
+.bp-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 720px;
+}
+.bp-brand .logo {
+  display: block;
+  height: 34px;
+  width: auto;
+}
+
+.bp-langs {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: var(--fg-faint);
+}
+.bp-lang {
+  padding: 6px 2px;
+  border: 0;
+  background: none;
+  color: var(--fg-dim);
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  transition: color 0.25s;
+}
+.bp-lang:hover,
+.bp-lang.on {
+  color: var(--accent-2);
+}
+.bp-lang:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.bp-intro {
+  max-width: 560px;
+  text-align: center;
+}
+.bp-eyebrow {
+  margin: 0 0 8px;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.bp-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(1.7rem, 4.4vw, 2.5rem);
+  font-weight: 300;
+  line-height: 1.1;
+  color: var(--fg);
+}
+.bp-lead {
+  margin: 10px auto 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--fg-dim);
+}
+
+.bp-stage {
+  position: relative;
+  height: clamp(380px, 62dvh, 780px);
+  aspect-ratio: 4 / 5;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 28px;
+  border: 1px solid var(--line);
+  /* до первого кадра — тот же тёплый белый, что у студии барса */
+  background: radial-gradient(ellipse at 50% 40%, #fbfaf7 0%, #efece6 60%, #e2ded7 100%);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+}
+.bp-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.bp-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(ellipse at 50% 40%, #fbfaf7 0%, #efece6 60%, #e2ded7 100%);
+}
+.bp-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid rgba(9, 12, 23, 0.12);
+  border-top-color: var(--accent);
+  animation: bp-spin 0.9s linear infinite;
+}
+.bp-veil.failed .bp-spinner {
+  animation: none;
+  border-top-color: rgba(9, 12, 23, 0.12);
+}
+@keyframes bp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.bp-captions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  pointer-events: none;
+}
+.bp-cap {
+  max-width: 100%;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 14px;
+  background: rgba(9, 12, 23, 0.74);
+  backdrop-filter: blur(8px);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--fg);
+}
+.bp-cap:empty {
+  display: none;
+}
+.bp-cap-user {
+  color: var(--fg-dim);
+}
+
+.bp-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 560px;
+  text-align: center;
+}
+.bp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 26px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--ink);
+  font: 600 1rem var(--body);
+  cursor: pointer;
+  transition: background 0.25s, transform 0.2s;
+}
+.bp-btn:hover:not(:disabled) {
+  background: var(--gold-2);
+}
+.bp-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.bp-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.bp-btn.on {
+  background: var(--surface);
+  color: var(--fg);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.bp-btn.on:hover:not(:disabled) {
+  background: var(--ink-2);
+}
+.bp-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.bp-status {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--fg-faint);
+}
+.bp-status.live {
+  color: var(--accent-2);
+}
+.bp-status.error {
+  color: var(--gold-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bp-spinner {
+    animation-duration: 2.4s;
+  }
+}

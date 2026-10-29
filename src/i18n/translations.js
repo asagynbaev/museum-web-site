@@ -211,6 +211,23 @@ const ru = {
     toSite: 'На сайт музея',
   },
 
+  bars: {
+    eyebrow: 'AI-гид музея',
+    title: 'Поговорите с барсом',
+    lead: 'Спросите голосом о залах, билетах и часах работы — по-русски, по-кыргызски или по-английски.',
+    start: 'Начать разговор',
+    stop: 'Завершить',
+    starting: 'Подключаемся…',
+    loading: 'Барс просыпается…',
+    loadError: 'Не удалось загрузить барса. Обновите страницу.',
+    listening: 'Барс слушает — говорите',
+    reconnecting: 'Восстанавливаем связь…',
+    micDenied: 'Нет доступа к микрофону. Разрешите его для этого сайта в настройках браузера.',
+    error: 'Связь прервалась. Попробуйте ещё раз.',
+    hint: 'Нужен микрофон. Речь распознаёт и озвучивает Google Gemini.',
+    toSite: 'На сайт музея',
+  },
+
   loader: { intro: 'Вступление', hero: 'Память, написанная светом' },
 
   rail: { caption: 'Маршрут' },
@@ -430,6 +447,23 @@ const ky = {
     toSite: 'Музей сайтына',
   },
 
+  bars: {
+    eyebrow: 'Музейдин AI-гиди',
+    title: 'Илбирс менен сүйлөшүңүз',
+    lead: 'Залдар, билеттер жана иш убактысы тууралуу үн менен сураңыз — кыргызча, орусча же англисче.',
+    start: 'Сүйлөшүүнү баштоо',
+    stop: 'Аяктоо',
+    starting: 'Туташууда…',
+    loading: 'Илбирс ойгонуп жатат…',
+    loadError: 'Илбирсти жүктөө мүмкүн болбоду. Баракты жаңыртыңыз.',
+    listening: 'Илбирс угуп жатат — сүйлөңүз',
+    reconnecting: 'Байланыш калыбына келтирилүүдө…',
+    micDenied: 'Микрофонго уруксат жок. Браузердин жөндөөлөрүнөн бул сайтка уруксат бериңиз.',
+    error: 'Байланыш үзүлдү. Кайра аракет кылыңыз.',
+    hint: 'Микрофон керек. Сүйлөөнү Google Gemini таанып, үн менен жооп берет.',
+    toSite: 'Музейдин сайтына',
+  },
+
   loader: { intro: 'Кириш', hero: 'Жарык менен жазылган эс-тутум' },
 
   rail: { caption: 'Маршрут' },
@@ -645,6 +679,23 @@ const en = {
     paid: 'Paid',
     paidAt: 'Payment date',
     toSite: 'To the museum site',
+  },
+
+  bars: {
+    eyebrow: 'Museum AI guide',
+    title: 'Talk to the snow leopard',
+    lead: 'Ask about the halls, tickets and opening hours by voice — in English, Russian or Kyrgyz.',
+    start: 'Start talking',
+    stop: 'End',
+    starting: 'Connecting…',
+    loading: 'The snow leopard is waking up…',
+    loadError: 'Could not load the snow leopard. Please refresh the page.',
+    listening: 'Listening — go ahead',
+    reconnecting: 'Reconnecting…',
+    micDenied: 'No microphone access. Allow it for this site in your browser settings.',
+    error: 'The connection dropped. Please try again.',
+    hint: 'Needs your microphone. Speech is recognised and voiced by Google Gemini.',
+    toSite: 'Museum website',
   },
 
   loader: { intro: 'Intro', hero: 'Memory written in light' },
