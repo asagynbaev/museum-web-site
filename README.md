@@ -67,11 +67,19 @@ src/
     Checkout.jsx         окно покупки билета
     TicketPage.jsx       проверка билета на /ticket/:code (сюда ведёт QR из письма)
     AdminPage.jsx        касса на /admin: статусы оплат, поиск, сверка с банком
+    BarsPage.jsx         голосовой гид на /bars: 3D-барс + разговор через Gemini Live
     Footer.jsx           подвал
     Logo.jsx             логотип музея (полный или только «AI»)
     Reveal.jsx           обёртка для scroll-reveal
     CountUp.jsx          анимированный счётчик
 ```
+
+Голосовой гид `/bars` — отдельный чанк (three.js, Gemini, модель ~22 МБ сжатой
+грузятся только там). Его код `src/concierge/` и ассеты `public/concierge/` —
+**копия из репозитория ai-concierge** (`node web/scripts/export-museum.mjs`):
+руками здесь не править, а экспортировать заново. В разработке разговору нужен
+сервер консьержа на `:8090` (прокси `/api/live`, `/api/tools` в `vite.config.js`);
+`npm run build` после сборки кладёт `.gz` рядом с моделью (`scripts/precompress.mjs`).
 
 Каждый компонент держит свой `*.css` рядом с собой; общие токены и утилиты —
 в `src/styles`. Вся императивная анимация из исходного `<script>` вынесена в

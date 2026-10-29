@@ -8,6 +8,7 @@
 | Сервер | `84.54.12.242` (Debian 12, hostname `kit-forum.kg`) |
 | Код | `/opt/museum`, пользователь `museum`, ветка `main` |
 | API | `museum-api.service` → `127.0.0.1:8787` |
+| Голосовой гид `/bars` | `concierge-api.service` → `127.0.0.1:8090`, `/opt/concierge` (раздел ниже) |
 | nginx | `/etc/nginx/sites-available/museum` — только `server_name museum.eaysdev.online` |
 | Бэкапы | `/etc/cron.d/museum-backup` → `/var/backups/museum/`, 30 дней |
 
@@ -196,6 +197,32 @@ sudo -u museum npm ci && sudo -u museum npm run build
 cd server && sudo -u museum npm ci --omit=dev
 sudo systemctl restart museum-api
 ```
+
+## Голосовой гид /bars (сервер консьержа)
+
+Страница `/bars` — 3D-барс, с которым говорят голосом через Gemini Live. Код барса
+в `src/concierge/` и модель в `public/concierge/` — копия из репозитория
+**ai-concierge** (`web/scripts/export-museum.mjs`), правится там. Токен сессии и
+тулы выдаёт его Java-сервер; nginx отправляет на него `/api/live/` и `/api/tools/`
+(с лимитом 6 токенов в минуту с адреса), остальной `/api/` — касса.
+
+| | |
+|---|---|
+| Код | `/opt/concierge/app.jar` (собирается в ai-concierge: `mvn -DskipTests clean package`, JDK 21) |
+| Java | `/opt/concierge/jre` — Temurin 21 JRE, системной Java на машине нет |
+| Ключ | `/opt/concierge/concierge.env`: `GEMINI_API_KEY=…`, владелец `concierge`, `chmod 600` |
+| Юнит | `/etc/systemd/system/concierge-api.service` (из ai-concierge `server/deploy/`) |
+
+Без этого сервиса сайт и касса работают как обычно, на `/bars` барс виден, но
+«Начать разговор» ответит ошибкой. Обновление сервера:
+
+```bash
+scp server/target/ai-concierge-server-0.1.0.jar root@СЕРВЕР:/opt/concierge/app.jar
+ssh root@СЕРВЕР 'systemctl restart concierge-api && journalctl -u concierge-api -n 20'
+```
+
+Проверка: `curl -s -X POST https://ВАШ-ДОМЕН/api/live/token -H 'content-type: application/json'
+-H 'Origin: https://ВАШ-ДОМЕН' -d '{"lang":"ru"}'` — JSON с полем `token`.
 
 ## Бэкап билетов
 
