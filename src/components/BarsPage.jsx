@@ -150,6 +150,12 @@ export default function BarsPage() {
       <section className="bp-intro">
         <p className="bp-eyebrow">{s.eyebrow}</p>
         <h1 className="bp-title">{s.title}</h1>
+        {/* имя по-японски, как на футболке гида (в японском заголовке оно уже есть) */}
+        {!japanese && (
+          <p className="bp-jp" lang="ja">
+            コクロク
+          </p>
+        )}
         <p className="bp-lead">{s.lead}</p>
       </section>
 

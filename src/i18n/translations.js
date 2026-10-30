@@ -214,7 +214,7 @@ const ru = {
   bars: {
     eyebrow: 'AI-гид музея',
     title: 'Поговорите с Кокуроком',
-    lead: 'Спросите голосом о залах, билетах и часах работы — по-русски, по-кыргызски или по-английски.',
+    lead: 'Спросите голосом о залах, билетах и часах работы — по-русски, по-кыргызски, по-английски или по-японски.',
     start: 'Начать разговор',
     stop: 'Завершить',
     starting: 'Подключаемся…',
@@ -451,7 +451,7 @@ const ky = {
   bars: {
     eyebrow: 'Музейдин AI-гиди',
     title: 'Көкүрөк менен сүйлөшүңүз',
-    lead: 'Залдар, билеттер жана иш убактысы тууралуу үн менен сураңыз — кыргызча, орусча же англисче.',
+    lead: 'Залдар, билеттер жана иш убактысы тууралуу үн менен сураңыз — кыргызча, орусча, англисче же жапончо.',
     start: 'Сүйлөшүүнү баштоо',
     stop: 'Аяктоо',
     starting: 'Туташууда…',
@@ -686,7 +686,7 @@ const en = {
   bars: {
     eyebrow: 'Museum AI guide',
     title: 'Talk to Kokurok',
-    lead: 'Ask about the halls, tickets and opening hours by voice — in English, Russian or Kyrgyz.',
+    lead: 'Ask about the halls, tickets and opening hours by voice — in English, Russian, Kyrgyz or Japanese.',
     start: 'Start talking',
     stop: 'End',
     starting: 'Connecting…',

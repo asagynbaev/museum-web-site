@@ -81,6 +81,13 @@
   line-height: 1.1;
   color: var(--fg);
 }
+.bp-jp {
+  margin: 0.35em 0 0;
+  font-size: clamp(1rem, min(4vw, 2.1dvh), 2.4rem);
+  font-weight: 500;
+  letter-spacing: 0.35em;
+  color: var(--accent);
+}
 .bp-lead {
   max-width: 34em;
   margin: 0.65em auto 0;
