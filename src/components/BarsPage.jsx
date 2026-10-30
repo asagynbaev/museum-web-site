@@ -45,8 +45,6 @@ export default function BarsPage() {
     if (code !== 'ja') setSiteLang(code);
   };
   const stageRef = useRef(null);
-  const userRef = useRef(null);
-  const botRef = useRef(null);
   const conciergeRef = useRef(null);
   const [load, setLoad] = useState('loading'); // loading | ready | error
   const [conn, setConn] = useState({ state: 'idle', detail: '' });
@@ -57,8 +55,6 @@ export default function BarsPage() {
   useEffect(() => {
     const c = new BarsConcierge({
       stage: stageRef.current,
-      userCaption: userRef.current,
-      botCaption: botRef.current,
       assetBase: '/concierge',
       lang,
       // «Кокурок, …» начинает разговор, как у умной колонки (Chrome; кнопка — запасной путь)
@@ -161,10 +157,6 @@ export default function BarsPage() {
             <span className="bp-spinner" />
           </div>
         )}
-        <div className="bp-captions" aria-live="polite">
-          <p className="bp-cap bp-cap-user" ref={userRef} />
-          <p className="bp-cap bp-cap-bot" ref={botRef} />
-        </div>
       </div>
 
       <div className="bp-controls">

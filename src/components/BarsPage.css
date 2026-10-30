@@ -146,38 +146,6 @@
   }
 }
 
-.bp-captions {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: clamp(12px, 2dvh, 36px);
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4em;
-  padding: 0 clamp(12px, 2dvh, 36px);
-  font-size: clamp(0.92rem, min(3.8vw, 1.7dvh), 1.5rem);
-  pointer-events: none;
-}
-.bp-cap {
-  max-width: 100%;
-  margin: 0;
-  padding: 0.55em 1em;
-  border-radius: 0.95em;
-  /* без backdrop-filter: размытие поверх анимации пересчитывается каждый кадр, на встроенной графике это дорого */
-  background: rgba(9, 12, 23, 0.8);
-  font-size: inherit;
-  line-height: 1.45;
-  color: var(--fg);
-}
-.bp-cap:empty {
-  display: none;
-}
-.bp-cap-user {
-  color: var(--fg-dim);
-}
-
 .bp-controls {
   display: flex;
   flex-direction: column;
