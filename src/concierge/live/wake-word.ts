@@ -61,10 +61,16 @@ const W = `а-яё${V}қғңһa-z`;    // word letters
  * Кокуроку); Edge's «Гюк рок» and «gökürk» (the vowel before р swallowed); not the rooster's «кукареку», «кукуруза»
  * nor «как рок…»; plus Latin spellings.
  */
-const NAME = new RegExp(
+const NAME_SOURCE =
   `(?:^|[^${W}])(?!кукарек|как\\s)[кгқ]р?[${V}]{1,2}\\s?[кгқ][${V}]?\\s?р[${V}][кгқ]?(?:а|у|ом|ам|е|і|гі|ке|ка|қа|ға)?(?=$|[^${W}])`
-    + '|\\b[kgc]r?[oöuüa]{1,2}[kgc]{1,2}[oöuüay]{0,2}\\s?r[oöuüae]{0,2}[kc]',
-  'i');
+    + '|\\b[kgc]r?[oöuüa]{1,2}[kgc]{1,2}[oöuüay]{0,2}\\s?r[oöuüae]{0,2}[kc]';
+const NAME = new RegExp(NAME_SOURCE, 'i');
+const NAMES = new RegExp(NAME_SOURCE, 'gi');
+
+/** The guest said only the name («Кокурок!», «kokurak.»): the leopard's «Да, слушаю» waits for the question. */
+export function onlyName(text: string): boolean {
+  return NAME.test(text) && text.replace(NAMES, ' ').replace(/[\s.,!?…«»"'-]+/g, '').length < 3;
+}
 /** Errors after which a recogniser stops for good: no microphone permission, the service is off, its language
  * unsupported; and MAX_FAILS other failures in a row (the service out of reach). */
 const FATAL = new Set(['not-allowed', 'service-not-allowed', 'language-not-supported']);

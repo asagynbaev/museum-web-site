@@ -12,7 +12,7 @@ import { Mic } from '../audio/mic';
 import { PcmPlayer } from '../audio/player';
 import { replyFix } from '../live/reply-guards';
 import { LiveSession, type ConnState, type Lang } from '../live/session';
-import { WakeWord } from '../live/wake-word';
+import { WakeWord, onlyName } from '../live/wake-word';
 
 export type { ConnState, Lang };
 /** The wake word: listening for the name; waiting for a tap (the browser starts no sound before one); off. */
@@ -42,15 +42,19 @@ const FORGET_MS = 180_000;
 const PREROLL_MS = 4000;
 /**
  * With the wake word the leopard answers like a smart speaker: once a reply has been heard out the guest has FOLLOW_MS
- * to go on without the name - FOLLOW_LONG_MS after a question (a ticket code to dictate, a choice) or a short reply
- * (the «Да, слушаю» to the name alone: it parked at once after it, and the question that followed was lost) - and
- * the microphone keeps going while the guest talks, up to HOLD_MS more (the museum's noise must not hold it open).
+ * to go on without the name - FOLLOW_LONG_MS when he waits for more: the guest said only the name, he asked a question
+ * (a ticket code to dictate, a choice) or gave a short reply (the «Да, слушаю» to the name alone: it parked at once
+ * after it, and the question that followed was lost) - and the microphone keeps going while the guest talks, up to
+ * HOLD_MS more. Short on purpose: a passer-by's voice in these seconds is taken for the guest's (his answers
+ * themselves can't be interrupted: see botAudible).
  * Then it stops going to Gemini and the page waits for the name again. The session stays open but "parked" (no audio
  * in, nothing billed), so the next "Кокурок, …" goes on with the same conversation at once, without reconnecting.
  */
-const FOLLOW_MS = 6000;
+const FOLLOW_MS = 3000;
 const FOLLOW_LONG_MS = 10_000;
-const HOLD_MS = 15_000;
+const HOLD_MS = 8000;
+/** The microphone stays away from Gemini this long after the leopard's voice has played out (see botAudible). */
+const BOT_TAIL_MS = 500;
 /** ... and parked anyway when no reply comes this long (the name, then silence or chatter the model lets pass). */
 const IDLE_MS = 15_000;
 
@@ -89,6 +93,7 @@ export class BarsConcierge {
   private toolPending = false;   // (a museum tool's call ends the turn too; the answer comes in the next one)
   private restTimer?: ReturnType<typeof setTimeout>;
   private holdUntil = 0;   // (the guest talking keeps the microphone going until then at most)
+  private audibleAt = -1e9;   // (the last moment the leopard's voice was playing, see botAudible)
   private disposed = false;
   private lang: Lang;
   private running = false;
@@ -157,6 +162,7 @@ export class BarsConcierge {
         this.listening();
       },
       onInterrupted: () => {
+        this.log('ответ перебит');
         this.emotion.release(800);
         this.player.flush();
         this.inTurn = false;
@@ -203,7 +209,8 @@ export class BarsConcierge {
     this.mic = new Mic({
       onChunk: (pcm) => this.micChunk(pcm),
       onSpeechStart: () => {
-        if (!this.running) return;   // (the wake word keeps the microphone open between conversations)
+        // (the wake word keeps the microphone open between conversations; voices over the leopard are not heard)
+        if (!this.running || this.botAudible()) return;
         this.userText = '';
         if (o.userCaption) o.userCaption.textContent = '';
       },
@@ -391,7 +398,7 @@ export class BarsConcierge {
     // (still playing: what was pushed and has not left the player, plus the avatar's stream delay)
     const left = Math.max(0, ((this.player.pushedTotal - this.player.playedNow) / this.player.sampleRate) * 1000 + 300);
     const reply = this.botText.trim();
-    const invites = /[?？]$/.test(reply) || reply.length < 40;
+    const invites = /[?？]$/.test(reply) || reply.length < 40 || onlyName(this.userText);
     this.holdUntil = performance.now() + left + HOLD_MS;
     this.restTimer = setTimeout(() => this.park(), left + (invites ? FOLLOW_LONG_MS : FOLLOW_MS));
   }
@@ -431,7 +438,9 @@ export class BarsConcierge {
     if (this.pending) {
       this.pending.push(pcm);
     } else if (this.running) {
-      this.live.sendAudio(pcm);
+      // Half duplex: while the leopard speaks the microphone does not go to Gemini - its VAD took a passer-by's voice
+      // (or the leopard's own from the speakers) for the guest and cut the answer off. The button still stops him.
+      if (!this.botAudible()) this.live.sendAudio(pcm);
     } else if (this.wake) {
       this.preroll.push(pcm);
       this.prerollLen += pcm.length;
@@ -443,6 +452,14 @@ export class BarsConcierge {
    * conversation stays open as with the button alone. */
   private get hearsName(): boolean {
     return !!this.wake && this.wakeState !== 'off';
+  }
+
+  /** The leopard's voice is playing: his turn, the player's unplayed audio, and BOT_TAIL_MS after (the avatar's
+   * stream delay, the room's echo). */
+  private botAudible(): boolean {
+    const now = performance.now();
+    if (this.inTurn || this.player.pushedTotal - this.player.playedNow > 0) this.audibleAt = now;
+    return now - this.audibleAt < BOT_TAIL_MS;
   }
 
   private setWake(state: WakeState): void {
