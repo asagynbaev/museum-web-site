@@ -102,14 +102,18 @@ const DEG = Math.PI / 180;
  * 0 = no cast shadows, the contact blob stays), the share of fur cards drawn and a frame cap (0 = the screen's rate).
  */
 const QUALITY = [
-  { scale: 1, ao: true, shadow: 2048, blur: 20, fur: 1, fps: 0 },
-  { scale: 0.75, ao: true, shadow: 2048, blur: 20, fur: 1, fps: 0 },
-  { scale: 0.75, ao: false, shadow: 1024, blur: 12, fur: 1, fps: 0 },
-  { scale: 0.6, ao: false, shadow: 1024, blur: 12, fur: 0.6, fps: 0 },
-  { scale: 0.5, ao: false, shadow: 512, blur: 8, fur: 0.4, fps: 30 },
-  { scale: 0.4, ao: false, shadow: 0, blur: 0, fur: 0.25, fps: 30 },
-  { scale: 0.4, ao: false, shadow: 0, blur: 0, fur: 0, fps: 30 },
+  { scale: 1, ao: true, shadow: 2048, blur: 20, fur: 1, fps: 0, lean: false },
+  { scale: 0.75, ao: true, shadow: 2048, blur: 20, fur: 1, fps: 0, lean: false },
+  { scale: 0.75, ao: false, shadow: 1024, blur: 12, fur: 1, fps: 0, lean: false },
+  { scale: 0.6, ao: false, shadow: 1024, blur: 12, fur: 0.6, fps: 0, lean: false },
+  { scale: 0.5, ao: false, shadow: 512, blur: 8, fur: 0.4, fps: 30, lean: true },
+  { scale: 0.4, ao: false, shadow: 0, blur: 0, fur: 0.25, fps: 30, lean: true },
+  { scale: 0.4, ao: false, shadow: 0, blur: 0, fur: 0, fps: 30, lean: true },
 ] as const;
+// lean: no breathing morph, and the body and the fur cut into the head the face morphs move and a rest drawn
+// without morphs (splitByMorphs). The kiosk's HD 4600 (?barsdiag at step 4): 10 fps as is, 15 without the fur,
+// 24 without the fur and the morphs; `breathe` moves 70k of the body's 110k vertices and 186k of the fur's, the face
+// morphs 2-14k each - every active morph is read for every vertex drawn.
 /** A mean frame longer than this (under ~47 fps; a 50 Hz screen gives 20 ms) steps the quality down. */
 const SLOW_FRAME_MS = 21;
 /**
@@ -194,6 +198,107 @@ function shuffleCards(geo: THREE.BufferGeometry): number {
   }
   index.needsUpdate = true;
   return cards.length;
+}
+
+/** The original body and fur, their cut parts (head, rest) and the fur's among them. */
+interface LeanMeshes {
+  originals: THREE.Mesh[];
+  parts: THREE.Mesh[];
+  fur: THREE.Mesh[];
+}
+
+/**
+ * Cuts a skinned, morphed mesh in two: the triangles some morph other than `skip` moves, which keep the morphs, and
+ * the rest, drawn without them (three.js reads every active morph for every vertex it draws). The cut runs along
+ * vertices no morph moves, so the halves meet without a crack.
+ */
+function splitByMorphs(mesh: THREE.SkinnedMesh, skip: number | undefined): [THREE.SkinnedMesh, THREE.SkinnedMesh] {
+  const g = mesh.geometry;
+  const n = g.getAttribute('position').count;
+  const moved = new Uint8Array(n);
+  const mark = (list: (THREE.BufferAttribute | THREE.InterleavedBufferAttribute)[] | undefined, eps: number): void => {
+    list?.forEach((a, t) => {
+      if (t === skip) return;
+      if ((a as THREE.InterleavedBufferAttribute).isInterleavedBufferAttribute || a.itemSize !== 3 || a.normalized) {
+        for (let i = 0; i < n; i++) {
+          if (!moved[i] && (Math.abs(a.getX(i)) > eps || Math.abs(a.getY(i)) > eps || Math.abs(a.getZ(i)) > eps)) moved[i] = 1;
+        }
+        return;
+      }
+      const v = a.array;   // (the usual case, read directly: 32 targets × 460k fur vertices on a kiosk's CPU)
+      for (let i = 0, j = 0; i < n; i++, j += 3) {
+        if (!moved[i] && (Math.abs(v[j]) > eps || Math.abs(v[j + 1]) > eps || Math.abs(v[j + 2]) > eps)) moved[i] = 1;
+      }
+    });
+  };
+  mark(g.morphAttributes.position, 1e-5);
+  mark(g.morphAttributes.normal, 1e-4);
+  const idx = g.index!.array;
+  const head: number[] = [];
+  const rest: number[] = [];
+  for (let t = 0; t < idx.length; t += 3) {
+    (moved[idx[t]] || moved[idx[t + 1]] || moved[idx[t + 2]] ? head : rest).push(idx[t], idx[t + 1], idx[t + 2]);
+  }
+  return [subMesh(mesh, head, true), subMesh(mesh, rest, false)];
+}
+
+/** A skinned mesh of some of `mesh`'s triangles, with only their vertices; beside it, on the same skeleton, hidden. */
+function subMesh(mesh: THREE.SkinnedMesh, tris: number[], morphs: boolean): THREE.SkinnedMesh {
+  const g = mesh.geometry;
+  const remap = new Int32Array(g.getAttribute('position').count).fill(-1);
+  const order: number[] = [];
+  const index = new Uint32Array(tris.length);
+  for (let i = 0; i < tris.length; i++) {
+    let v = remap[tris[i]];
+    if (v < 0) {
+      v = remap[tris[i]] = order.length;
+      order.push(tris[i]);
+    }
+    index[i] = v;
+  }
+  // (raw values: the stored integers of a normalized attribute are copied as they are)
+  const pick = (a: THREE.BufferAttribute | THREE.InterleavedBufferAttribute): THREE.BufferAttribute => {
+    const s = a.itemSize;
+    const inter = (a as THREE.InterleavedBufferAttribute).isInterleavedBufferAttribute;
+    const src = inter ? (a as THREE.InterleavedBufferAttribute).data.array : a.array;
+    const stride = inter ? (a as THREE.InterleavedBufferAttribute).data.stride : s;
+    const offset = inter ? (a as THREE.InterleavedBufferAttribute).offset : 0;
+    const out = new (src.constructor as new (len: number) => typeof src)(order.length * s);
+    for (let i = 0; i < order.length; i++) {
+      const from = order[i] * stride + offset;
+      for (let c = 0; c < s; c++) out[i * s + c] = src[from + c];
+    }
+    return new THREE.BufferAttribute(out, s, a.normalized);
+  };
+  const geo = new THREE.BufferGeometry();
+  for (const [name, a] of Object.entries(g.attributes)) geo.setAttribute(name, pick(a));
+  geo.setIndex(new THREE.BufferAttribute(index, 1));
+  if (morphs) {
+    for (const name of ['position', 'normal', 'color'] as const) {
+      const list = g.morphAttributes[name];
+      if (list) geo.morphAttributes[name] = list.map(pick);
+    }
+    geo.morphTargetsRelative = g.morphTargetsRelative;
+  }
+  const m = new THREE.SkinnedMesh(geo, mesh.material);
+  m.name = `${mesh.name}${morphs ? '_head' : '_rest'}`;   // (keeps "_fur": the AO pass hides the fur by name)
+  m.position.copy(mesh.position);
+  m.quaternion.copy(mesh.quaternion);
+  m.scale.copy(mesh.scale);
+  m.bind(mesh.skeleton, mesh.bindMatrix);
+  m.bindMode = mesh.bindMode;
+  m.frustumCulled = false;
+  m.castShadow = mesh.castShadow;
+  m.receiveShadow = mesh.receiveShadow;
+  m.renderOrder = mesh.renderOrder;
+  m.userData = { ...mesh.userData };
+  if (morphs) {
+    m.morphTargetInfluences = mesh.morphTargetInfluences?.slice() ?? [];
+    m.morphTargetDictionary = mesh.morphTargetDictionary;
+  }
+  m.visible = false;
+  mesh.parent?.add(m);
+  return m;
 }
 
 export class BarsAvatar {
@@ -309,8 +414,10 @@ export class BarsAvatar {
   private gpu = '';
   private keyLight?: THREE.DirectionalLight;
   private shadowsOn = true;  // (?barsshadow=0)
-  private furMesh?: THREE.Mesh;
-  private furCards = 0;      // cards found by shuffleCards (0 = not shuffled yet: only needed below fur 1)
+  private furMesh?: THREE.SkinnedMesh;
+  private bodyMesh?: THREE.SkinnedMesh;
+  /** The body and the fur cut for the lean steps (splitByMorphs), built the first time one is used. */
+  private lean?: LeanMeshes;
   private hud?: HTMLDivElement;   // ?barsfps: frame rate, step, render size and GPU over the stage
   private diag?: { phase: number; at: number; frames: number; rows: string[] };   // ?barsdiag (see DIAG)
   private diagOff: (typeof DIAG)[number] = { label: '' };
@@ -600,7 +707,7 @@ export class BarsAvatar {
         mesh.castShadow = false;
         mesh.receiveShadow = true;
         this.meshes.push(mesh);
-        this.furMesh = mesh;
+        if ((mesh as THREE.SkinnedMesh).isSkinnedMesh) this.furMesh = mesh as THREE.SkinnedMesh;
         return;
       }
       if (src.name === 'Glint') {
@@ -681,7 +788,10 @@ void main() {`)
         };
         m.customProgramCacheKey = () => (this.artFace ? 'bars-eyes-fur-art' : 'bars-eyes-fur');
         mesh.material = m;
-        if ((mesh as THREE.SkinnedMesh).isSkinnedMesh) bodies.push(mesh as THREE.SkinnedMesh);
+        if ((mesh as THREE.SkinnedMesh).isSkinnedMesh) {
+          bodies.push(mesh as THREE.SkinnedMesh);
+          this.bodyMesh = mesh as THREE.SkinnedMesh;
+        }
       }
       this.meshes.push(mesh);
     });
@@ -740,7 +850,7 @@ void main() {`)
     this.scene.add(model);
     this.model = model;
     this.bounds.setFromObject(model);
-    this.applyFur();   // (a weak GPU starts below the full coat)
+    this.applyLean();   // (a weak GPU starts at a lean step)
   }
 
   /** Long hair-thin whiskers like the concept art (the sculpted ones are collapsed by the build). */
@@ -816,8 +926,35 @@ void main() {`)
     this.renderer?.setPixelRatio(ratio);
     this.composer?.setPixelRatio(ratio);
     this.setShadow(q.shadow, q.blur);
-    this.applyFur();
+    this.applyLean();
     this.resize();
+  }
+
+  /** The lean steps draw the cut body and fur (built once, the first time), the others the original meshes. */
+  private applyLean(): void {
+    const on = QUALITY[this.quality].lean;
+    if (on && !this.lean && this.bodyMesh) {
+      const t = performance.now();
+      const skip = this.morph.breathe;
+      const lean: LeanMeshes = { originals: [], parts: [], fur: [] };
+      for (const mesh of [this.bodyMesh, this.furMesh]) {
+        if (!mesh) continue;
+        const [head, rest] = splitByMorphs(mesh, skip);
+        lean.originals.push(mesh);
+        lean.parts.push(head, rest);
+        if (mesh === this.furMesh) lean.fur.push(head, rest);
+        this.meshes.push(head);   // (setMorph drives the head's morphs; the rest has none)
+        console.info(`[bars] ${mesh.name}: ${head.geometry.getAttribute('position').count} vertices with morphs, `
+          + `${rest.geometry.getAttribute('position').count} without`);
+      }
+      this.lean = lean;
+      console.info(`[bars] lean meshes cut in ${(performance.now() - t).toFixed(0)} ms`);
+    }
+    if (this.lean) {
+      for (const m of this.lean.originals) m.visible = !on;
+      for (const m of this.lean.parts) m.visible = on;
+    }
+    this.applyFur();
   }
 
   /** The key light's soft shadow: map size and blur samples; 0 stops casting (the materials recompile once). */
@@ -835,19 +972,22 @@ void main() {`)
     }
   }
 
-  /** Draws QUALITY[].fur of the fur cards (shuffled once, the first time fewer than all are drawn). */
+  /** Draws QUALITY[].fur of the fur cards (each fur mesh shuffled once, the first time fewer than all are drawn). */
   private applyFur(): void {
-    const fur = this.furMesh;
-    const geo = fur?.geometry;
-    if (!fur || !geo?.index) return;
-    const share = QUALITY[this.quality].fur;
-    fur.visible = share > 0 && !this.diagOff.fur;
-    if (share < 1 && !this.furCards) {
-      const t = performance.now();
-      this.furCards = shuffleCards(geo);
-      console.info(`[bars] fur: ${this.furCards} cards shuffled in ${(performance.now() - t).toFixed(0)} ms`);
+    const { fur: share, lean } = QUALITY[this.quality];
+    const drawn = lean && this.lean ? this.lean.fur : this.furMesh ? [this.furMesh] : [];
+    for (const m of [this.furMesh, ...(this.lean?.fur ?? [])]) if (m) m.visible = false;
+    for (const m of drawn) {
+      const geo = m.geometry;
+      m.visible = share > 0 && !this.diagOff.fur;
+      if (!geo.index) continue;
+      if (share < 1 && !m.userData.cards) {
+        const t = performance.now();
+        m.userData.cards = shuffleCards(geo);
+        console.info(`[bars] ${m.name}: ${m.userData.cards} cards shuffled in ${(performance.now() - t).toFixed(0)} ms`);
+      }
+      geo.setDrawRange(0, share >= 1 ? Infinity : Math.floor((geo.index.count * share) / 3) * 3);
     }
-    geo.setDrawRange(0, share >= 1 ? Infinity : Math.floor((geo.index.count * share) / 3) * 3);
   }
 
   /**
@@ -1165,7 +1305,8 @@ void main() {`)
     const ph = this.breathPhase;
     const sm3 = (x: number): number => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
     const breath = ph < 0.4 ? sm3(ph / 0.4) : 1 - sm3((ph - 0.4) / 0.6);
-    this.setMorph('breathe', (speaking ? 0.35 : 0.5) + (speaking ? 0.35 : 0.5) * breath);
+    // (lean steps: no breathing - the morph moves most of the body and the fur, see QUALITY)
+    this.setMorph('breathe', QUALITY[this.quality].lean ? 0 : (speaking ? 0.35 : 0.5) + (speaking ? 0.35 : 0.5) * breath);
 
     // --- head: slow drift + attentive tilt while listening, bob with the speech, plus the expression's pose
     if (speaking && !this.wasSpeaking) this.nodNext = t + 0.15;
