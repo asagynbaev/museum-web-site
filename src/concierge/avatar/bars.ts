@@ -108,6 +108,7 @@ const QUALITY = [
   { scale: 0.6, ao: false, shadow: 1024, blur: 12, fur: 0.6, fps: 0 },
   { scale: 0.5, ao: false, shadow: 512, blur: 8, fur: 0.4, fps: 30 },
   { scale: 0.4, ao: false, shadow: 0, blur: 0, fur: 0.25, fps: 30 },
+  { scale: 0.4, ao: false, shadow: 0, blur: 0, fur: 0, fps: 30 },
 ] as const;
 /** A mean frame longer than this (under ~47 fps; a 50 Hz screen gives 20 ms) steps the quality down. */
 const SLOW_FRAME_MS = 21;
@@ -117,6 +118,19 @@ const SLOW_FRAME_MS = 21;
  */
 const WEAK_GPU = /Intel.*\b(HD|UHD) Graphics|SwiftShader|llvmpipe|Microsoft Basic Render|Mali|Adreno \(TM\) [3-6]\d\d|PowerVR/i;
 const WEAK_START = 4;
+
+/**
+ * ?barsdiag: the frame rate (no cap) with parts of the scene switched off one after another, printed over the stage -
+ * a photo of it from a kiosk too weak for the leopard tells what to cut (its HD 4600 did 10-20 fps at step 5).
+ */
+const DIAG: { label: string; fur?: boolean; morphs?: boolean; anim?: boolean; model?: boolean; tiny?: boolean }[] = [
+  { label: 'как есть' },
+  { label: 'без меха', fur: true },
+  { label: 'без меха и морфов', fur: true, morphs: true },
+  { label: 'без меха, морфов, анимации', fur: true, morphs: true, anim: true },
+  { label: 'без барса', model: true },
+  { label: 'холст 1/8', tiny: true },
+];
 
 /** The GPU's name (unmasked where the browser allows), from a throwaway context. */
 function gpuName(): string {
@@ -298,6 +312,8 @@ export class BarsAvatar {
   private furMesh?: THREE.Mesh;
   private furCards = 0;      // cards found by shuffleCards (0 = not shuffled yet: only needed below fur 1)
   private hud?: HTMLDivElement;   // ?barsfps: frame rate, step, render size and GPU over the stage
+  private diag?: { phase: number; at: number; frames: number; rows: string[] };   // ?barsdiag (see DIAG)
+  private diagOff: (typeof DIAG)[number] = { label: '' };
   /** Jaw multiplier (tuning knob). */
   jawGain = 1;
   /** Demo: synthetic speech (visemes cycling, no audio) to check the mouth without a conversation. */
@@ -478,10 +494,11 @@ export class BarsAvatar {
     } else if (weak) {
       this.setQuality(WEAK_START);
     }
-    if (params.has('barsfps')) {
+    if (params.has('barsdiag')) this.diag = { phase: -1, at: 0, frames: 0, rows: [] };
+    if (params.has('barsfps') || this.diag) {
       this.hud = document.createElement('div');
       this.hud.style.cssText = 'position:absolute;left:8px;top:8px;z-index:5;padding:2px 6px;border-radius:4px;'
-        + 'background:rgba(0,0,0,.6);color:#fff;font:12px/1.4 monospace;pointer-events:none';
+        + 'background:rgba(0,0,0,.6);color:#fff;font:12px/1.4 monospace;white-space:pre;pointer-events:none';
       this.container.append(this.hud);
     }
     this.resizeObserver = new ResizeObserver(() => this.resize());
@@ -820,9 +837,11 @@ void main() {`)
 
   /** Draws QUALITY[].fur of the fur cards (shuffled once, the first time fewer than all are drawn). */
   private applyFur(): void {
-    const geo = this.furMesh?.geometry;
-    if (!geo?.index) return;
+    const fur = this.furMesh;
+    const geo = fur?.geometry;
+    if (!fur || !geo?.index) return;
     const share = QUALITY[this.quality].fur;
+    fur.visible = share > 0 && !this.diagOff.fur;
     if (share < 1 && !this.furCards) {
       const t = performance.now();
       this.furCards = shuffleCards(geo);
@@ -839,6 +858,7 @@ void main() {`)
   private judgeFrame(ms: number): void {
     const now = performance.now();
     if (!this.autoQuality || document.hidden || now < this.qualityAt || ms > 250) return;  // (a hitch, a hidden tab)
+    if (this.diag && this.diag.phase < DIAG.length) return;   // (?barsdiag is measuring)
     this.frameCount++;
     this.frameSum += ms;
     if (this.frameSum < 2000 || this.frameCount < 20) return;
@@ -867,6 +887,39 @@ void main() {`)
     }
   }
 
+  /** ?barsdiag: switches off what DIAG[phase] says (past the end: nothing) at the current quality step. */
+  private diagApply(phase: number): void {
+    this.diagOff = DIAG[phase] ?? { label: '' };
+    if (this.model) this.model.visible = !this.diagOff.model;
+    this.applyFur();
+    const ratio = Math.max(0.4, Math.min(window.devicePixelRatio, 2) * QUALITY[this.quality].scale);
+    const r = this.diagOff.tiny ? ratio / 8 : ratio;
+    this.renderer?.setPixelRatio(r);
+    this.composer?.setPixelRatio(r);
+    this.resize();
+  }
+
+  /** ?barsdiag: 3 s after the start, each phase 4 s - 1 s to settle, then the frames of 3 s. */
+  private diagFrame(now: number): void {
+    const d = this.diag;
+    if (!d || d.phase >= DIAG.length) return;
+    if (d.phase < 0) {
+      if (!d.at) d.at = now;
+      if (now - d.at < 3000) return;
+      d.phase = 0;
+      d.at = now;
+      this.diagApply(0);
+      return;
+    }
+    if (now - d.at > 1000) d.frames++;
+    if (now - d.at < 4000) return;
+    d.rows.push(`${DIAG[d.phase].label.padEnd(28)} ${(d.frames / 3).toFixed(0).padStart(3)} fps`);
+    d.phase++;
+    d.at = now;
+    d.frames = 0;
+    this.diagApply(d.phase);
+  }
+
   private resize(): void {
     if (!this.renderer) return;
     const w = Math.max(1, this.container.clientWidth);
@@ -881,7 +934,12 @@ void main() {`)
   private setMorph(name: string, v: number): void {
     const i = this.morph[name];
     if (i === undefined) return;
-    for (const m of this.meshes) if (m.morphTargetInfluences) m.morphTargetInfluences[i] = v;
+    // The springs only ever approach 0, and three.js reads every non-zero morph from its texture for every vertex
+    // of the body and the fur, each frame: a morph used once (an emotion, a blink) stayed "on" for good - free on a
+    // big GPU, not on an integrated one reading shared memory. Under 0.004 a morph moves the skin by hundredths of
+    // a millimetre.
+    const w = Math.abs(v) < 0.004 ? 0 : v;
+    for (const m of this.meshes) if (m.morphTargetInfluences) m.morphTargetInfluences[i] = w;
   }
 
   private rotate(name: string, x: number, y: number, z: number): void {
@@ -908,7 +966,8 @@ void main() {`)
   private readonly tick = (): void => {
     this.raf = requestAnimationFrame(this.tick);
     const now0 = performance.now();
-    const cap = QUALITY[this.quality].fps;
+    const measuring = this.diag && this.diag.phase < DIAG.length;
+    const cap = measuring ? 0 : QUALITY[this.quality].fps;
     if (cap && now0 - this.last < 1000 / cap - 4) return;   // (a weak GPU draws every other frame of a 60 Hz screen)
     // the first frames after a load run with a long step: every spring lands on its target at once, instead of the
     // face settling (lids closing, the smile arriving) in front of the viewer
@@ -916,13 +975,15 @@ void main() {`)
     const dt = this.warm++ < 4 ? 1 : Math.min(0.05, step / 1000);
     this.last = now0;
     this.time += dt;
-    this.animate(dt);
+    if (!this.diagOff.anim) this.animate(dt);
     for (const [k, v] of Object.entries(this.pose)) this.setMorph(k, v);
     for (const [k, [x, y, z]] of Object.entries(this.bonePose)) this.rotate(k, x * DEG, y * DEG, z * DEG);
+    if (this.diagOff.morphs) for (const m of this.meshes) m.morphTargetInfluences?.fill(0);
     // (without the AO pass: straight to the screen, which has MSAA, so no SMAA either)
     if (this.composer && QUALITY[this.quality].ao) this.composer.render();
     else this.renderer?.render(this.scene, this.camera);
     this.judgeFrame(step);
+    this.diagFrame(now0);
     this.frames++;
     const now = performance.now();
     if (now - this.fpsAt >= 1000) {
@@ -931,8 +992,15 @@ void main() {`)
       this.fpsAt = now;
       if (this.hud) {
         const c = this.renderer?.domElement;
-        this.hud.textContent = `${this.fps} fps · q${this.quality}${this.autoQuality ? '' : ' fixed'} · `
-          + `${c?.width}×${c?.height} · ${this.gpu.replace(/^ANGLE \((.*)\)$/, '$1').slice(0, 60)}`;
+        const morphs = this.meshes[0]?.morphTargetInfluences?.filter((v) => v !== 0).length ?? 0;
+        let text = `${this.fps} fps · q${this.quality}${this.autoQuality ? '' : ' fixed'} · ${c?.width}×${c?.height}`
+          + ` · morphs ${morphs} · ${this.gpu.replace(/^ANGLE \((.*)\)$/, '$1').slice(0, 60)}`;
+        const d = this.diag;
+        if (d) {
+          const now = DIAG[d.phase]?.label;
+          text += `\n${d.rows.join('\n')}${now ? `\n${now} …` : d.phase < 0 ? '\nдиагностика через 3 с …' : '\nготово'}`;
+        }
+        this.hud.textContent = text;
       }
     }
   };
