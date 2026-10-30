@@ -55,11 +55,13 @@ export class LiveSession {
    * goes on with the same conversation (Gemini keeps it ~2 h; the handle lives in memory, a page reload starts
    * over); a new language starts a fresh one (the language is in the token's system prompt).
    */
-  async connect(lang: Lang = 'auto'): Promise<void> {
+  async connect(lang: Lang = 'auto', silent = false): Promise<void> {
     if (lang !== this.lang) this.handle = undefined;
     this.lang = lang;
     this.closedByUser = false;
+    // (silent: the guest's own words open the conversation - the wake word's phrase, sent as audio right after)
     this.trigger = this.handle ? CONTINUE_TRIGGER : GREETING_TRIGGER;
+    if (silent) this.trigger = undefined;
     await this.open();
   }
 

@@ -25,6 +25,7 @@ export default function BarsPage() {
   const [conn, setConn] = useState({ state: 'idle', detail: '' });
   const [running, setRunning] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [wake, setWake] = useState('off'); // listening | tap | off — ждёт ли гид своё имя
 
   useEffect(() => {
     const c = new BarsConcierge({
@@ -33,6 +34,9 @@ export default function BarsPage() {
       botCaption: botRef.current,
       assetBase: '/concierge',
       lang,
+      // «Батай, …» начинает разговор, как у умной колонки (Chrome; кнопка — запасной путь)
+      wakeWord: true,
+      onWake: setWake,
       onState: (state, detail = '') => setConn({ state, detail }),
       onRunning: setRunning,
     });
@@ -79,9 +83,14 @@ export default function BarsPage() {
       const denied = /NotAllowed|Permission|denied/i.test(conn.detail);
       return { text: denied ? s.micDenied : s.error, tone: 'error' };
     }
-    if (starting || conn.state === 'connecting') return { text: s.starting, tone: 'muted' };
+    // (сокет открыт, но сессия ещё настраивается: разговор по имени стартует без кнопки)
+    if (starting || conn.state === 'connecting' || (conn.state === 'connected' && !running)) {
+      return { text: s.starting, tone: 'muted' };
+    }
     if (conn.state === 'reconnecting') return { text: s.reconnecting, tone: 'muted' };
     if (running) return { text: s.listening, tone: 'live' };
+    if (wake === 'listening') return { text: s.sayName, tone: 'wake' };
+    if (wake === 'tap') return { text: s.tapToWake, tone: 'wake' };
     return { text: '', tone: 'muted' };
   })();
 

@@ -229,6 +229,11 @@
 .bp-status.live {
   color: var(--accent-2);
 }
+/* «скажите „Батай“» — главное приглашение экрана, крупнее остальных статусов */
+.bp-status.wake {
+  font-size: 1.05em;
+  color: var(--fg);
+}
 .bp-status.error {
   color: var(--gold-2);
 }

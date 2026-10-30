@@ -24,6 +24,11 @@ export class Mic {
     return !!this.ctx;
   }
 
+  /** The microphone's track (the wake word's recogniser listens to the same one). */
+  get track(): MediaStreamTrack | undefined {
+    return this.stream?.getAudioTracks()[0];
+  }
+
   async start(): Promise<void> {
     this.stream = await navigator.mediaDevices.getUserMedia({
       audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
