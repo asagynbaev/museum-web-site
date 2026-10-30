@@ -81,11 +81,13 @@
   line-height: 1.1;
   color: var(--fg);
 }
-.bp-jp {
+.bp-name {
   margin: 0.35em 0 0;
+  font-family: var(--display);
   font-size: clamp(1rem, min(4vw, 2.1dvh), 2.4rem);
-  font-weight: 500;
-  letter-spacing: 0.35em;
+  font-weight: 400;
+  letter-spacing: 0.45em;
+  text-indent: 0.45em; /* (letter-spacing оставляет хвост справа — центр уезжал) */
   color: var(--accent);
 }
 .bp-lead {
