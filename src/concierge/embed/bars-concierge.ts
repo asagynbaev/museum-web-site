@@ -41,12 +41,16 @@ const FORGET_MS = 180_000;
 /** The microphone kept while waiting for the name (recognised ~1 s late): the phrase reaches Gemini whole. */
 const PREROLL_MS = 4000;
 /**
- * With the wake word the leopard answers like a smart speaker: once a reply has been heard out the microphone stops
- * going to Gemini and the page waits for the name again - FOLLOW_MS later if the reply ended with a question (a
- * ticket code to dictate, a choice). The session stays open but "parked" (no audio in, nothing billed), so the next
- * "Кокурок, …" goes on with the same conversation at once, without reconnecting.
+ * With the wake word the leopard answers like a smart speaker: once a reply has been heard out the guest has FOLLOW_MS
+ * to go on without the name - FOLLOW_LONG_MS after a question (a ticket code to dictate, a choice) or a short reply
+ * (the «Да, слушаю» to the name alone: it parked at once after it, and the question that followed was lost) - and
+ * the microphone keeps going while the guest talks, up to HOLD_MS more (the museum's noise must not hold it open).
+ * Then it stops going to Gemini and the page waits for the name again. The session stays open but "parked" (no audio
+ * in, nothing billed), so the next "Кокурок, …" goes on with the same conversation at once, without reconnecting.
  */
-const FOLLOW_MS = 8000;
+const FOLLOW_MS = 6000;
+const FOLLOW_LONG_MS = 10_000;
+const HOLD_MS = 15_000;
 /** ... and parked anyway when no reply comes this long (the name, then silence or chatter the model lets pass). */
 const IDLE_MS = 15_000;
 
@@ -84,6 +88,7 @@ export class BarsConcierge {
   private spokeInTurn = false;   // (set_emotion ends a turn of its own before the voice: only a voiced one is a reply)
   private toolPending = false;   // (a museum tool's call ends the turn too; the answer comes in the next one)
   private restTimer?: ReturnType<typeof setTimeout>;
+  private holdUntil = 0;   // (the guest talking keeps the microphone going until then at most)
   private disposed = false;
   private lang: Lang;
   private running = false;
@@ -379,21 +384,24 @@ export class BarsConcierge {
     void this.start(true);
   }
 
-  /** Wake mode: once the reply has been heard out, park - FOLLOW_MS later if it ended with a question. */
+  /** Wake mode: once the reply has been heard out, the guest's FOLLOW_MS (or FOLLOW_LONG_MS), then park. */
   private afterReply(): void {
     if (!this.hearsName || !this.running) return;
     clearTimeout(this.restTimer);
     // (still playing: what was pushed and has not left the player, plus the avatar's stream delay)
-    const left = ((this.player.pushedTotal - this.player.playedNow) / this.player.sampleRate) * 1000 + 300;
-    const question = /[?？]\s*$/.test(this.botText.trim());
-    this.restTimer = setTimeout(() => this.park(), Math.max(0, left) + (question ? FOLLOW_MS : 300));
+    const left = Math.max(0, ((this.player.pushedTotal - this.player.playedNow) / this.player.sampleRate) * 1000 + 300);
+    const reply = this.botText.trim();
+    const invites = /[?？]$/.test(reply) || reply.length < 40;
+    this.holdUntil = performance.now() + left + HOLD_MS;
+    this.restTimer = setTimeout(() => this.park(), left + (invites ? FOLLOW_LONG_MS : FOLLOW_MS));
   }
 
   /** The microphone stops going to Gemini (the session stays open) and the page waits for the name again. */
   private park(): void {
     if (!this.hearsName || !this.running || this.inTurn) return;   // (a reply under way parks itself when done)
-    if (performance.now() - this.lastUser < 1500) {
-      this.restTimer = setTimeout(() => this.park(), 1500);   // (the guest is still answering the question)
+    const now = performance.now();
+    if ((now - this.lastUser < 1500 || this.mic.speakingNow) && now < this.holdUntil) {
+      this.restTimer = setTimeout(() => this.park(), 1000);   // (the guest is talking: a question on its way)
       return;
     }
     this.running = false;

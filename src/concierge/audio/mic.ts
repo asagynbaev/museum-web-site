@@ -25,6 +25,11 @@ export class Mic {
     return !!this.ctx;
   }
 
+  /** The local VAD hears speech right now. */
+  get speakingNow(): boolean {
+    return this.speaking;
+  }
+
   /**
    * The microphone at this context's 16 kHz, as a track, for the wake word's recogniser: Edge garbled the 48 kHz
    * capture track ("Я сейчас когда?") and heard nothing from a 48 kHz copy, but took a 16 kHz one cleanly
