@@ -40,12 +40,15 @@ export interface BarsConciergeOptions {
 const FORGET_MS = 180_000;
 /** The microphone kept while waiting for the name (recognised ~1 s late): the phrase reaches Gemini whole. */
 const PREROLL_MS = 2500;
-/** With the wake word a conversation "falls asleep" (back to waiting for the name; an open session's microphone is
- * billed by the second): this long after the leopard last spoke, if the guest has been quiet for SLEEP_QUIET_MS ... */
-const SLEEP_MS = 30_000;
-const SLEEP_QUIET_MS = 10_000;
-/** ... and after this long in any case (the museum's chatter keeps the transcript going). */
-const SLEEP_MAX_MS = 60_000;
+/**
+ * With the wake word the leopard answers like a smart speaker: once a reply has been heard out the microphone stops
+ * going to Gemini and the page waits for the name again - FOLLOW_MS later if the reply ended with a question (a
+ * ticket code to dictate, a choice). The session stays open but "parked" (no audio in, nothing billed), so the next
+ * "Кокурок, …" goes on with the same conversation at once, without reconnecting.
+ */
+const FOLLOW_MS = 8000;
+/** ... and parked anyway when no reply comes this long (the name, then silence or chatter the model lets pass). */
+const IDLE_MS = 15_000;
 
 /** Can the page start sound now? After any tap on it, or when the browser allows autoplay (a kiosk started with
  * --autoplay-policy=no-user-gesture-required, or Chrome's media engagement for a site visited often). */
@@ -76,6 +79,11 @@ export class BarsConcierge {
   private pending?: Int16Array[];
   private lastBot = 0;
   private lastUser = 0;
+  /** Wake mode: the session is open but gets no microphone while the page waits for the name (see FOLLOW_MS). */
+  private parked = false;
+  private spokeInTurn = false;   // (set_emotion ends a turn of its own before the voice: only a voiced one is a reply)
+  private toolPending = false;   // (a museum tool's call ends the turn too; the answer comes in the next one)
+  private restTimer?: ReturnType<typeof setTimeout>;
   private disposed = false;
   private lang: Lang;
   private running = false;
@@ -122,13 +130,24 @@ export class BarsConcierge {
 
     this.live = new LiveSession({
       onState: (s, d) => {
+        if (this.parked) {
+          // (a parked session's own reconnects are not the guest's business; one that died is simply gone)
+          if (s === 'error') {
+            this.parked = false;
+            this.log(`сессия в ожидании закрылась: ${d ?? ''}`);
+          }
+          return;
+        }
         if (s === 'error') this.halt();   // (the session closed itself: a fatal close or reconnects ran out)
         o.onState?.(s, d);
       },
       onAudio: (pcm) => {
+        if (this.parked) this.unpark();   // (a late reply to the last phrase: the guest hears it out, not the name)
         this.beginBotTurn();
         this.talked();
         this.lastBot = performance.now();
+        this.spokeInTurn = true;
+        this.toolPending = false;
         this.player.push(pcm);
         this.listening();
       },
@@ -136,8 +155,11 @@ export class BarsConcierge {
         this.emotion.release(800);
         this.player.flush();
         this.inTurn = false;
+        clearTimeout(this.restTimer);   // (the guest talks over the reply)
       },
       onTurnComplete: () => {
+        const spoke = this.spokeInTurn;
+        this.spokeInTurn = false;
         this.inTurn = false;
         this.emotion.release(2500);
         this.listening();
@@ -150,6 +172,7 @@ export class BarsConcierge {
           return;
         }
         this.nudged = false;
+        if (spoke && !this.toolPending) this.afterReply();
       },
       onInputTranscript: (t) => {
         this.talked();
@@ -167,6 +190,7 @@ export class BarsConcierge {
       },
       onToolCall: (name, args) => {
         this.log(`tool ${name} ${JSON.stringify(args)}`);
+        this.toolPending = true;
         this.thinking(8000);   // a tool call ends the model's turn before it answers
       },
       onLog: (line) => this.log(line),
@@ -194,17 +218,22 @@ export class BarsConcierge {
       document.addEventListener('pointerdown', this.onTap);
     }
     this.forgetTimer = setInterval(() => {
-      if (!this.running) return;
       const now = performance.now();
+      if (this.parked && now - this.lastTalk > FORGET_MS) {
+        this.log('3 мин без разговора — закрываю сессию и забываю');
+        this.parked = false;
+        this.live.close();
+        this.forget();
+        return;
+      }
+      if (!this.running) return;
       if (now - this.lastTalk > FORGET_MS) {
         this.log('3 мин без разговора — завершаю и забываю');
         this.stop();
         this.forget();
-      } else if (this.wake && !this.inTurn && (now - this.lastBot > SLEEP_MAX_MS
-          || (now - this.lastBot > SLEEP_MS && now - this.lastUser > SLEEP_QUIET_MS))) {
-        this.log('тишина — засыпаю, жду имени');
-        this.stop();
-        this.forget();   // (the captions go; the name opens a new conversation anyway, see heardName)
+      } else if (this.wake && !this.inTurn && now - this.lastBot > IDLE_MS && now - this.lastUser > IDLE_MS / 2) {
+        this.log('ответа нет — жду имени');
+        this.park();
       }
     }, 5000);
   }
@@ -219,6 +248,12 @@ export class BarsConcierge {
    */
   async start(byName = false): Promise<void> {
     if (this.running || this.busy) return;
+    if (this.parked && this.live.connected) {
+      this.wake?.stop();
+      this.unpark();   // (the button while the session waits: the guest just talks on)
+      return;
+    }
+    this.parked = false;
     this.busy = true;
     this.wake?.stop();
     if (performance.now() - this.lastTalk > FORGET_MS) this.forget();
@@ -247,6 +282,7 @@ export class BarsConcierge {
   }
 
   stop(): void {
+    this.parked = false;   // (first: the session's 'closed' must reach the page)
     this.live.close();
     this.halt();
   }
@@ -254,6 +290,8 @@ export class BarsConcierge {
   /** Everything stop() does but closing the session; with the wake word, back to waiting for the name. */
   private halt(): void {
     if (!this.wake || this.disposed) this.mic.stop();
+    this.parked = false;
+    clearTimeout(this.restTimer);
     this.pending = undefined;
     this.avatar.detachStream();
     this.player.flush();
@@ -271,6 +309,10 @@ export class BarsConcierge {
   async setLang(next: Lang): Promise<void> {
     if (next === this.lang) return;
     this.lang = next;
+    if (this.parked) {
+      this.parked = false;   // (a waiting session speaks the old language: the name opens one in the new)
+      this.live.close();
+    }
     if (!this.running) return;
     this.live.close();
     this.player.flush();
@@ -321,14 +363,59 @@ export class BarsConcierge {
 
   private heardName(): void {
     if (this.running || this.busy || this.disposed) return;
-    this.log('услышал имя — начинаю разговор');
-    // Always a new conversation: a resumed session now and then comes back deaf, and only the continue trigger's
-    // watchdog notices that (live/session.ts) - a conversation opened by the name sends no trigger.
-    this.forget();
     this.pending = this.preroll;
     this.preroll = [];
     this.prerollLen = 0;
+    if (this.parked && this.live.connected) {
+      this.log('услышал имя — продолжаю разговор');
+      this.unpark();
+      return;
+    }
+    this.log('услышал имя — начинаю разговор');
+    // A closed conversation is not resumed: a resumed session now and then comes back deaf, and only the continue
+    // trigger's watchdog notices that (live/session.ts) - a conversation opened by the name sends no trigger.
+    this.parked = false;
+    this.forget();
     void this.start(true);
+  }
+
+  /** Wake mode: once the reply has been heard out, park - FOLLOW_MS later if it ended with a question. */
+  private afterReply(): void {
+    if (!this.wake || !this.running) return;
+    clearTimeout(this.restTimer);
+    // (still playing: what was pushed and has not left the player, plus the avatar's stream delay)
+    const left = ((this.player.pushedTotal - this.player.playedNow) / this.player.sampleRate) * 1000 + 300;
+    const question = /[?？]\s*$/.test(this.botText.trim());
+    this.restTimer = setTimeout(() => this.park(), Math.max(0, left) + (question ? FOLLOW_MS : 300));
+  }
+
+  /** The microphone stops going to Gemini (the session stays open) and the page waits for the name again. */
+  private park(): void {
+    if (!this.wake || !this.running || this.inTurn) return;   // (a reply under way parks itself when done)
+    if (performance.now() - this.lastUser < 1500) {
+      this.restTimer = setTimeout(() => this.park(), 1500);   // (the guest is still answering the question)
+      return;
+    }
+    this.running = false;
+    this.parked = true;
+    this.listening();
+    this.o.onRunning?.(false);
+    this.o.onState?.('idle');
+    this.log('ответил — жду имени');
+    void this.listenForName();
+  }
+
+  /** The name (or the button) with a parked session: the phrase kept so far goes in, the microphone follows. */
+  private unpark(): void {
+    this.parked = false;
+    const phrase = this.pending ?? [];
+    this.pending = undefined;
+    for (const pcm of phrase) this.live.sendAudio(pcm);
+    this.talked();
+    this.lastBot = performance.now();
+    this.running = true;
+    this.o.onRunning?.(true);
+    this.o.onState?.('connected');
   }
 
   /** The microphone: to Gemini while talking; kept while connecting after the name; the last PREROLL_MS when idle. */
@@ -362,6 +449,7 @@ export class BarsConcierge {
   }
 
   private beginBotTurn(): void {
+    clearTimeout(this.restTimer);
     if (this.inTurn) return;
     this.inTurn = true;
     this.botText = '';

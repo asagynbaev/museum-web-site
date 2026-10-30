@@ -38,9 +38,10 @@ const recognitionCtor = (): RecognitionCtor | undefined => {
 
 /**
  * The name as the recogniser writes it - кокурак (Chrome), кокурок, кукурук, кокорок, a split «коку рок», the Kyrgyz
- * «көкүрөк» heard as кёкюрёк - and its case forms (Кокурока, Кокуроку); not the rooster's «кукареку».
+ * «көкүрөк» heard as кёкюрёк, without its last к when that sticks to the next word («я кокура кваш гид») - and its case
+ * forms (Кокурока, Кокуроку); not the rooster's «кукареку» nor «кукуруза».
  */
-const NAME = /(?:^|[^а-яёa-z])(?!кукарек)к[оуаыё]к[уоаыю]\s?р[оаеёу]к(?:а|у|ом|ам|е)?(?=$|[^а-яёa-z])|kok[uü]r[oö]k/i;
+const NAME = /(?:^|[^а-яёa-z])(?!кукарек)к[оуаыё]к[уоаыю]\s?р[оаеёу]к?(?:а|у|ом|ам|е)?(?=$|[^а-яёa-z])|kok[uü]r[oö]k/i;
 const USE_TRACK = !/\bEdg\//.test(navigator.userAgent);
 /** Errors after which listening is pointless: no microphone permission, the service is off, no Russian. */
 const FATAL = new Set(['not-allowed', 'service-not-allowed', 'language-not-supported']);
