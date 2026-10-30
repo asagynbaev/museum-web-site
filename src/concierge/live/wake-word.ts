@@ -3,7 +3,8 @@
 // Google's cloud recogniser - free, no key) listens for the leopard's name and fires once it is heard. Only the name
 // is looked for: the question around it reaches Gemini as audio (embed/bars-concierge.ts keeps the last seconds of
 // the microphone), so the question itself may be in any of the leopard's languages.
-// Two recognisers listen together (CHANNELS), through start(track), to a 16 kHz copy of the page's microphone
+// The leopard is Кокуро (Kokuro, コクロ) - until 31.10.2026 Кокурок: the measurements below are of that name, and the
+// pattern takes both. Three recognisers listen together (CHANNELS), through start(track), to a 16 kHz copy of the page's microphone
 // (audio/mic.ts): Chrome hears a fake / chosen microphone only that way, and Edge garbled the 48 kHz capture track but
 // recognised the 16 kHz copy as well as Chrome. Measured on the leopard saying his name (Chrome 156):
 //   Russian «Меня зовут Кокурок» - ru-RU: «кокурок», «кокурак»; kk-KZ: «көкурак»
@@ -63,11 +64,12 @@ const W = `а-яё${V}қғңһa-z`;    // word letters
  */
 const NAME_SOURCE =
   `(?:^|[^${W}])(?!кукарек|как\\s)[кгқ]р?[${V}]{1,2}\\s?[кгқ][${V}]?\\s?р[${V}][кгқ]?(?:а|у|ом|ам|е|і|гі|ке|ка|қа|ға)?(?=$|[^${W}])`
-    + '|\\b[kgc]r?[oöuüa]{1,2}[kgc]{1,2}[oöuüay]{0,2}\\s?r[oöuüae]{0,2}[kc]';
+    + '|\\b[kgc]r?[oöuüa]{1,2}[kgc]{1,2}[oöuüay]{0,2}\\s?r[oöuüae]{0,2}[kc]{0,2}\\b'
+    + '|こくろ|コクロ|こころ|ココロ|小黒|国土';   // (Japanese recognition: «こくろと申します», Edge «小黒», Chrome «国土»)
 const NAME = new RegExp(NAME_SOURCE, 'i');
 const NAMES = new RegExp(NAME_SOURCE, 'gi');
 
-/** The guest said only the name («Кокурок!», «kokurak.»): the leopard's «Да, слушаю» waits for the question. */
+/** The guest said only the name («Кокуро!», «kokuro.»): the leopard's «Да, слушаю» waits for the question. */
 export function onlyName(text: string): boolean {
   return NAME.test(text) && text.replace(NAMES, ' ').replace(/[\s.,!?…«»"'-]+/g, '').length < 3;
 }
@@ -97,12 +99,16 @@ export class WakeWord {
     return !!recognitionCtor();
   }
 
-  /** Listens to `track` (the page's microphone) until the name is heard or stop(). */
-  start(track?: MediaStreamTrack): void {
+  /**
+   * Listens to `track` (the page's microphone) until the name is heard or stop(). japanese: one more recogniser, for
+   * a Japanese page - the Japanese «コクロ» only Japanese recognition has («こくろ»; the others: «Cocker Otomotiv»).
+   */
+  start(track?: MediaStreamTrack, japanese = false): void {
     if (this.on) return;
     this.on = true;
     this.track = track;
-    this.channels = CHANNELS.map((c) => ({ ...c, fails: 0, dead: false }));
+    const channels = japanese ? [...CHANNELS, { lang: 'ja-JP', continuous: true }] : CHANNELS;
+    this.channels = channels.map((c) => ({ ...c, fails: 0, dead: false }));
     for (const c of this.channels) this.run(c);
   }
 

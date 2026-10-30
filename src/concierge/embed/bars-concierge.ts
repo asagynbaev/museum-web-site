@@ -2,7 +2,7 @@
 // The snow leopard concierge for another site's page (the museum site's /bars; scripts/export-museum.mjs copies it
 // there with its modules): the bars avatar and the Gemini Live conversation of main.ts - captions, emotions, the
 // reply guards, forgetting after 3 min - without the kiosk's other engines, settings and metrics. Optionally it
-// waits for its name like a smart speaker (wakeWord): "Кокурок, сколько стоит билет?" starts the conversation.
+// waits for its name like a smart speaker (wakeWord): "Кокуро, сколько стоит билет?" starts the conversation.
 // The page gives the elements and the asset folder; the backend is the same Java server behind /api/live and /api/tools.
 import { TalkingAvatar } from '@interviewflowai/talking-avatar';
 import { asset, setAssetBase } from '../assets';
@@ -53,7 +53,7 @@ const PREROLL_MS = 4000;
  * HOLD_MS more. Not longer: a passer-by's voice in these seconds is taken for the guest's (his answers themselves
  * can't be interrupted: see botAudible).
  * Then it stops going to Gemini and the page waits for the name again. The session stays open but "parked" (no audio
- * in, nothing billed), so the next "Кокурок, …" goes on with the same conversation at once, without reconnecting.
+ * in, nothing billed), so the next "Кокуро, …" goes on with the same conversation at once, without reconnecting.
  */
 const FOLLOW_MS = 8000;   // (3 s were too few to think of the next question)
 const FOLLOW_LONG_MS = 12_000;
@@ -334,7 +334,11 @@ export class BarsConcierge {
       this.parked = false;   // (a waiting session speaks the old language: the name opens one in the new)
       this.live.close();
     }
-    if (!this.running) return;
+    if (!this.running) {
+      this.wake?.stop();   // (Japanese listens with one recogniser more: start again with the new set)
+      void this.listenForName();
+      return;
+    }
     this.live.close();
     this.player.flush();
     this.inTurn = false;
@@ -375,7 +379,7 @@ export class BarsConcierge {
       this.setWake('tap');   // (onTap comes back here)
       return;
     }
-    this.wake.start(this.mic.track);
+    this.wake.start(this.mic.track, this.lang === 'ja');
     this.setWake('listening');
   }
 

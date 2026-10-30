@@ -11,16 +11,16 @@ import './BarsPage.css';
 // у остального сайта японских текстов нет, общий язык сайта он не трогает.
 const JA = {
   eyebrow: 'ミュージアムのAIガイド',
-  title: 'コクロクと話しましょう',
+  title: 'コクロと話しましょう',
   lead: '展示室・チケット・開館時間について、声で質問してください。',
   start: '会話をはじめる',
   stop: '終了',
   starting: '接続中…',
-  loading: 'コクロクが目を覚ましています…',
-  loadError: 'コクロクを読み込めませんでした。ページを再読み込みしてください。',
-  listening: 'コクロクが聞いています — どうぞ話してください',
-  sayName: '話しかけるには「コクロク」と呼んでください',
-  tapToWake: '画面をタップして音声をオンにし、「コクロク」と呼んでください',
+  loading: 'コクロが目を覚ましています…',
+  loadError: 'コクロを読み込めませんでした。ページを再読み込みしてください。',
+  listening: 'コクロが聞いています — どうぞ話してください',
+  sayName: '話しかけるには「コクロ」と呼んでください',
+  tapToWake: '画面をタップして音声をオンにし、「コクロ」と呼んでください',
   reconnecting: '再接続中…',
   micDenied: 'マイクへのアクセスがありません。ブラウザの設定でこのサイトのマイクを許可してください。',
   error: '接続が切れました。もう一度お試しください。',
@@ -60,7 +60,7 @@ export default function BarsPage() {
       stage: stageRef.current,
       assetBase: '/concierge',
       lang,
-      // «Кокурок, …» начинает разговор, как у умной колонки (Chrome; кнопка — запасной путь)
+      // «Кокуро, …» начинает разговор, как у умной колонки (Chrome; кнопка — запасной путь)
       wakeWord: true,
       onWake: setWake,
       onActivity: setActivity,
@@ -151,7 +151,7 @@ export default function BarsPage() {
         <p className="bp-eyebrow">{s.eyebrow}</p>
         <h1 className="bp-title">{s.title}</h1>
         {/* имя, как на футболке гида: латиницей вразрядку, с точками по краям */}
-        <p className="bp-name">• kökürök •</p>
+        <p className="bp-name">• kokuro •</p>
         <p className="bp-lead">{s.lead}</p>
       </section>
 
