@@ -34,7 +34,7 @@ export default function BarsPage() {
       botCaption: botRef.current,
       assetBase: '/concierge',
       lang,
-      // «Батай, …» начинает разговор, как у умной колонки (Chrome; кнопка — запасной путь)
+      // «Кокурок, …» начинает разговор, как у умной колонки (Chrome; кнопка — запасной путь)
       wakeWord: true,
       onWake: setWake,
       onState: (state, detail = '') => setConn({ state, detail }),

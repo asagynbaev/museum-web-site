@@ -2,7 +2,7 @@
 // The snow leopard concierge for another site's page (the museum site's /bars; scripts/export-museum.mjs copies it
 // there with its modules): the bars avatar and the Gemini Live conversation of main.ts - captions, emotions, the
 // reply guards, forgetting after 3 min - without the kiosk's other engines, settings and metrics. Optionally it
-// waits for its name like a smart speaker (wakeWord): "Батай, сколько стоит билет?" starts the conversation.
+// waits for its name like a smart speaker (wakeWord): "Кокурок, сколько стоит билет?" starts the conversation.
 // The page gives the elements and the asset folder; the backend is the same Java server behind /api/live and /api/tools.
 import { TalkingAvatar } from '@interviewflowai/talking-avatar';
 import { asset, setAssetBase } from '../assets';

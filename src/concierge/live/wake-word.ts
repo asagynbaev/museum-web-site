@@ -3,10 +3,10 @@
 // Google's cloud recogniser - free, no key) listens for the leopard's name and fires once it is heard. Only the name
 // is looked for: the question around it reaches Gemini as audio (embed/bars-concierge.ts keeps the last seconds of
 // the microphone), so Kyrgyz and English questions work although the recogniser runs in Russian.
-// Measured on a recording of "Здравствуйте, я Батай, ваш цифровой консьерж": Chrome 156 writes the name «ботай»
-// (the unstressed о/а), in an interim result ~1 s after it was said. Chrome hears a fake / chosen microphone only
-// through start(track); Edge returned nonsense from the same track ("Я сейчас когда?"), so it listens to the
-// default microphone itself.
+// Measured on the leopard's own "Konnichiwa! Я Кокурок, ваш гид…": Chrome 156 writes the name «кокурак», in an
+// interim result ~1 s after it was said (its earlier name «Батай» came out «ботай»). Chrome hears a fake / chosen
+// microphone only through start(track); Edge returned nonsense from the same track ("Я сейчас когда?"), so it
+// listens to the default microphone itself.
 
 interface Alternative {
   transcript: string;
@@ -36,8 +36,11 @@ const recognitionCtor = (): RecognitionCtor | undefined => {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition;
 };
 
-/** The name as the recogniser writes it - батай, ботай, бадай, потай, батаи - and its case forms (Батая, Батаю). */
-const NAME = /(?:^|[^а-яёa-z])(?:[бп][аоы][тд][аоя][йияю]|batai|batay)(?=$|[^а-яёa-z])/i;
+/**
+ * The name as the recogniser writes it - кокурак (Chrome), кокурок, кукурук, кокорок, a split «коку рок», the Kyrgyz
+ * «көкүрөк» heard as кёкюрёк - and its case forms (Кокурока, Кокуроку); not the rooster's «кукареку».
+ */
+const NAME = /(?:^|[^а-яёa-z])(?!кукарек)к[оуаыё]к[уоаыю]\s?р[оаеёу]к(?:а|у|ом|ам|е)?(?=$|[^а-яёa-z])|kok[uü]r[oö]k/i;
 const USE_TRACK = !/\bEdg\//.test(navigator.userAgent);
 /** Errors after which listening is pointless: no microphone permission, the service is off, no Russian. */
 const FATAL = new Set(['not-allowed', 'service-not-allowed', 'language-not-supported']);
