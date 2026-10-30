@@ -96,16 +96,91 @@ interface BoneRig {
 
 const DEG = Math.PI / 180;
 
-/** Render quality steps, best first: the render resolution (a share of the screen's pixel ratio) and the AO pass. */
+/**
+ * Render quality steps, best first: the render resolution (a share of the screen's pixel ratio), the AO pass, the key
+ * light's soft shadow (VSM map size and blur samples - the blur alone reads the map 2 × size² × samples times a frame;
+ * 0 = no cast shadows, the contact blob stays), the share of fur cards drawn and a frame cap (0 = the screen's rate).
+ */
 const QUALITY = [
-  { scale: 1, ao: true },
-  { scale: 0.75, ao: true },
-  { scale: 0.75, ao: false },
-  { scale: 0.55, ao: false },
-  { scale: 0.4, ao: false },
+  { scale: 1, ao: true, shadow: 2048, blur: 20, fur: 1, fps: 0 },
+  { scale: 0.75, ao: true, shadow: 2048, blur: 20, fur: 1, fps: 0 },
+  { scale: 0.75, ao: false, shadow: 1024, blur: 12, fur: 1, fps: 0 },
+  { scale: 0.6, ao: false, shadow: 1024, blur: 12, fur: 0.6, fps: 0 },
+  { scale: 0.5, ao: false, shadow: 512, blur: 8, fur: 0.4, fps: 30 },
+  { scale: 0.4, ao: false, shadow: 0, blur: 0, fur: 0.25, fps: 30 },
 ] as const;
 /** A mean frame longer than this (under ~47 fps; a 50 Hz screen gives 20 ms) steps the quality down. */
 const SLOW_FRAME_MS = 21;
+/**
+ * GPUs that start at WEAK_START (and without MSAA) instead of stepping down from the top for ~15 s of stutter: Intel
+ * HD / UHD integrated graphics (a museum kiosk's i5-4460 with HD 4600 ran at 99 %), software and old mobile GPUs.
+ */
+const WEAK_GPU = /Intel.*\b(HD|UHD) Graphics|SwiftShader|llvmpipe|Microsoft Basic Render|Mali|Adreno \(TM\) [3-6]\d\d|PowerVR/i;
+const WEAK_START = 4;
+
+/** The GPU's name (unmasked where the browser allows), from a throwaway context. */
+function gpuName(): string {
+  const gl = document.createElement('canvas').getContext('webgl2');
+  if (!gl) return '';
+  const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+  const name = String(gl.getParameter(dbg ? dbg.UNMASKED_RENDERER_WEBGL : gl.RENDERER));
+  gl.getExtension('WEBGL_lose_context')?.loseContext();
+  return name;
+}
+
+/**
+ * Reorders a card mesh's triangles card by card (a card = a connected piece) in a fixed random order: drawing the
+ * first part of the index buffer (setDrawRange) then thins the coat evenly instead of baring one region, and each
+ * card's vertices stay together for the vertex cache.
+ */
+function shuffleCards(geo: THREE.BufferGeometry): number {
+  const index = geo.index;
+  if (!index) return 0;
+  const idx = index.array as Uint32Array | Uint16Array;
+  const parent = Int32Array.from({ length: geo.getAttribute('position').count }, (_, i) => i);
+  const find = (a: number): number => {
+    while (parent[a] !== a) a = parent[a] = parent[parent[a]];
+    return a;
+  };
+  const union = (a: number, b: number): void => {
+    const ra = find(a);
+    const rb = find(b);
+    if (ra !== rb) parent[rb] = ra;
+  };
+  for (let t = 0; t < idx.length; t += 3) {
+    union(idx[t], idx[t + 1]);
+    union(idx[t], idx[t + 2]);
+  }
+  const cardOf = new Map<number, number>();
+  const cards: number[][] = [];
+  for (let t = 0; t < idx.length; t += 3) {
+    const root = find(idx[t]);
+    let c = cardOf.get(root);
+    if (c === undefined) {
+      c = cards.length;
+      cardOf.set(root, c);
+      cards.push([]);
+    }
+    cards[c].push(t);
+  }
+  let seed = 20261030;
+  const rnd = (): number => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+  const src = idx.slice();
+  let o = 0;
+  for (const card of cards) {
+    for (const t of card) {
+      idx[o++] = src[t];
+      idx[o++] = src[t + 1];
+      idx[o++] = src[t + 2];
+    }
+  }
+  index.needsUpdate = true;
+  return cards.length;
+}
 
 export class BarsAvatar {
   private renderer?: THREE.WebGLRenderer;
@@ -217,6 +292,12 @@ export class BarsAvatar {
   private frameCount = 0;
   private frameSum = 0;
   private slowBefore = 0;    // mean frame before the last step, to check it helped (0 = nothing to check)
+  private gpu = '';
+  private keyLight?: THREE.DirectionalLight;
+  private shadowsOn = true;  // (?barsshadow=0)
+  private furMesh?: THREE.Mesh;
+  private furCards = 0;      // cards found by shuffleCards (0 = not shuffled yet: only needed below fur 1)
+  private hud?: HTMLDivElement;   // ?barsfps: frame rate, step, render size and GPU over the stage
   /** Jaw multiplier (tuning knob). */
   jawGain = 1;
   /** Demo: synthetic speech (visemes cycling, no audio) to check the mouth without a conversation. */
@@ -285,12 +366,17 @@ export class BarsAvatar {
   private initRenderer(): void {
     // Opaque canvas: the fur shells write alpha < 1 (alpha-to-coverage), which a transparent canvas would blend
     // with the page behind it (washed-out, dusty fur). The studio backdrop is drawn in the scene instead.
-    const r = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
+    this.gpu = gpuName();
+    const weak = WEAK_GPU.test(this.gpu);
+    console.info(`[bars] GPU: ${this.gpu || '?'}${weak ? ` - weak: quality ${WEAK_START}, no MSAA` : ''}`);
+    // (MSAA cannot be switched off later, and a weak GPU's memory bandwidth is the scarcest thing it has)
+    const r = new THREE.WebGLRenderer({ antialias: !weak, alpha: false, powerPreference: 'high-performance' });
     r.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     r.outputColorSpace = THREE.SRGBColorSpace;
     r.toneMapping = THREE.NeutralToneMapping;   // keeps the warm beige of the reference
     r.toneMappingExposure = 1.0;
-    r.shadowMap.enabled = new URLSearchParams(location.search).get('barsshadow') !== '0';
+    this.shadowsOn = new URLSearchParams(location.search).get('barsshadow') !== '0';
+    r.shadowMap.enabled = this.shadowsOn;
     r.shadowMap.type = THREE.VSMShadowMap;   // soft shadows, incl. the head onto the chest
     this.scene.background = backdropTexture();
     this.container.appendChild(r.domElement);
@@ -321,6 +407,7 @@ export class BarsAvatar {
     sc.bottom = -0.4;
     sc.near = 0.5;
     sc.far = 6;
+    this.keyLight = key;
     const fill = new THREE.DirectionalLight(0xffffff, 0.25);   // (stronger, it rimmed every right-hand edge)
     fill.position.set(2.0, 0.8, 2.4);
     const back = new THREE.DirectionalLight(0xffffff, 0.45);
@@ -383,10 +470,19 @@ export class BarsAvatar {
       this.composer = composer;
       this.gtao = gtao;
     }
-    const pinned = Number(new URLSearchParams(location.search).get('barsq') ?? NaN);
+    const params = new URLSearchParams(location.search);
+    const pinned = Number(params.get('barsq') ?? NaN);
     if (QUALITY[pinned]) {
       this.autoQuality = false;
       this.setQuality(pinned);
+    } else if (weak) {
+      this.setQuality(WEAK_START);
+    }
+    if (params.has('barsfps')) {
+      this.hud = document.createElement('div');
+      this.hud.style.cssText = 'position:absolute;left:8px;top:8px;z-index:5;padding:2px 6px;border-radius:4px;'
+        + 'background:rgba(0,0,0,.6);color:#fff;font:12px/1.4 monospace;pointer-events:none';
+      this.container.append(this.hud);
     }
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(this.container);
@@ -487,6 +583,7 @@ export class BarsAvatar {
         mesh.castShadow = false;
         mesh.receiveShadow = true;
         this.meshes.push(mesh);
+        this.furMesh = mesh;
         return;
       }
       if (src.name === 'Glint') {
@@ -626,6 +723,7 @@ void main() {`)
     this.scene.add(model);
     this.model = model;
     this.bounds.setFromObject(model);
+    this.applyFur();   // (a weak GPU starts below the full coat)
   }
 
   /** Long hair-thin whiskers like the concept art (the sculpted ones are collapsed by the build). */
@@ -696,15 +794,46 @@ void main() {`)
 
   private setQuality(step: number): void {
     this.quality = step;
-    const ratio = Math.max(0.5, Math.min(window.devicePixelRatio, 2) * QUALITY[step].scale);
+    const q = QUALITY[step];
+    const ratio = Math.max(0.4, Math.min(window.devicePixelRatio, 2) * q.scale);
     this.renderer?.setPixelRatio(ratio);
     this.composer?.setPixelRatio(ratio);
+    this.setShadow(q.shadow, q.blur);
+    this.applyFur();
     this.resize();
   }
 
+  /** The key light's soft shadow: map size and blur samples; 0 stops casting (the materials recompile once). */
+  private setShadow(size: number, blur: number): void {
+    const key = this.keyLight;
+    if (!key) return;
+    key.castShadow = size > 0 && this.shadowsOn;
+    key.shadow.blurSamples = blur;
+    if (size > 0 && key.shadow.mapSize.x !== size) {
+      key.shadow.mapSize.set(size, size);
+      key.shadow.map?.dispose();
+      key.shadow.map = null;   // (rebuilt at the new size on the next frame)
+      key.shadow.mapPass?.dispose();
+      key.shadow.mapPass = null;   // (the VSM blur's target)
+    }
+  }
+
+  /** Draws QUALITY[].fur of the fur cards (shuffled once, the first time fewer than all are drawn). */
+  private applyFur(): void {
+    const geo = this.furMesh?.geometry;
+    if (!geo?.index) return;
+    const share = QUALITY[this.quality].fur;
+    if (share < 1 && !this.furCards) {
+      const t = performance.now();
+      this.furCards = shuffleCards(geo);
+      console.info(`[bars] fur: ${this.furCards} cards shuffled in ${(performance.now() - t).toFixed(0)} ms`);
+    }
+    geo.setDrawRange(0, share >= 1 ? Infinity : Math.floor((geo.index.count * share) / 3) * 3);
+  }
+
   /**
-   * Auto quality: the mean frame over ~2 s windows; a slow one steps the quality down. A step that did not help
-   * (a 30 Hz screen or a slow CPU, not the GPU) is taken back and the adaptation stops. Never steps up: frames
+   * Auto quality: the mean frame over ~2 s windows; a slow one steps the quality down. When a step did not make the
+   * frame faster (a 30 Hz screen or a slow CPU, not the GPU) the adaptation stops there. Never steps up: frames
    * capped by the screen's refresh show no headroom.
    */
   private judgeFrame(ms: number): void {
@@ -715,22 +844,26 @@ void main() {`)
     if (this.frameSum < 2000 || this.frameCount < 20) return;
     const mean = this.frameSum / this.frameCount;
     this.frameCount = this.frameSum = 0;
+    const cap = QUALITY[this.quality].fps;
+    const slow = cap ? 1250 / cap : SLOW_FRAME_MS;   // (capped: under 80 % of the cap)
     if (this.slowBefore) {
       const before = this.slowBefore;
       this.slowBefore = 0;
-      if (mean > before * 0.88) {
+      // (no step back: a weak GPU bound by geometry gains little from the first, resolution-only steps, and taking
+      // them back kept the kiosk's HD 4600 at the top)
+      if (mean > before * 0.88 && mean > slow) {
         this.autoQuality = false;
-        this.setQuality(this.quality - 1);
-        console.info(`[bars] quality step did not help (${before.toFixed(1)} -> ${mean.toFixed(1)} ms/frame): back to ${this.quality}, auto off`);
+        console.info(`[bars] quality step did not help (${before.toFixed(1)} -> ${mean.toFixed(1)} ms/frame): stays at ${this.quality}, auto off`);
         return;
       }
     }
-    if (mean > SLOW_FRAME_MS && this.quality < QUALITY.length - 1) {
+    if (mean > slow && this.quality < QUALITY.length - 1) {
       this.slowBefore = mean;
       this.setQuality(this.quality + 1);
-      this.qualityAt = now + 1000;
+      this.qualityAt = now + 1500;   // (new buffers; dropping the shadow recompiles every material)
       const q = QUALITY[this.quality];
-      console.info(`[bars] ${mean.toFixed(1)} ms/frame: quality ${this.quality} (resolution x${q.scale}, AO ${q.ao ? 'on' : 'off'})`);
+      console.info(`[bars] ${mean.toFixed(1)} ms/frame: quality ${this.quality} (resolution x${q.scale}, AO ${q.ao ? 'on' : 'off'}, `
+        + `shadow ${q.shadow || 'off'}, fur ${q.fur * 100}%, ${q.fps ? `${q.fps} fps` : 'full rate'})`);
     }
   }
 
@@ -775,6 +908,8 @@ void main() {`)
   private readonly tick = (): void => {
     this.raf = requestAnimationFrame(this.tick);
     const now0 = performance.now();
+    const cap = QUALITY[this.quality].fps;
+    if (cap && now0 - this.last < 1000 / cap - 4) return;   // (a weak GPU draws every other frame of a 60 Hz screen)
     // the first frames after a load run with a long step: every spring lands on its target at once, instead of the
     // face settling (lids closing, the smile arriving) in front of the viewer
     const step = now0 - this.last;
@@ -794,6 +929,11 @@ void main() {`)
       this.fps = Math.round((this.frames * 1000) / (now - this.fpsAt));
       this.frames = 0;
       this.fpsAt = now;
+      if (this.hud) {
+        const c = this.renderer?.domElement;
+        this.hud.textContent = `${this.fps} fps · q${this.quality}${this.autoQuality ? '' : ' fixed'} · `
+          + `${c?.width}×${c?.height} · ${this.gpu.replace(/^ANGLE \((.*)\)$/, '$1').slice(0, 60)}`;
+      }
     }
   };
 
