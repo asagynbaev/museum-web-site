@@ -82,7 +82,7 @@ export default function BarsPage() {
     if (starting || conn.state === 'connecting') return { text: s.starting, tone: 'muted' };
     if (conn.state === 'reconnecting') return { text: s.reconnecting, tone: 'muted' };
     if (running) return { text: s.listening, tone: 'live' };
-    return { text: s.hint, tone: 'muted' };
+    return { text: '', tone: 'muted' };
   })();
 
   return (
@@ -134,7 +134,7 @@ export default function BarsPage() {
           onClick={toggle}
           disabled={load !== 'ready' || starting}
         >
-          {running ? <MicOff size={18} strokeWidth={1.75} aria-hidden /> : <Mic size={18} strokeWidth={1.75} aria-hidden />}
+          {running ? <MicOff strokeWidth={1.75} aria-hidden /> : <Mic strokeWidth={1.75} aria-hidden />}
           {running ? s.stop : s.start}
         </button>
         <p className={`bp-status ${status.tone}`} role="status">

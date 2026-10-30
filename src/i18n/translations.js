@@ -224,7 +224,6 @@ const ru = {
     reconnecting: 'Восстанавливаем связь…',
     micDenied: 'Нет доступа к микрофону. Разрешите его для этого сайта в настройках браузера.',
     error: 'Связь прервалась. Попробуйте ещё раз.',
-    hint: 'Нужен микрофон. Речь распознаёт и озвучивает Google Gemini.',
     toSite: 'На сайт музея',
   },
 
@@ -460,7 +459,6 @@ const ky = {
     reconnecting: 'Байланыш калыбына келтирилүүдө…',
     micDenied: 'Микрофонго уруксат жок. Браузердин жөндөөлөрүнөн бул сайтка уруксат бериңиз.',
     error: 'Байланыш үзүлдү. Кайра аракет кылыңыз.',
-    hint: 'Микрофон керек. Сүйлөөнү Google Gemini таанып, үн менен жооп берет.',
     toSite: 'Музейдин сайтына',
   },
 
@@ -694,7 +692,6 @@ const en = {
     reconnecting: 'Reconnecting…',
     micDenied: 'No microphone access. Allow it for this site in your browser settings.',
     error: 'The connection dropped. Please try again.',
-    hint: 'Needs your microphone. Speech is recognised and voiced by Google Gemini.',
     toSite: 'Museum website',
   },
 
