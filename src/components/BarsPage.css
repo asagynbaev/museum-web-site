@@ -146,6 +146,90 @@
   }
 }
 
+/* Что делает гид (act-* — BarsConcierge.onActivity): услышал имя — сцена сразу загорается
+   и сверху «Секунду…», пока подключается; «Слушаю» — пока ждёт гостя; мягкий свет — пока говорит. */
+.bp-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow:
+    inset 0 0 0 clamp(4px, 0.45dvh, 8px) var(--accent),
+    inset 0 0 clamp(50px, 8dvh, 150px) rgba(56, 181, 170, 0.6);
+  transition: opacity 0.3s ease;
+}
+.act-waking .bp-glow {
+  opacity: 1;
+  animation: bp-glow 0.7s ease-in-out infinite alternate;
+}
+.act-listening .bp-glow {
+  opacity: 1;
+  animation: bp-glow 2.2s ease-in-out infinite alternate;
+}
+.act-speaking .bp-glow {
+  opacity: 0.4;
+}
+@keyframes bp-glow {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.bp-pill {
+  position: absolute;
+  top: clamp(14px, 2.4dvh, 40px);
+  left: 50%;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  margin: 0;
+  padding: 0.55em 1.25em;
+  border-radius: 999px;
+  background: rgba(9, 12, 23, 0.82);
+  color: #fff;
+  font: 600 clamp(1rem, min(4vw, 2dvh), 1.7rem) var(--body);
+  white-space: nowrap;
+  transform: translateX(-50%);
+  animation: bp-pill-in 0.25s ease-out;
+}
+.bp-pill-dot {
+  width: 0.65em;
+  height: 0.65em;
+  border-radius: 50%;
+  background: var(--accent-2);
+  animation: bp-dot 1.1s ease-in-out infinite alternate;
+}
+.act-waking .bp-pill-dot {
+  background: var(--gold);
+  animation-duration: 0.45s;
+}
+@keyframes bp-dot {
+  from {
+    opacity: 0.35;
+    transform: scale(0.75);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+@keyframes bp-pill-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
 .bp-controls {
   display: flex;
   flex-direction: column;
@@ -218,5 +302,10 @@
 @media (prefers-reduced-motion: reduce) {
   .bp-spinner {
     animation-duration: 2.4s;
+  }
+  .bp-glow,
+  .bp-pill,
+  .bp-pill-dot {
+    animation: none;
   }
 }

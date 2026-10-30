@@ -17,6 +17,9 @@ import { WakeWord, onlyName } from '../live/wake-word';
 export type { ConnState, Lang };
 /** The wake word: listening for the name; waiting for a tap (the browser starts no sound before one); off. */
 export type WakeState = 'listening' | 'tap' | 'off';
+/** What the guest should see the leopard doing: waiting (for the name or the button), waking up (heard the name or
+ * the button, connecting), listening to the guest, speaking. */
+export type Activity = 'idle' | 'waking' | 'listening' | 'speaking';
 
 export interface BarsConciergeOptions {
   /** The leopard fills it (it needs a size). */
@@ -33,6 +36,8 @@ export interface BarsConciergeOptions {
   /** Listen for the leopard's name while idle and start talking when it is heard (live/wake-word.ts). */
   wakeWord?: boolean;
   onWake?(state: WakeState): void;
+  /** The leopard's activity for the page to show (it changed). */
+  onActivity?(activity: Activity): void;
   onLog?(line: string): void;
 }
 
@@ -93,6 +98,8 @@ export class BarsConcierge {
   private toolPending = false;   // (a museum tool's call ends the turn too; the answer comes in the next one)
   private restTimer?: ReturnType<typeof setTimeout>;
   private holdUntil = 0;   // (the guest talking keeps the microphone going until then at most)
+  private readonly activityTimer: ReturnType<typeof setInterval>;
+  private shown: Activity = 'idle';
   private audibleAt = -1e9;   // (the last moment the leopard's voice was playing, see botAudible)
   private disposed = false;
   private lang: Lang;
@@ -229,6 +236,8 @@ export class BarsConcierge {
       );
       document.addEventListener('pointerdown', this.onTap);
     }
+    // (polled: the voice playing out has no event of its own)
+    this.activityTimer = setInterval(() => this.showActivity(), 120);
     this.forgetTimer = setInterval(() => {
       const now = performance.now();
       if (this.parked && now - this.lastTalk > FORGET_MS) {
@@ -344,6 +353,7 @@ export class BarsConcierge {
     document.removeEventListener('pointerdown', this.onTap);
     this.stop();
     clearInterval(this.forgetTimer);
+    clearInterval(this.activityTimer);
     this.bars.pause();
     this.avatar.dispose();
     this.barsEl.remove();
@@ -378,6 +388,10 @@ export class BarsConcierge {
     this.pending = this.preroll;
     this.preroll = [];
     this.prerollLen = 0;
+    // The guest must see at once that the name was heard: the face perks up (and the page lights up, see Activity).
+    this.emotion.set('surprised', 1, 250);
+    this.emotion.release(1400);
+    this.showActivity();
     if (this.parked && this.live.connected) {
       this.log('услышал имя — продолжаю разговор');
       this.unpark();
@@ -460,6 +474,15 @@ export class BarsConcierge {
     const now = performance.now();
     if (this.inTurn || this.player.pushedTotal - this.player.playedNow > 0) this.audibleAt = now;
     return now - this.audibleAt < BOT_TAIL_MS;
+  }
+
+  private showActivity(): void {
+    let a: Activity = 'idle';
+    if (this.busy || this.pending) a = 'waking';
+    else if (this.running) a = this.botAudible() ? 'speaking' : 'listening';
+    if (a === this.shown) return;
+    this.shown = a;
+    this.o.onActivity?.(a);
   }
 
   private setWake(state: WakeState): void {

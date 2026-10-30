@@ -25,6 +25,8 @@ const JA = {
   micDenied: 'マイクへのアクセスがありません。ブラウザの設定でこのサイトのマイクを許可してください。',
   error: '接続が切れました。もう一度お試しください。',
   toSite: 'ミュージアムのサイトへ',
+  waking: '少々お待ちください…',
+  hearing: '聞いています',
 };
 const PAGE_LANGS = [...LANGS, { code: 'ja', label: 'JP' }];
 
@@ -51,6 +53,8 @@ export default function BarsPage() {
   const [running, setRunning] = useState(false);
   const [starting, setStarting] = useState(false);
   const [wake, setWake] = useState('off'); // listening | tap | off — ждёт ли гид своё имя
+  // idle | waking | listening | speaking — что гид делает, видно на сцене (подсветка и плашка)
+  const [activity, setActivity] = useState('idle');
 
   useEffect(() => {
     const c = new BarsConcierge({
@@ -60,6 +64,7 @@ export default function BarsPage() {
       // «Кокурок, …» начинает разговор, как у умной колонки (Chrome; кнопка — запасной путь)
       wakeWord: true,
       onWake: setWake,
+      onActivity: setActivity,
       onState: (state, detail = '') => setConn({ state, detail }),
       onRunning: setRunning,
     });
@@ -151,7 +156,15 @@ export default function BarsPage() {
         <p className="bp-lead">{s.lead}</p>
       </section>
 
-      <div className="bp-stage" ref={stageRef}>
+      <div className={`bp-stage act-${activity}`} ref={stageRef}>
+        {/* услышал имя (или кнопку) — сцена загорается сразу, ещё до ответа: гость видит, что его услышали */}
+        <div className="bp-glow" aria-hidden />
+        {(activity === 'waking' || activity === 'listening') && (
+          <p className="bp-pill" role="status">
+            <span className="bp-pill-dot" aria-hidden />
+            {activity === 'waking' ? s.waking : s.hearing}
+          </p>
+        )}
         {load !== 'ready' && (
           <div className={`bp-veil${load === 'error' ? ' failed' : ''}`} aria-hidden>
             <span className="bp-spinner" />
