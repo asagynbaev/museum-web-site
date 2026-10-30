@@ -50,13 +50,13 @@ const PREROLL_MS = 4000;
  * to go on without the name - FOLLOW_LONG_MS when he waits for more: the guest said only the name, he asked a question
  * (a ticket code to dictate, a choice) or gave a short reply (the «Да, слушаю» to the name alone: it parked at once
  * after it, and the question that followed was lost) - and the microphone keeps going while the guest talks, up to
- * HOLD_MS more. Short on purpose: a passer-by's voice in these seconds is taken for the guest's (his answers
- * themselves can't be interrupted: see botAudible).
+ * HOLD_MS more. Not longer: a passer-by's voice in these seconds is taken for the guest's (his answers themselves
+ * can't be interrupted: see botAudible).
  * Then it stops going to Gemini and the page waits for the name again. The session stays open but "parked" (no audio
  * in, nothing billed), so the next "Кокурок, …" goes on with the same conversation at once, without reconnecting.
  */
-const FOLLOW_MS = 3000;
-const FOLLOW_LONG_MS = 10_000;
+const FOLLOW_MS = 8000;   // (3 s were too few to think of the next question)
+const FOLLOW_LONG_MS = 12_000;
 const HOLD_MS = 8000;
 /** The microphone stays away from Gemini this long after the leopard's voice has played out (see botAudible). */
 const BOT_TAIL_MS = 500;
