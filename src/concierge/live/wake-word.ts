@@ -2,18 +2,26 @@
 // Wake word: while no conversation runs, the browser's own speech recognition (Web Speech API; in Chrome it is
 // Google's cloud recogniser - free, no key) listens for the leopard's name and fires once it is heard. Only the name
 // is looked for: the question around it reaches Gemini as audio (embed/bars-concierge.ts keeps the last seconds of
-// the microphone), so Kyrgyz and English questions work although the recogniser runs in Russian.
-// Measured on the leopard's own "Konnichiwa! Я Кокурок, ваш гид…": Chrome 156 writes the name «кокурак», in an
-// interim result ~1 s after it was said (its earlier name «Батай» came out «ботай»). It listens through
-// start(track) to a 16 kHz copy of the page's microphone (audio/mic.ts): Chrome hears a fake / chosen microphone only
-// that way, and Edge garbled the 48 kHz capture track but recognised the 16 kHz copy as well as Chrome.
+// the microphone), so the question itself may be in any of the leopard's languages.
+// Two recognisers listen together (CHANNELS), through start(track), to a 16 kHz copy of the page's microphone
+// (audio/mic.ts): Chrome hears a fake / chosen microphone only that way, and Edge garbled the 48 kHz capture track but
+// recognised the 16 kHz copy as well as Chrome. Measured on the leopard saying his name (Chrome 156):
+//   Russian «Меня зовут Кокурок» - ru-RU: «кокурок», «кокурак»; kk-KZ: «көкурак»
+//   Kyrgyz «Менин атым Көкүрөк» - ru-RU: nothing («меню натум»); kk-KZ: «көкірек», «гүкірек», «гүү күрек»
+//   English «I am Kokurok», Japanese «コクロクと申します» - ru-RU: nothing; kk-KZ: «көкірек», «крокурок»
+// Chrome has no Kyrgyz model (its ky-KG writes English: «mini Lotto gokulak»; Edge's fails with 'network'); Kazakh,
+// a Turkic language with ө and ү, knows «көкірек» - Kyrgyz «көкүрөк» ('chest'). Chrome's Kazakh gives no interim
+// results, and in continuous mode nothing before stop(): it listens phrase by phrase (a final ~0.5 s after the
+// phrase). Edge's Kazakh loses the Kyrgyz «Көкүрөк» («Менің атым беру керек») but its Turkish has it («Menin atın
+// gökürök»; Chrome's: «benim atım gökyürek»), so Turkish listens too.
 
 interface Alternative {
   transcript: string;
 }
 interface RecognitionResult {
   isFinal: boolean;
-  0: Alternative;
+  length: number;
+  [k: number]: Alternative;
 }
 interface RecognitionEvent {
   resultIndex: number;
@@ -23,6 +31,7 @@ interface Recognition {
   lang: string;
   continuous: boolean;
   interimResults: boolean;
+  maxAlternatives: number;
   onresult: ((e: RecognitionEvent) => void) | null;
   onerror: ((e: { error: string }) => void) | null;
   onend: (() => void) | null;
@@ -36,24 +45,46 @@ const recognitionCtor = (): RecognitionCtor | undefined => {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition;
 };
 
+/** The recognisers listening at once (see the top): Russian and Turkish continuously, Kazakh phrase by phrase. */
+const CHANNELS = [
+  { lang: 'ru-RU', continuous: true },
+  { lang: 'kk-KZ', continuous: false },
+  { lang: 'tr-TR', continuous: true },
+];
+
+const V = 'аоуыэеёюяиөүұіә';   // vowels, Russian and Kazakh
+const W = `а-яё${V}қғңһa-z`;    // word letters
 /**
- * The name as the recogniser writes it - кокурак (Chrome), кокурок, кукурук, кокорок, a split «коку рок», the Kyrgyz
- * «көкүрөк» heard as кёкюрёк, without its last к when that sticks to the next word («я кокура кваш гид») - and its case
- * forms (Кокурока, Кокуроку); not the rooster's «кукареку» nor «кукуруза».
+ * The name as the recognisers write it: K-V-K-V-р-V-K, with к/г/қ and any vowel - Russian кокурок, кокурак, кукурук,
+ * кокорок; Kazakh көкірек, гүкірек, гөкірек, гүкірақ, a doubled «гүү күрек»; English heard as «крокурок»; split «коку
+ * рок»; without the last к when that sticks to the next word («я кокура кваш гид») - and case forms (Кокурока,
+ * Кокуроку); Edge's «Гюк рок» and «gökürk» (the vowel before р swallowed); not the rooster's «кукареку», «кукуруза»
+ * nor «как рок…»; plus Latin spellings.
  */
-const NAME = /(?:^|[^а-яёa-z])(?!кукарек)к[оуаыё]к[уоаыю]\s?р[оаеёу]к?(?:а|у|ом|ам|е)?(?=$|[^а-яёa-z])|kok[uü]r[oö]k/i;
-/** Errors after which listening is pointless: no microphone permission, the service is off, no Russian; and
- * MAX_FAILS other failures in a row (the recogniser's service out of reach). */
+const NAME = new RegExp(
+  `(?:^|[^${W}])(?!кукарек|как\\s)[кгқ]р?[${V}]{1,2}\\s?[кгқ][${V}]?\\s?р[${V}][кгқ]?(?:а|у|ом|ам|е|і|гі|ке|ка|қа|ға)?(?=$|[^${W}])`
+    + '|\\b[kgc]r?[oöuüa]{1,2}[kgc]{1,2}[oöuüay]{0,2}\\s?r[oöuüae]{0,2}[kc]',
+  'i');
+/** Errors after which a recogniser stops for good: no microphone permission, the service is off, its language
+ * unsupported; and MAX_FAILS other failures in a row (the service out of reach). */
 const FATAL = new Set(['not-allowed', 'service-not-allowed', 'language-not-supported']);
 const MAX_FAILS = 5;
 
-export class WakeWord {
-  private rec?: Recognition;
-  private on = false;
-  private fails = 0;
-  private restartTimer?: ReturnType<typeof setTimeout>;
+interface Channel {
+  lang: string;
+  continuous: boolean;
+  rec?: Recognition;
+  fails: number;
+  dead: boolean;
+  timer?: ReturnType<typeof setTimeout>;
+}
 
-  /** onName: the name was heard (listening has stopped); onFatal: listening is impossible (see FATAL). */
+export class WakeWord {
+  private on = false;
+  private track?: MediaStreamTrack;
+  private channels: Channel[] = [];
+
+  /** onName: the name was heard (listening has stopped); onFatal: no recogniser can listen (see FATAL). */
   constructor(private readonly onName: () => void, private readonly onFatal: (why: string) => void) {}
 
   static get supported(): boolean {
@@ -64,15 +95,20 @@ export class WakeWord {
   start(track?: MediaStreamTrack): void {
     if (this.on) return;
     this.on = true;
-    this.fails = 0;
-    this.run(track);
+    this.track = track;
+    this.channels = CHANNELS.map((c) => ({ ...c, fails: 0, dead: false }));
+    for (const c of this.channels) this.run(c);
   }
 
   stop(): void {
     this.on = false;
-    clearTimeout(this.restartTimer);
-    const r = this.rec;
-    this.rec = undefined;
+    for (const c of this.channels) this.kill(c);
+  }
+
+  private kill(c: Channel): void {
+    clearTimeout(c.timer);
+    const r = c.rec;
+    c.rec = undefined;
     if (!r) return;
     r.onresult = r.onerror = r.onend = null;
     try {
@@ -82,43 +118,53 @@ export class WakeWord {
     }
   }
 
-  private run(track?: MediaStreamTrack): void {
+  /** A recogniser that cannot listen stops; the others go on - only when none is left is the wake word off. */
+  private drop(c: Channel, why: string): void {
+    this.kill(c);
+    c.dead = true;
+    if (this.on && this.channels.every((x) => x.dead)) {
+      this.on = false;
+      this.onFatal(why);
+    }
+  }
+
+  private run(c: Channel): void {
     const Ctor = recognitionCtor();
-    if (!Ctor || !this.on) return;
+    if (!Ctor || !this.on || c.dead) return;
     const r = new Ctor();
-    r.lang = 'ru-RU';
-    r.continuous = true;
+    r.lang = c.lang;
+    r.continuous = c.continuous;
     r.interimResults = true;
+    r.maxAlternatives = 5;   // (the name is often only in a lower hypothesis: «курок Меня зовут кокурок | кукурок …»)
     r.onresult = (e) => {
-      this.fails = 0;
+      c.fails = 0;
       for (let i = e.resultIndex; i < e.results.length; i++) {
-        if (!NAME.test(e.results[i][0].transcript)) continue;
-        this.stop();
-        this.onName();
-        return;
+        const res = e.results[i];
+        for (let k = 0; k < res.length; k++) {
+          if (!NAME.test(res[k].transcript)) continue;
+          this.stop();
+          this.onName();
+          return;
+        }
       }
     };
     r.onerror = (e) => {
-      if (FATAL.has(e.error)) {
-        this.stop();
-        this.onFatal(e.error);
-      } else if (e.error !== 'no-speech' && e.error !== 'aborted' && ++this.fails >= MAX_FAILS) {
-        this.stop();
-        this.onFatal(`${e.error} ×${MAX_FAILS}`);
+      if (FATAL.has(e.error)) this.drop(c, `${c.lang}: ${e.error}`);
+      else if (e.error !== 'no-speech' && e.error !== 'aborted' && ++c.fails >= MAX_FAILS) {
+        this.drop(c, `${c.lang}: ${e.error} ×${MAX_FAILS}`);
       }   // (network and the like, fewer times: the restart backs off)
     };
-    // Chrome ends a continuous session every so often and after a silence: start a new one.
+    // A continuous session ends every so often and after a silence, a phrase-by-phrase one after each phrase.
     r.onend = () => {
-      if (this.rec !== r) return;
-      const wait = this.fails ? Math.min(30_000, 1000 * 2 ** this.fails) : 250;
-      this.restartTimer = setTimeout(() => this.run(track), wait);
+      if (c.rec !== r || c.dead || !this.on) return;
+      const wait = c.fails ? Math.min(30_000, 1000 * 2 ** c.fails) : c.continuous ? 250 : 50;
+      c.timer = setTimeout(() => this.run(c), wait);
     };
-    this.rec = r;
+    c.rec = r;
     try {
-      r.start(track);   // (a browser without start(track) ignores it and takes the default microphone)
+      r.start(this.track);   // (a browser without start(track) ignores it and takes the default microphone)
     } catch (err) {
-      this.stop();
-      this.onFatal(String(err));
+      this.drop(c, `${c.lang}: ${err}`);
     }
   }
 }
