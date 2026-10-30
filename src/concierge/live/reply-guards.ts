@@ -43,7 +43,7 @@ function cyrLang(s: string): 'ru' | 'ky' | null {
  * What to ask the model to redo in its reply `botText` (to the guest's `userText`), or null if the reply is fine:
  * a Kyrgyz / undecided session answered in Turkish; any session answered in a fourth language (a misheard phrase
  * taken for Spanish etc.) or with Ukrainian words; an undecided session answered in the other Cyrillic language;
- * Kyrgyz number words in a Russian reply; a Japanese session answered in another language.
+ * Kyrgyz number words in a Russian reply; a Japanese phrase (or a Japanese session) answered in another language.
  */
 export function replyFix(botText: string, userText: string, lang: Lang): string | null {
   if (!botText) return null;
@@ -57,8 +57,12 @@ export function replyFix(botText: string, userText: string, lang: Lang): string 
     // Ukrainian (or Kazakh) words in a reply: "Всегда рада допомогти. Якщо захочете ще щось дізнатися..."
     return `в ответе украинские слова — у музея нет украинского. Повтори то же самое целиком ${WANT[lang]}.`;
   }
-  if (lang === 'ja' && botText.replace(/konnichiwa/gi, '').trim().length > 12 && !JAPANESE.test(botText)) {
-    return 'ответ прозвучал не по-японски. Повтори то же самое по-японски.';
+  // Japanese: a Japanese session's reply to a Japanese phrase (or to none), and in any session a reply to a phrase
+  // in Japanese, must be in Japanese - a Russian session answered «それはなんですか?» in Russian
+  const userJa = JAPANESE.test(userText);
+  if ((userJa || (lang === 'ja' && !userText)) && botText.replace(/konnichiwa/gi, '').trim().length > 12
+      && !JAPANESE.test(botText)) {
+    return userJa ? 'гость спросил по-японски — повтори то же самое по-японски.' : 'ответ прозвучал не по-японски. Повтори то же самое по-японски.';
   }
   if (userText && lang === 'auto' && cyrLang(userText) && cyrLang(botText) && cyrLang(userText) !== cyrLang(botText)) {
     const want = cyrLang(userText) === 'ru' ? 'по-русски' : 'по-кыргызски';
