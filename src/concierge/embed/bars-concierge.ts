@@ -388,10 +388,7 @@ export class BarsConcierge {
     this.pending = this.preroll;
     this.preroll = [];
     this.prerollLen = 0;
-    // The guest must see at once that the name was heard: the face perks up (and the page lights up, see Activity).
-    this.emotion.set('surprised', 1, 250);
-    this.emotion.release(1400);
-    this.showActivity();
+    this.showActivity();   // (the guest must see at once that the name was heard: the page lights up, see Activity)
     if (this.parked && this.live.connected) {
       this.log('услышал имя — продолжаю разговор');
       this.unpark();

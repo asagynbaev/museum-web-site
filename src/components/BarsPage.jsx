@@ -26,7 +26,6 @@ const JA = {
   error: '接続が切れました。もう一度お試しください。',
   toSite: 'ミュージアムのサイトへ',
   waking: '少々お待ちください…',
-  hearing: '聞いています',
 };
 const PAGE_LANGS = [...LANGS, { code: 'ja', label: 'JP' }];
 
@@ -157,12 +156,13 @@ export default function BarsPage() {
       </section>
 
       <div className={`bp-stage act-${activity}`} ref={stageRef}>
-        {/* услышал имя (или кнопку) — сцена загорается сразу, ещё до ответа: гость видит, что его услышали */}
+        {/* услышал имя (или кнопку) — сцена загорается сразу, ещё до ответа: гость видит, что его услышали;
+            пока подключается — «Секунду…» в углу */}
         <div className="bp-glow" aria-hidden />
-        {(activity === 'waking' || activity === 'listening') && (
+        {activity === 'waking' && (
           <p className="bp-pill" role="status">
             <span className="bp-pill-dot" aria-hidden />
-            {activity === 'waking' ? s.waking : s.hearing}
+            {s.waking}
           </p>
         )}
         {load !== 'ready' && (

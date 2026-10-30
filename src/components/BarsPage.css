@@ -147,7 +147,7 @@
 }
 
 /* Что делает гид (act-* — BarsConcierge.onActivity): услышал имя — сцена сразу загорается
-   и сверху «Секунду…», пока подключается; «Слушаю» — пока ждёт гостя; мягкий свет — пока говорит. */
+   и в углу «Секунду…», пока подключается; «дышит» — пока ждёт гостя; мягкий свет — пока говорит. */
 .bp-glow {
   position: absolute;
   inset: 0;
@@ -182,8 +182,8 @@
 
 .bp-pill {
   position: absolute;
-  top: clamp(14px, 2.4dvh, 40px);
-  left: 50%;
+  right: clamp(14px, 2.4dvh, 40px);
+  bottom: clamp(14px, 2.4dvh, 40px);
   z-index: 4;
   display: inline-flex;
   align-items: center;
@@ -195,19 +195,14 @@
   color: #fff;
   font: 600 clamp(1rem, min(4vw, 2dvh), 1.7rem) var(--body);
   white-space: nowrap;
-  transform: translateX(-50%);
   animation: bp-pill-in 0.25s ease-out;
 }
 .bp-pill-dot {
   width: 0.65em;
   height: 0.65em;
   border-radius: 50%;
-  background: var(--accent-2);
-  animation: bp-dot 1.1s ease-in-out infinite alternate;
-}
-.act-waking .bp-pill-dot {
   background: var(--gold);
-  animation-duration: 0.45s;
+  animation: bp-dot 0.45s ease-in-out infinite alternate;
 }
 @keyframes bp-dot {
   from {
@@ -222,11 +217,11 @@
 @keyframes bp-pill-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -8px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: none;
   }
 }
 
