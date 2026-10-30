@@ -39,7 +39,7 @@ export interface BarsConciergeOptions {
 /** A conversation is forgotten after this long without speech (main.ts FORGET_MS). */
 const FORGET_MS = 180_000;
 /** The microphone kept while waiting for the name (recognised ~1 s late): the phrase reaches Gemini whole. */
-const PREROLL_MS = 2500;
+const PREROLL_MS = 4000;
 /**
  * With the wake word the leopard answers like a smart speaker: once a reply has been heard out the microphone stops
  * going to Gemini and the page waits for the name again - FOLLOW_MS later if the reply ended with a question (a
@@ -231,7 +231,7 @@ export class BarsConcierge {
         this.log('3 мин без разговора — завершаю и забываю');
         this.stop();
         this.forget();
-      } else if (this.wake && !this.inTurn && now - this.lastBot > IDLE_MS && now - this.lastUser > IDLE_MS / 2) {
+      } else if (this.hearsName && !this.inTurn && now - this.lastBot > IDLE_MS && now - this.lastUser > IDLE_MS / 2) {
         this.log('ответа нет — жду имени');
         this.park();
       }
@@ -381,7 +381,7 @@ export class BarsConcierge {
 
   /** Wake mode: once the reply has been heard out, park - FOLLOW_MS later if it ended with a question. */
   private afterReply(): void {
-    if (!this.wake || !this.running) return;
+    if (!this.hearsName || !this.running) return;
     clearTimeout(this.restTimer);
     // (still playing: what was pushed and has not left the player, plus the avatar's stream delay)
     const left = ((this.player.pushedTotal - this.player.playedNow) / this.player.sampleRate) * 1000 + 300;
@@ -391,7 +391,7 @@ export class BarsConcierge {
 
   /** The microphone stops going to Gemini (the session stays open) and the page waits for the name again. */
   private park(): void {
-    if (!this.wake || !this.running || this.inTurn) return;   // (a reply under way parks itself when done)
+    if (!this.hearsName || !this.running || this.inTurn) return;   // (a reply under way parks itself when done)
     if (performance.now() - this.lastUser < 1500) {
       this.restTimer = setTimeout(() => this.park(), 1500);   // (the guest is still answering the question)
       return;
@@ -429,6 +429,12 @@ export class BarsConcierge {
       this.prerollLen += pcm.length;
       while (this.prerollLen - this.preroll[0].length >= PREROLL_MS * 16) this.prerollLen -= this.preroll.shift()!.length;
     }
+  }
+
+  /** Parking needs the name to be heard: without it (no recogniser, no permission, its service out of reach) a
+   * conversation stays open as with the button alone. */
+  private get hearsName(): boolean {
+    return !!this.wake && this.wakeState !== 'off';
   }
 
   private setWake(state: WakeState): void {

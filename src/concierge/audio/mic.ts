@@ -14,6 +14,7 @@ const RATE = 16000;
 export class Mic {
   private ctx?: AudioContext;
   private stream?: MediaStream;
+  private copy?: MediaStreamAudioDestinationNode;
   private speaking = false;
   private speechMs = 0;
   private silenceMs = 0;
@@ -24,9 +25,13 @@ export class Mic {
     return !!this.ctx;
   }
 
-  /** The microphone's track (the wake word's recogniser listens to the same one). */
+  /**
+   * The microphone at this context's 16 kHz, as a track, for the wake word's recogniser: Edge garbled the 48 kHz
+   * capture track ("Я сейчас когда?") and heard nothing from a 48 kHz copy, but took a 16 kHz one cleanly
+   * («я кокурок ваш гид»); Chrome takes either.
+   */
   get track(): MediaStreamTrack | undefined {
-    return this.stream?.getAudioTracks()[0];
+    return this.copy?.stream.getAudioTracks()[0];
   }
 
   async start(): Promise<void> {
@@ -52,6 +57,8 @@ export class Mic {
       this.ev.onChunk(e.data);
     };
     source.connect(node);
+    this.copy = ctx.createMediaStreamDestination();
+    source.connect(this.copy);
     node.connect(ctx.destination); // keeps the worklet pulled; it outputs silence
     await ctx.resume();
     this.ctx = ctx;
@@ -62,6 +69,7 @@ export class Mic {
     void this.ctx?.close();
     this.ctx = undefined;
     this.stream = undefined;
+    this.copy = undefined;
     this.speaking = false;
     this.speechMs = 0;
     this.silenceMs = 0;

@@ -4,9 +4,9 @@
 // is looked for: the question around it reaches Gemini as audio (embed/bars-concierge.ts keeps the last seconds of
 // the microphone), so Kyrgyz and English questions work although the recogniser runs in Russian.
 // Measured on the leopard's own "Konnichiwa! Я Кокурок, ваш гид…": Chrome 156 writes the name «кокурак», in an
-// interim result ~1 s after it was said (its earlier name «Батай» came out «ботай»). Chrome hears a fake / chosen
-// microphone only through start(track); Edge returned nonsense from the same track ("Я сейчас когда?"), so it
-// listens to the default microphone itself.
+// interim result ~1 s after it was said (its earlier name «Батай» came out «ботай»). It listens through
+// start(track) to a 16 kHz copy of the page's microphone (audio/mic.ts): Chrome hears a fake / chosen microphone only
+// that way, and Edge garbled the 48 kHz capture track but recognised the 16 kHz copy as well as Chrome.
 
 interface Alternative {
   transcript: string;
@@ -42,9 +42,10 @@ const recognitionCtor = (): RecognitionCtor | undefined => {
  * forms (Кокурока, Кокуроку); not the rooster's «кукареку» nor «кукуруза».
  */
 const NAME = /(?:^|[^а-яёa-z])(?!кукарек)к[оуаыё]к[уоаыю]\s?р[оаеёу]к?(?:а|у|ом|ам|е)?(?=$|[^а-яёa-z])|kok[uü]r[oö]k/i;
-const USE_TRACK = !/\bEdg\//.test(navigator.userAgent);
-/** Errors after which listening is pointless: no microphone permission, the service is off, no Russian. */
+/** Errors after which listening is pointless: no microphone permission, the service is off, no Russian; and
+ * MAX_FAILS other failures in a row (the recogniser's service out of reach). */
 const FATAL = new Set(['not-allowed', 'service-not-allowed', 'language-not-supported']);
+const MAX_FAILS = 5;
 
 export class WakeWord {
   private rec?: Recognition;
@@ -101,9 +102,10 @@ export class WakeWord {
       if (FATAL.has(e.error)) {
         this.stop();
         this.onFatal(e.error);
-      } else if (e.error !== 'no-speech' && e.error !== 'aborted') {
-        this.fails++;   // (network and the like: the restart backs off)
-      }
+      } else if (e.error !== 'no-speech' && e.error !== 'aborted' && ++this.fails >= MAX_FAILS) {
+        this.stop();
+        this.onFatal(`${e.error} ×${MAX_FAILS}`);
+      }   // (network and the like, fewer times: the restart backs off)
     };
     // Chrome ends a continuous session every so often and after a silence: start a new one.
     r.onend = () => {
@@ -113,7 +115,7 @@ export class WakeWord {
     };
     this.rec = r;
     try {
-      r.start(USE_TRACK ? track : undefined);   // (a browser without start(track) ignores it: the default microphone)
+      r.start(track);   // (a browser without start(track) ignores it and takes the default microphone)
     } catch (err) {
       this.stop();
       this.onFatal(String(err));
