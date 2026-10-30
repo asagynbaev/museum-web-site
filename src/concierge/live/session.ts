@@ -4,7 +4,7 @@
 import { GoogleGenAI, Modality, type FunctionCall, type LiveServerMessage, type Session } from '@google/genai';
 
 export type ConnState = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'closed' | 'error';
-export type Lang = 'auto' | 'ky' | 'ru' | 'en';
+export type Lang = 'auto' | 'ky' | 'ru' | 'en' | 'ja';   // (ja: the museum site's /bars, for the Japanese leopard)
 
 export interface LiveEvents {
   onState(state: ConnState, detail?: string): void;

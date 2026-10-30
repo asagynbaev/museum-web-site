@@ -7,6 +7,27 @@ import { LANGS } from '../i18n/translations.js';
 import { useLang } from '../i18n/LanguageProvider.jsx';
 import './BarsPage.css';
 
+// Гид — японский барс, поэтому здесь есть и японский. Только на этой странице:
+// у остального сайта японских текстов нет, общий язык сайта он не трогает.
+const JA = {
+  eyebrow: 'ミュージアムのAIガイド',
+  title: 'コクロクと話しましょう',
+  lead: '展示室・チケット・開館時間について、声で質問してください。',
+  start: '会話をはじめる',
+  stop: '終了',
+  starting: '接続中…',
+  loading: 'コクロクが目を覚ましています…',
+  loadError: 'コクロクを読み込めませんでした。ページを再読み込みしてください。',
+  listening: 'コクロクが聞いています — どうぞ話してください',
+  sayName: '話しかけるには「コクロク」と呼んでください',
+  tapToWake: '画面をタップして音声をオンにし、「コクロク」と呼んでください',
+  reconnecting: '再接続中…',
+  micDenied: 'マイクへのアクセスがありません。ブラウザの設定でこのサイトのマイクを許可してください。',
+  error: '接続が切れました。もう一度お試しください。',
+  toSite: 'ミュージアムのサイトへ',
+};
+const PAGE_LANGS = [...LANGS, { code: 'ja', label: 'JP' }];
+
 /**
  * Голосовой гид на `/bars`: 3D-барс и разговор с ним через Gemini Live.
  * Сам барс и разговор — модуль консьержа (`src/concierge`, копия из репозитория
@@ -15,8 +36,14 @@ import './BarsPage.css';
  * чанком: three.js и модель на ~20 МБ нужны только здесь.
  */
 export default function BarsPage() {
-  const { t, lang, setLang } = useLang();
-  const s = t.bars;
+  const { t, lang: siteLang, setLang: setSiteLang } = useLang();
+  const [japanese, setJapanese] = useState(false);
+  const lang = japanese ? 'ja' : siteLang;
+  const s = japanese ? JA : t.bars;
+  const setLang = (code) => {
+    setJapanese(code === 'ja');
+    if (code !== 'ja') setSiteLang(code);
+  };
   const stageRef = useRef(null);
   const userRef = useRef(null);
   const botRef = useRef(null);
@@ -56,9 +83,11 @@ export default function BarsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Язык разговора — язык сайта: смена переоткрывает сессию на новом.
+  // Язык разговора — язык страницы: смена переоткрывает сессию на новом.
   useEffect(() => {
     void conciergeRef.current?.setLang(lang);
+    // (японский — не язык сайта, провайдер его не ставит; lang нужен браузеру для японских шрифтов)
+    document.documentElement.lang = lang;
   }, [lang]);
 
   const toggle = async () => {
@@ -102,7 +131,7 @@ export default function BarsPage() {
           <Logo />
         </a>
         <span className="bp-langs">
-          {LANGS.map((l, i) => (
+          {PAGE_LANGS.map((l, i) => (
             <Fragment key={l.code}>
               {i > 0 && <span className="bp-sep"> · </span>}
               <button
