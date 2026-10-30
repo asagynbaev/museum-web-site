@@ -96,6 +96,17 @@ interface BoneRig {
 
 const DEG = Math.PI / 180;
 
+/** Render quality steps, best first: the render resolution (a share of the screen's pixel ratio) and the AO pass. */
+const QUALITY = [
+  { scale: 1, ao: true },
+  { scale: 0.75, ao: true },
+  { scale: 0.75, ao: false },
+  { scale: 0.55, ao: false },
+  { scale: 0.4, ao: false },
+] as const;
+/** A mean frame longer than this (under ~47 fps; a 50 Hz screen gives 20 ms) steps the quality down. */
+const SLOW_FRAME_MS = 21;
+
 export class BarsAvatar {
   private renderer?: THREE.WebGLRenderer;
   /** Post chain: render → ground-truth ambient occlusion (contact shadows between head, body and paws) → output. */
@@ -199,6 +210,13 @@ export class BarsAvatar {
   private frames = 0;
   private fpsAt = performance.now();
   fps = 0;
+  /** Current QUALITY step: frames slower than SLOW_FRAME_MS step it down (see judgeFrame); ?barsq=N pins a step. */
+  quality = 0;
+  private autoQuality = true;
+  private qualityAt = 0;     // frames are not judged before this time (a load or a step settling)
+  private frameCount = 0;
+  private frameSum = 0;
+  private slowBefore = 0;    // mean frame before the last step, to check it helped (0 = nothing to check)
   /** Jaw multiplier (tuning knob). */
   jawGain = 1;
   /** Demo: synthetic speech (visemes cycling, no audio) to check the mouth without a conversation. */
@@ -253,6 +271,7 @@ export class BarsAvatar {
     this.resize();
     if (!this.raf) {
       this.last = performance.now();
+      this.qualityAt = this.last + 3000;
       this.raf = requestAnimationFrame(this.tick);
     }
   }
@@ -363,6 +382,11 @@ export class BarsAvatar {
       composer.addPass(new SMAAPass());   // (the composer's targets carry no MSAA: alpha-tested fur edges crawled)
       this.composer = composer;
       this.gtao = gtao;
+    }
+    const pinned = Number(new URLSearchParams(location.search).get('barsq') ?? NaN);
+    if (QUALITY[pinned]) {
+      this.autoQuality = false;
+      this.setQuality(pinned);
     }
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(this.container);
@@ -670,6 +694,46 @@ void main() {`)
     cam.lookAt(look);
   }
 
+  private setQuality(step: number): void {
+    this.quality = step;
+    const ratio = Math.max(0.5, Math.min(window.devicePixelRatio, 2) * QUALITY[step].scale);
+    this.renderer?.setPixelRatio(ratio);
+    this.composer?.setPixelRatio(ratio);
+    this.resize();
+  }
+
+  /**
+   * Auto quality: the mean frame over ~2 s windows; a slow one steps the quality down. A step that did not help
+   * (a 30 Hz screen or a slow CPU, not the GPU) is taken back and the adaptation stops. Never steps up: frames
+   * capped by the screen's refresh show no headroom.
+   */
+  private judgeFrame(ms: number): void {
+    const now = performance.now();
+    if (!this.autoQuality || document.hidden || now < this.qualityAt || ms > 250) return;  // (a hitch, a hidden tab)
+    this.frameCount++;
+    this.frameSum += ms;
+    if (this.frameSum < 2000 || this.frameCount < 20) return;
+    const mean = this.frameSum / this.frameCount;
+    this.frameCount = this.frameSum = 0;
+    if (this.slowBefore) {
+      const before = this.slowBefore;
+      this.slowBefore = 0;
+      if (mean > before * 0.88) {
+        this.autoQuality = false;
+        this.setQuality(this.quality - 1);
+        console.info(`[bars] quality step did not help (${before.toFixed(1)} -> ${mean.toFixed(1)} ms/frame): back to ${this.quality}, auto off`);
+        return;
+      }
+    }
+    if (mean > SLOW_FRAME_MS && this.quality < QUALITY.length - 1) {
+      this.slowBefore = mean;
+      this.setQuality(this.quality + 1);
+      this.qualityAt = now + 1000;
+      const q = QUALITY[this.quality];
+      console.info(`[bars] ${mean.toFixed(1)} ms/frame: quality ${this.quality} (resolution x${q.scale}, AO ${q.ao ? 'on' : 'off'})`);
+    }
+  }
+
   private resize(): void {
     if (!this.renderer) return;
     const w = Math.max(1, this.container.clientWidth);
@@ -713,14 +777,17 @@ void main() {`)
     const now0 = performance.now();
     // the first frames after a load run with a long step: every spring lands on its target at once, instead of the
     // face settling (lids closing, the smile arriving) in front of the viewer
-    const dt = this.warm++ < 4 ? 1 : Math.min(0.05, (now0 - this.last) / 1000);
+    const step = now0 - this.last;
+    const dt = this.warm++ < 4 ? 1 : Math.min(0.05, step / 1000);
     this.last = now0;
     this.time += dt;
     this.animate(dt);
     for (const [k, v] of Object.entries(this.pose)) this.setMorph(k, v);
     for (const [k, [x, y, z]] of Object.entries(this.bonePose)) this.rotate(k, x * DEG, y * DEG, z * DEG);
-    if (this.composer) this.composer.render();
+    // (without the AO pass: straight to the screen, which has MSAA, so no SMAA either)
+    if (this.composer && QUALITY[this.quality].ao) this.composer.render();
     else this.renderer?.render(this.scene, this.camera);
+    this.judgeFrame(step);
     this.frames++;
     const now = performance.now();
     if (now - this.fpsAt >= 1000) {
