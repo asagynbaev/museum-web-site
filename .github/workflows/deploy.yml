@@ -117,7 +117,10 @@ jobs:
 
       - name: Сайт отвечает
         if: steps.secrets.outputs.ready == 'true'
+        # Ищем сам ответ API, а не код: curl -f считает успехом и 301, а старый домен
+        # museum.eaysdev.online отвечает именно им (редирект на ai-museum.htp.kg),
+        # так что проверка по нему проходила, ничего не проверив.
         run: |
-          curl -fsS https://museum.eaysdev.online/api/health
-          curl -fsS -o /dev/null https://museum.eaysdev.online/
-          echo "museum.eaysdev.online живой"
+          curl -fsS https://ai-museum.htp.kg/api/health | grep -q '"ok":true'
+          curl -fsS -o /dev/null https://ai-museum.htp.kg/
+          echo "ai-museum.htp.kg живой"

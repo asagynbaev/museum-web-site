@@ -4,12 +4,12 @@
 
 | | |
 |---|---|
-| Сайт | **https://museum.eaysdev.online** (Let's Encrypt, http → https редиректом) |
+| Сайт | **https://ai-museum.htp.kg** (Let's Encrypt, http → https редиректом); прежний `museum.eaysdev.online` отвечает 301 сюда |
 | Сервер | `84.54.12.242` (Debian 12, hostname `kit-forum.kg`) |
 | Код | `/opt/museum`, пользователь `museum`, ветка `main` |
 | API | `museum-api.service` → `127.0.0.1:8787` |
 | Голосовой гид `/bars` | `concierge-api.service` → `127.0.0.1:8090`, `/opt/concierge` (раздел ниже) |
-| nginx | `/etc/nginx/sites-available/museum` — только `server_name museum.eaysdev.online` |
+| nginx | `/etc/nginx/sites-available/museum` — `server_name ai-museum.htp.kg`, отдельный блок для `museum.eaysdev.online` с редиректом |
 | Бэкапы | `/etc/cron.d/museum-backup` → `/var/backups/museum/`, 30 дней |
 | Деплой | пуш в `main` → GitHub Actions → `deploy@сервер` → `/usr/local/bin/museum-deploy` (раздел «Автодеплой») |
 
@@ -29,14 +29,15 @@
   отвалился на `GetLink`: `HTTP 500, code 5 InternalServiceError` на любой
   terminalId. На боевом это надо перепроверить первым же QR.
 
-Что ещё не сделано перед открытием кассы:
+Касса на 08.11.2026:
 
-- **SMTP не вписан на сервере** — параметры Google Workspace известны и проверены
-  локально (`smtp.gmail.com:465`, ящик `events@htp.kg`, пароль приложения), но пока
-  их нет в `/opt/museum/server/.env`, билеты печатаются в `journalctl -u museum-api`
-  и на почту покупателю ничего не уходит;
+- SMTP вписан в `/opt/museum/server/.env` (`smtp.gmail.com:465`, ящик `events@htp.kg`,
+  пароль приложения); отправку проверять `npm run mail:test -- вы@почта` из `server/`;
 - цены боевые с 15.10.2026: `PRICE_ADULT=1600`, `PRICE_REDUCED=1200`,
-  `PRICE_FAMILY=4800`.
+  `PRICE_FAMILY=4800`;
+- продажа по часовым сеансам: переменных `SLOT_*` в `.env` нет, работают значения
+  по умолчанию из `server/src/config.js` — 20 мест, сеансы 10:00–19:00, понедельник
+  выходной.
 
 Дальше — общая инструкция, если разворачивать с нуля на чистой машине.
 
@@ -211,7 +212,11 @@ sudo systemctl restart museum-api
    `/usr/local/bin/museum-deploy` (копия `deploy/museum-deploy.sh`): `git merge --ff-only`,
    `npm ci` и сборка, `npm ci` API, копия базы в `/var/backups/museum/`, рестарт
    `museum-api` и ожидание, пока `/api/health` ответит.
-3. **Проверка снаружи**: `https://museum.eaysdev.online/api/health`.
+3. **Проверка снаружи**: `https://ai-museum.htp.kg/api/health` отвечает `{"ok":true}`.
+
+Настроено 08.11.2026: пользователь `deploy`, `/usr/local/bin/museum-deploy`, sudoers и
+ключ с `command=` на сервере; секреты `DEPLOY_HOST/USER/SSH_KEY/KNOWN_HOSTS` в репозитории.
+Первый деплой — Deploy #3, зелёный.
 
 Пока секреты не заданы, шаг деплоя пропускается с предупреждением, проверка работает.
 Запустить вручную: GitHub → Actions → Deploy → Run workflow.
