@@ -7,11 +7,12 @@ const BASE = import.meta.env.VITE_API_URL ?? '';
 
 /** Ошибка с текстом, который уже можно показать человеку. */
 export class ApiError extends Error {
-  constructor(message, { code = 'error', status = 0 } = {}) {
+  constructor(message, { code = 'error', status = 0, payload = null } = {}) {
     super(message);
     this.name = 'ApiError';
     this.code = code;
     this.status = status;
+    this.payload = payload;
   }
 }
 
@@ -39,6 +40,7 @@ async function request(path, { method = 'GET', body, signal, token } = {}) {
     throw new ApiError(payload?.message || `HTTP ${res.status}`, {
       code: payload?.error || 'error',
       status: res.status,
+      payload,
     });
   }
 
@@ -48,8 +50,15 @@ async function request(path, { method = 'GET', body, signal, token } = {}) {
 export const api = {
   tariffs: (signal) => request('/tariffs', { signal }).then((r) => r.tariffs),
 
-  createOrder: ({ items, email, lang }) =>
-    request('/orders', { method: 'POST', body: { items, email, lang } }).then((r) => r.order),
+  /** Календарь продаж: каждый день горизонта и его статус (open/few/full/closed/past). */
+  calendar: (signal) => request('/slots/calendar', { signal }),
+
+  /** Сеансы одного дня с остатком мест. */
+  slots: (date, signal) =>
+    request(`/slots?date=${encodeURIComponent(date)}`, { signal }).then((r) => r.slots),
+
+  createOrder: ({ items, email, lang, slot }) =>
+    request('/orders', { method: 'POST', body: { items, email, lang, slot } }).then((r) => r.order),
 
   getOrder: (id, signal) => request(`/orders/${id}`, { signal }).then((r) => r.order),
 
@@ -69,6 +78,9 @@ export const api = {
       if (q) params.set('q', q);
       return request(`/admin/orders?${params}`, { token, signal });
     },
+
+    slots: ({ token, date, signal }) =>
+      request(`/admin/slots?date=${encodeURIComponent(date)}`, { token, signal }),
 
     sync: (id, token) => request(`/admin/orders/${id}/sync`, { method: 'POST', token }),
 

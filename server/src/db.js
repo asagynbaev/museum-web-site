@@ -65,12 +65,49 @@ if (!orderColumns.includes('entries_used')) {
   db.exec('ALTER TABLE orders ADD COLUMN entries_used INTEGER NOT NULL DEFAULT 0');
 }
 
+/**
+ * Миграция: сеанс посещения. `slot` — начало часа входа по Бишкеку строкой
+ * `YYYY-MM-DDTHH:00` (см. src/slots.js). Строки сравниваются как время, так что
+ * диапазоны дат — обычные `>=`/`<` по тексту. У билетов, купленных до сеансов,
+ * и у тестовых заказов из админки slot = NULL: они пускают в любое время и
+ * лимит мест не занимают.
+ */
+if (!orderColumns.includes('slot')) {
+  db.exec('ALTER TABLE orders ADD COLUMN slot TEXT');
+}
+db.exec('CREATE INDEX IF NOT EXISTS idx_orders_slot ON orders (slot, status)');
+
+/**
+ * Какие заказы держат места в сеансе: оплаченные и те, по которым ещё висит
+ * QR. Неоплаченный QR занимает места до тех пор, пока фоновая сверка не
+ * переведёт его в expired/cancelled/failed — иначе два человека могли бы
+ * одновременно оплатить последние места.
+ */
+const HOLDING = "('paid','pending','processing')";
+
 const stmts = {
   insert: db.prepare(`
     INSERT INTO orders (id, created_at, updated_at, expires_at, status, amount, currency,
-                        seats, items, email, lang, qr_link)
+                        seats, items, email, lang, qr_link, slot)
     VALUES (@id, @created_at, @updated_at, @expires_at, @status, @amount, @currency,
-            @seats, @items, @email, @lang, @qr_link)
+            @seats, @items, @email, @lang, @qr_link, @slot)
+  `),
+  setQrLink: db.prepare(
+    'UPDATE orders SET qr_link = @qr_link, currency = @currency, updated_at = @now WHERE id = @id'
+  ),
+
+  // ── Сеансы ──────────────────────────────────────────────────────────────
+  seatsInSlot: db.prepare(
+    `SELECT COALESCE(SUM(seats), 0) AS n FROM orders WHERE slot = ? AND status IN ${HOLDING}`
+  ),
+  slotLoad: db.prepare(`
+    SELECT slot,
+           COALESCE(SUM(CASE WHEN status = 'paid' THEN seats END), 0) AS paid,
+           COALESCE(SUM(CASE WHEN status <> 'paid' THEN seats END), 0) AS held,
+           COALESCE(SUM(CASE WHEN status = 'paid' THEN entries_used END), 0) AS entered
+    FROM orders
+    WHERE slot >= @from AND slot < @to AND status IN ${HOLDING}
+    GROUP BY slot
   `),
   byId: db.prepare('SELECT * FROM orders WHERE id = ?'),
   // Без дефисов с обеих сторон: коды, выпущенные до смены формата (с AIM-XXXX-XXXX),
@@ -141,10 +178,41 @@ export function hydrate(row) {
   return { ...row, items: JSON.parse(row.items) };
 }
 
+/**
+ * Проверка остатка и запись заказа — одна транзакция. better-sqlite3
+ * синхронный, а сервер — один процесс, так что между «посчитали занятые
+ * места» и «записали заказ» второй запрос влезть не может: последнее место
+ * достанется ровно одному покупателю.
+ */
+const reserveTx = db.transaction((order, capacity) => {
+  const taken = stmts.seatsInSlot.get(order.slot).n;
+  if (taken + order.seats > capacity) return { ok: false, remaining: Math.max(0, capacity - taken) };
+  stmts.insert.run({ ...order, items: JSON.stringify(order.items) });
+  return { ok: true, order: hydrate(stmts.byId.get(order.id)) };
+});
+
 export const orders = {
   insert(order) {
-    stmts.insert.run({ ...order, items: JSON.stringify(order.items) });
+    stmts.insert.run({ slot: null, ...order, items: JSON.stringify(order.items) });
     return hydrate(stmts.byId.get(order.id));
+  },
+
+  /** Записывает заказ на сеанс, если в нём хватает мест. */
+  reserve: (order, capacity) => reserveTx(order, capacity),
+
+  setQrLink(id, qrLink, currency) {
+    stmts.setQrLink.run({ id, qr_link: qrLink, currency, now: Date.now() });
+    return hydrate(stmts.byId.get(id));
+  },
+
+  /**
+   * Загрузка сеансов в диапазоне `[from, to)` (строки слотов):
+   * Map slot → { paid, held, entered }.
+   */
+  slotLoad(from, to) {
+    return new Map(
+      stmts.slotLoad.all({ from, to }).map((r) => [r.slot, { paid: r.paid, held: r.held, entered: r.entered }])
+    );
   },
 
   byId: (id) => hydrate(stmts.byId.get(id)),

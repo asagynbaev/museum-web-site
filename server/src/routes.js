@@ -13,7 +13,9 @@ import {
   publicOrder,
   resendTicket,
   syncOrder,
+  ticketVisit,
 } from './orders.js';
+import { adminSlotsForDate, calendar, localDate, slotsForDate } from './slots.js';
 import { publicTariffs } from './tariffs.js';
 
 /**
@@ -42,6 +44,7 @@ function rateLimiter({ limit, windowMs }) {
 
 const limitCreate = rateLimiter({ limit: 10, windowMs: 10 * 60_000 });
 const limitPoll = rateLimiter({ limit: 600, windowMs: 5 * 60_000 });
+const limitSlots = rateLimiter({ limit: 300, windowMs: 5 * 60_000 });
 // Подбор пароля к админке: 20 неудач за 15 минут с одного адреса — предел.
 const limitAdminAuth = rateLimiter({ limit: 20, windowMs: 15 * 60_000 });
 // Турникет стучится на каждый вход живого человека — лимит щедрее, но тоже есть.
@@ -121,16 +124,35 @@ export async function registerRoutes(app) {
 
   app.get('/api/tariffs', async () => ({ tariffs: publicTariffs() }));
 
+  // ── Сеансы: календарь на весь горизонт и часы одного дня ────────────────
+  // Остатки мест меняются с каждой покупкой — не кэшируем.
+  app.get('/api/slots/calendar', async (req, reply) => {
+    if (!limitSlots(req.ip)) {
+      return reply.code(429).send({ error: 'rate_limited', message: 'Слишком частые запросы' });
+    }
+    reply.header('Cache-Control', 'no-store');
+    return calendar();
+  });
+
+  app.get('/api/slots', async (req, reply) => {
+    if (!limitSlots(req.ip)) {
+      return reply.code(429).send({ error: 'rate_limited', message: 'Слишком частые запросы' });
+    }
+    const date = String(req.query?.date || '');
+    reply.header('Cache-Control', 'no-store');
+    return { date, slots: slotsForDate(date) };
+  });
+
   // ── Создание заказа ─────────────────────────────────────────────────────
   app.post('/api/orders', async (req, reply) => {
     if (!limitCreate(req.ip)) {
       return reply.code(429).send({ error: 'rate_limited', message: 'Слишком много попыток. Подождите немного.' });
     }
 
-    const { items, email, lang } = req.body || {};
-    const order = await createOrder({ items, email, lang });
+    const { items, email, lang, slot } = req.body || {};
+    const order = await createOrder({ items, email, lang, slot });
 
-    req.log.info({ orderId: order.id, amount: order.amount }, 'заказ создан');
+    req.log.info({ orderId: order.id, amount: order.amount, slot: order.slot, seats: order.seats }, 'заказ создан');
     return reply.code(201).send({ order: publicOrder(order) });
   });
 
@@ -203,6 +225,13 @@ export async function registerRoutes(app) {
         },
       },
     };
+  });
+
+  // Загрузка сеансов дня для кассы: продано / держат QR / уже прошли.
+  app.get('/api/admin/slots', async (req, reply) => {
+    if (!adminAllowed(req, reply)) return undefined;
+    const date = String(req.query?.date || localDate());
+    return { date, slots: adminSlotsForDate(date) };
   });
 
   // Кнопка «проверить в банке»: спрашиваем KICB прямо сейчас, не дожидаясь
@@ -295,6 +324,7 @@ export async function registerRoutes(app) {
         amount: order.amount / 100,
         currency: order.currency,
         paidAt: order.paid_at,
+        ...ticketVisit(order),
       },
     };
   });
@@ -316,5 +346,11 @@ export function errorHandler(err, req, reply) {
     return reply.code(status).send({ error: 'internal', message: 'Внутренняя ошибка сервера' });
   }
 
-  return reply.code(status).send({ error: 'bad_request', message: err.message });
+  // publicCode ставят наши собственные ошибки (см. slots.js) — фронт по нему
+  // понимает, что случилось: сеанс заполнен, закрыт и т. п.
+  return reply.code(status).send({
+    error: err.publicCode || 'bad_request',
+    message: err.message,
+    ...(err.remaining !== undefined ? { remaining: err.remaining } : {}),
+  });
 }

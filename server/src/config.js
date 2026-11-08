@@ -30,6 +30,31 @@ function bool(name, fallback) {
   return v === 'true' || v === '1';
 }
 
+function intList(name, fallback) {
+  const v = process.env[name];
+  if (v === undefined) return fallback;
+  return v
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((s) => {
+      const n = Number.parseInt(s, 10);
+      if (!Number.isInteger(n) || n < 0 || n > 6) throw new Error(`${name}: "${s}" — не день недели 0–6`);
+      return n;
+    });
+}
+
+function dateList(name) {
+  return (process.env[name] || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((s) => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) throw new Error(`${name}: "${s}" — нужен формат YYYY-MM-DD`);
+      return s;
+    });
+}
+
 const mode = str('KICB_MODE', 'mock');
 if (mode !== 'mock' && mode !== 'live') {
   throw new Error(`KICB_MODE должен быть "mock" или "live", получено "${mode}"`);
@@ -93,6 +118,26 @@ export const config = {
     family: int('PRICE_FAMILY', 4800) * 100,
   },
 
+  // Сеансы: билет продаётся на конкретную дату и час входа, у часа — лимит мест.
+  // Всё время — по Бишкеку (UTC+6, без перехода на летнее), независимо от
+  // часового пояса VPS. См. src/slots.js.
+  slots: {
+    capacity: int('SLOT_CAPACITY', 20),
+    firstHour: int('SLOT_FIRST_HOUR', 10),
+    lastHour: int('SLOT_LAST_HOUR', 19),
+    horizonMonths: int('BOOKING_HORIZON_MONTHS', 3),
+    // 0 — воскресенье … 6 — суббота. По умолчанию выходной — понедельник.
+    closedWeekdays: intList('CLOSED_WEEKDAYS', [1]),
+    // Праздники и санитарные дни: YYYY-MM-DD через запятую.
+    closedDates: dateList('CLOSED_DATES'),
+    // Сеанс продаётся, пока с его начала прошло меньше этого (мин).
+    salesCloseMin: int('SLOT_SALES_CLOSE_MIN', 45),
+    // Турникет пускает за столько минут до начала сеанса…
+    gateEarlyMin: int('GATE_EARLY_MIN', 15),
+    // …и до стольких минут после начала.
+    gateLateMin: int('GATE_LATE_MIN', 60),
+  },
+
   smtp: smtpHost
     ? {
         host: smtpHost,
@@ -109,4 +154,13 @@ export const config = {
 
 if (config.kicb.mode === 'live' && config.kicb.baseUrl.startsWith('http://')) {
   throw new Error('В режиме live KICB_BASE_URL обязан быть https://');
+}
+
+if (config.slots.capacity < 1) throw new Error('SLOT_CAPACITY должно быть больше нуля');
+if (
+  config.slots.firstHour < 0 ||
+  config.slots.lastHour > 23 ||
+  config.slots.firstHour > config.slots.lastHour
+) {
+  throw new Error('SLOT_FIRST_HOUR/SLOT_LAST_HOUR: нужен порядок 0 ≤ первый ≤ последний ≤ 23');
 }

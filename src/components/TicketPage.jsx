@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Logo } from './Logo.jsx';
 import { useLang } from '../i18n/LanguageProvider.jsx';
 import { ApiError, api } from '../lib/api.js';
+import { bishkekTime, formatSlot } from '../lib/visit.js';
 import './TicketPage.css';
 
 /**
@@ -60,6 +61,20 @@ export function TicketPage({ code }) {
             <div className="tk-code">{ticket.code}</div>
 
             <dl className="tk-rows">
+              {ticket.slot && (
+                <>
+                  <div className="tk-row">
+                    <dt>{s.visit}</dt>
+                    <dd>{formatSlot(ticket.slot, t.checkout)}</dd>
+                  </div>
+                  <div className="tk-row">
+                    <dt>{s.entry}</dt>
+                    <dd>
+                      {bishkekTime(ticket.entryFrom)}–{bishkekTime(ticket.entryUntil)}
+                    </dd>
+                  </div>
+                </>
+              )}
               {ticket.items.map((item) => (
                 <div className="tk-row" key={item.tariff}>
                   <dt>{t.checkout.tariffs[item.tariff] || item.tariff}</dt>

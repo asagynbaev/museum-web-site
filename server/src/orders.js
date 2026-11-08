@@ -4,6 +4,7 @@ import { config } from './config.js';
 import { orders } from './db.js';
 import { kicb, KicbError, QR_STATUS, QR_STATUS_NAME } from './kicb.js';
 import { sendTicket } from './mailer.js';
+import { assertBookable, entryWindow, httpError } from './slots.js';
 import { priceCart, CURRENCY } from './tariffs.js';
 
 /** Не дёргаем банк чаще, чем раз в 1.5 с на заказ — фронт опрашивает нас чаще. */
@@ -49,12 +50,12 @@ export function normaliseEmail(raw) {
 }
 
 /**
- * Создаёт заказ и получает QR у банка. Сумму считает `priceCart` — из тела
- * запроса берутся только id тарифов и количества.
+ * Создаёт заказ на сеанс и получает QR у банка. Сумму считает `priceCart` —
+ * из тела запроса берутся только id тарифов, количества и сеанс.
  */
-export async function createOrder({ items, email, lang }) {
+export async function createOrder({ items, email, lang, slot }) {
   const cart = priceCart(items);
-  return createPricedOrder({ ...cart, email, lang });
+  return createPricedOrder({ ...cart, email, lang, slot: assertBookable(slot) });
 }
 
 /**
@@ -78,8 +79,15 @@ export async function createTestOrder({ amountSom, email, lang }) {
   });
 }
 
-/** Общая часть createOrder/createTestOrder: бронь, звонок в банк, запись в базу. */
-async function createPricedOrder({ amount, seats, items, email, lang }) {
+/**
+ * Общая часть createOrder/createTestOrder: запись в базу (с бронью мест, если
+ * есть сеанс), потом звонок в банк за QR.
+ *
+ * Порядок важен: места бронируются ДО банка. Если бы мы сначала шли за QR, а
+ * потом проверяли остаток, два покупателя последних мест оба получили бы QR —
+ * а проверка между ними прошла бы у обоих.
+ */
+async function createPricedOrder({ amount, seats, items, email, lang, slot = null }) {
   const address = normaliseEmail(email);
 
   // Простой предохранитель от накрутки: не больше 5 живых заказов на адрес.
@@ -92,23 +100,49 @@ async function createPricedOrder({ amount, seats, items, email, lang }) {
   const now = Date.now();
   const id = newOrderId();
 
-  // Сумма уходит в банк в сомах: decimal NUMERIC(10,2).
-  const link = await kicb.getLink({ id, amount: amount / 100 });
-
-  return orders.insert({
+  const row = {
     id,
     created_at: now,
     updated_at: now,
     expires_at: now + config.orderTtlMs,
     status: 'pending',
     amount,
-    currency: link.currency || CURRENCY,
+    currency: CURRENCY,
     seats,
     items,
     email: address,
     lang: ['ru', 'ky', 'en'].includes(lang) ? lang : 'ru',
-    qr_link: link.qrLink,
-  });
+    qr_link: null,
+    slot,
+  };
+
+  if (slot) {
+    const res = orders.reserve(row, config.slots.capacity);
+    if (!res.ok) {
+      throw httpError(
+        409,
+        'slot_full',
+        res.remaining > 0
+          ? `На этот сеанс осталось мест: ${res.remaining}`
+          : 'На этот сеанс мест не осталось',
+        { remaining: res.remaining }
+      );
+    }
+  } else {
+    orders.insert(row);
+  }
+
+  // Сумма уходит в банк в сомах: decimal NUMERIC(10,2).
+  let link;
+  try {
+    link = await kicb.getLink({ id, amount: amount / 100 });
+  } catch (err) {
+    // QR не выдан — бронь снимаем сразу, не дожидаясь истечения заказа.
+    orders.setStatus(id, 'failed', { error: `GetLink: ${err.message}` });
+    throw err;
+  }
+
+  return orders.setQrLink(id, link.qrLink, link.currency || CURRENCY);
 }
 
 /**
@@ -282,6 +316,25 @@ export function startReconciler({ intervalMs = 5000 } = {}) {
   return () => clearInterval(timer);
 }
 
+/**
+ * Сеанс билета и окно входа по нему. У билетов, купленных до сеансов
+ * (slot = NULL), окна нет — они пускают в любое время.
+ */
+export function ticketVisit(order) {
+  if (!order.slot) return { slot: null, entryFrom: null, entryUntil: null };
+  const { from, until } = entryWindow(order.slot);
+  return { slot: order.slot, entryFrom: from, entryUntil: until };
+}
+
+/** Можно ли войти по билету сейчас: 'ok' | 'early' | 'late'. */
+function entryTiming(order, now = Date.now()) {
+  if (!order.slot) return 'ok';
+  const { from, until } = entryWindow(order.slot);
+  if (now < from) return 'early';
+  if (now > until) return 'late';
+  return 'ok';
+}
+
 /** Вид билета для турникета: только то, что нужно показать на экране сканера. */
 function gateTicket(order) {
   return {
@@ -291,6 +344,8 @@ function gateTicket(order) {
     entriesUsed: order.entries_used,
     remaining: order.seats - order.entries_used,
     paidAt: order.paid_at,
+    ...ticketVisit(order),
+    timing: entryTiming(order),
   };
 }
 
@@ -312,6 +367,16 @@ export function gateLookup(code) {
 export function gateCheckIn(code, { count = 1 } = {}) {
   const ticketCode = String(code || '').toUpperCase();
   const n = Math.max(1, Math.min(50, Math.trunc(count) || 1));
+
+  // Сеанс проверяем до списания: пришёл не в своё время — вход не тратится.
+  // Гонки тут нет: сеанс у билета не меняется, а время идёт только вперёд.
+  const before = orders.byTicket(ticketCode);
+  if (before?.status === 'paid') {
+    const timing = entryTiming(before);
+    if (timing !== 'ok') {
+      return { ok: false, reason: timing === 'early' ? 'too_early' : 'too_late', ticket: gateTicket(before) };
+    }
+  }
 
   if (orders.gateCheckIn(ticketCode, n)) {
     const order = orders.byTicket(ticketCode);
@@ -343,6 +408,7 @@ export function publicOrder(order) {
     email: order.email,
     qrLink: order.status === 'pending' || order.status === 'processing' ? order.qr_link : null,
     expiresAt: order.expires_at,
+    ...ticketVisit(order),
     ticketCode: order.ticket_code ?? null,
     mailSent: Boolean(order.mail_sent_at),
   };

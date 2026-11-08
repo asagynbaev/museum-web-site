@@ -1,8 +1,9 @@
-import { CircleCheck, CircleX, Minus, Plus, Smartphone, X } from 'lucide-react';
-import { useEffect, useId, useRef } from 'react';
+import { CalendarDays, ChevronLeft, ChevronRight, CircleCheck, CircleX, Minus, Plus, Smartphone, X } from 'lucide-react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { useLang } from '../i18n/LanguageProvider.jsx';
 import { api } from '../lib/api.js';
+import { formatEntry, formatSlot, parseDay } from '../lib/visit.js';
 import './Checkout.css';
 
 const money = (value, lang) =>
@@ -14,7 +15,7 @@ const clock = (seconds) =>
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
 
 /**
- * Покупка билета: корзина → QR → билет. Всё состояние живёт в `useCheckout`,
+ * Покупка билета: сеанс → корзина → QR → билет. Всё состояние живёт в `useCheckout`,
  * здесь только разметка и фокус-ловушка.
  */
 export function Checkout({ checkout }) {
@@ -100,6 +101,7 @@ export function Checkout({ checkout }) {
 
         <div className="co-eyebrow">{c.eyebrow}</div>
 
+        {step === 'when' && <WhenStep checkout={checkout} c={c} titleId={titleId} />}
         {step === 'cart' && <CartStep checkout={checkout} c={c} lang={lang} titleId={titleId} />}
         {step === 'qr' && <QrStep checkout={checkout} c={c} lang={lang} titleId={titleId} />}
         {step === 'done' && <DoneStep checkout={checkout} c={c} lang={lang} titleId={titleId} />}
@@ -109,14 +111,176 @@ export function Checkout({ checkout }) {
   );
 }
 
-/* ── Шаг 1: корзина ───────────────────────────────────────────────────── */
+/* ── Шаг 1: дата и час входа ──────────────────────────────────────────── */
+
+const SELLING = new Set(['open', 'few']);
+const monthKey = (date) => date.slice(0, 7);
+
+/** Сетка месяца с понедельника: null — пустые клетки до первого числа. */
+function monthGrid(key) {
+  const [y, m] = key.split('-').map(Number);
+  const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const lead = (new Date(Date.UTC(y, m - 1, 1)).getUTCDay() + 6) % 7;
+  const cells = Array.from({ length: lead }, () => null);
+  for (let d = 1; d <= daysInMonth; d += 1) cells.push(`${key}-${String(d).padStart(2, '0')}`);
+  return cells;
+}
+
+function WhenStep({ checkout, c, titleId }) {
+  const { days, scheduleFailed, date, pickDate, slots, slot, setSlot, toCart, error } = checkout;
+
+  const byDate = useMemo(() => new Map((days || []).map((d) => [d.date, d])), [days]);
+  const months = useMemo(() => [...new Set((days || []).map((d) => monthKey(d.date)))], [days]);
+
+  // Какой месяц открыт в календаре — по умолчанию месяц выбранного дня.
+  const [view, setView] = useState(null);
+  const current = view && months.includes(view) ? view : date ? monthKey(date) : months[0];
+  const at = months.indexOf(current);
+
+  return (
+    <div className="co-step">
+      <h3 className="co-title" id={titleId}>
+        {c.whenTitle}
+      </h3>
+      <p className="co-sub">{c.whenHint}</p>
+
+      {error && <div className="co-alert">{c.errors[error] || c.errors.create}</div>}
+
+      {!days &&
+        (scheduleFailed ? (
+          <div className="co-alert">{c.errors.schedule}</div>
+        ) : (
+          <div className="co-skeleton co-skeleton-cal" aria-hidden="true" />
+        ))}
+
+      {days && current && (
+        <div className="co-cal">
+          <div className="co-cal-head">
+            <button
+              type="button"
+              className="co-cal-nav"
+              onClick={() => setView(months[at - 1])}
+              disabled={at <= 0}
+              aria-label={c.prevMonth}
+            >
+              <ChevronLeft size={16} strokeWidth={1.75} aria-hidden />
+            </button>
+            <div className="co-cal-month" aria-live="polite">
+              {c.months[Number(current.slice(5, 7)) - 1]} {current.slice(0, 4)}
+            </div>
+            <button
+              type="button"
+              className="co-cal-nav"
+              onClick={() => setView(months[at + 1])}
+              disabled={at >= months.length - 1}
+              aria-label={c.nextMonth}
+            >
+              <ChevronRight size={16} strokeWidth={1.75} aria-hidden />
+            </button>
+          </div>
+
+          <div className="co-cal-grid" role="group" aria-label={c.dateLabel}>
+            {c.weekdaysShort.map((wd) => (
+              <span className="co-cal-wd" key={wd} aria-hidden="true">
+                {wd}
+              </span>
+            ))}
+            {monthGrid(current).map((d, i) => {
+              if (!d) return <span key={`pad-${i}`} />;
+              const info = byDate.get(d);
+              const status = info?.status ?? 'out';
+              const selling = SELLING.has(status);
+              const { d: dayNum, weekday } = parseDay(d);
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  className={`co-cal-day is-${status}${d === date ? ' on' : ''}`}
+                  disabled={!selling}
+                  aria-pressed={d === date}
+                  aria-label={`${dayNum} ${c.monthsOf[Number(d.slice(5, 7)) - 1]}, ${c.weekdays[weekday]}${
+                    status === 'full' ? ` — ${c.slotFull}` : ''
+                  }`}
+                  onClick={() => pickDate(d)}
+                >
+                  {dayNum}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {days && (
+        <div className="co-slots-wrap">
+          <div className="co-label">{c.timeLabel}</div>
+          {!date && <p className="co-sub">{c.pickDate}</p>}
+          {date && !slots && <div className="co-skeleton co-skeleton-slots" aria-hidden="true" />}
+          {date && slots && slots.length === 0 && <p className="co-sub">{c.noSlots}</p>}
+          {date && slots && slots.length > 0 && (
+            <div className="co-slots" role="group" aria-label={c.timeLabel}>
+              {slots.map((x) => {
+                const selling = SELLING.has(x.status);
+                const note =
+                  x.status === 'few'
+                    ? c.slotFew.replace('{n}', x.remaining)
+                    : x.status === 'full'
+                      ? c.slotFull
+                      : x.status === 'past'
+                        ? c.slotPast
+                        : c.slotOpen;
+                return (
+                  <button
+                    key={x.slot}
+                    type="button"
+                    className={`co-slot is-${x.status}${x.slot === slot ? ' on' : ''}`}
+                    disabled={!selling}
+                    aria-pressed={x.slot === slot}
+                    onClick={() => setSlot(x.slot)}
+                  >
+                    <strong>{x.time}</strong>
+                    <small>{note}</small>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      <button className="co-cta" type="button" onClick={toCart} disabled={!slot}>
+        {c.next}
+      </button>
+    </div>
+  );
+}
+
+/* ── Шаг 2: корзина ───────────────────────────────────────────────────── */
 
 function CartStep({ checkout, c, lang, titleId }) {
-  const { tariffs, tariffsFailed, qty, setTariffQty, count, total, email, setEmail, submit, busy, error } =
-    checkout;
+  const {
+    tariffs,
+    tariffsFailed,
+    qty,
+    setTariffQty,
+    count,
+    total,
+    email,
+    setEmail,
+    submit,
+    busy,
+    error,
+    slot,
+    slotInfo,
+    seatsLeft,
+    toWhen,
+  } = checkout;
 
   const emailValid = EMAIL_RE.test(email.trim());
-  const canSubmit = count > 0 && emailValid && !busy;
+  // seatsLeft < 0 — человек выбрал больше, чем осталось в сеансе (например,
+  // сменил время на более занятое). Покупать так нельзя, пусть уберёт лишних.
+  const overbooked = Boolean(slotInfo) && seatsLeft < 0;
+  const canSubmit = count > 0 && emailValid && !busy && !overbooked;
 
   return (
     <form
@@ -129,6 +293,17 @@ function CartStep({ checkout, c, lang, titleId }) {
       <h3 className="co-title" id={titleId}>
         {c.cartTitle}
       </h3>
+
+      <div className="co-visit">
+        <CalendarDays size={16} strokeWidth={1.5} aria-hidden />
+        <div>
+          <span>{c.visitLabel}</span>
+          <strong>{formatSlot(slot, c)}</strong>
+        </div>
+        <button className="co-visit-change" type="button" onClick={toWhen}>
+          {c.change}
+        </button>
+      </div>
 
       <div className="co-rows">
         {/* Без прайса покупать нечего: пока он едет — скелетон, если не доехал — текст. */}
@@ -163,7 +338,7 @@ function CartStep({ checkout, c, lang, titleId }) {
                 <button
                   type="button"
                   onClick={() => setTariffQty(tariff.id, n + 1)}
-                  disabled={n >= tariff.maxQty}
+                  disabled={n >= tariff.maxQty || (slotInfo && seatsLeft < (tariff.seats || 1))}
                   aria-label={`${c.plus} · ${c.tariffs[tariff.id]}`}
                 >
                   <Plus size={14} strokeWidth={1.75} aria-hidden />
@@ -188,6 +363,12 @@ function CartStep({ checkout, c, lang, titleId }) {
         <small>{c.emailHint}</small>
       </label>
 
+      {slotInfo && (overbooked || slotInfo.status === 'few') && (
+        <div className={overbooked ? 'co-alert' : 'co-note'}>
+          {c.seatsLeft.replace('{n}', slotInfo.remaining)}
+        </div>
+      )}
+
       {error && <div className="co-alert">{c.errors[error] || c.errors.create}</div>}
 
       <div className="co-total">
@@ -204,7 +385,7 @@ function CartStep({ checkout, c, lang, titleId }) {
   );
 }
 
-/* ── Шаг 2: QR и ожидание оплаты ──────────────────────────────────────── */
+/* ── Шаг 3: QR и ожидание оплаты ──────────────────────────────────────── */
 
 function QrStep({ checkout, c, lang, titleId }) {
   const { order, secondsLeft, reset } = checkout;
@@ -247,7 +428,7 @@ function QrStep({ checkout, c, lang, titleId }) {
   );
 }
 
-/* ── Шаг 3: билет куплен ──────────────────────────────────────────────── */
+/* ── Шаг 4: билет куплен ──────────────────────────────────────────────── */
 
 function DoneStep({ checkout, c, lang, titleId }) {
   const { order, close } = checkout;
@@ -266,6 +447,12 @@ function DoneStep({ checkout, c, lang, titleId }) {
       <div className="co-ticket">
         <div className="co-ticket-label">{c.ticketCode}</div>
         <div className="co-ticket-code">{order.ticketCode}</div>
+        {order.slot && (
+          <div className="co-ticket-visit">
+            <strong>{formatSlot(order.slot, c)}</strong>
+            <span>{formatEntry(order.entryFrom, order.entryUntil, c)}</span>
+          </div>
+        )}
       </div>
 
       <div className="co-recap">

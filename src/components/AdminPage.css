@@ -63,6 +63,91 @@
   color: var(--accent-2);
 }
 
+/* ── Сеансы ─────────────────────────────────────────────────────────────── */
+
+.ad-slots {
+  margin: 0 0 22px;
+}
+.ad-slots-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.ad-slots-head h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.ad-slots-head input {
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--fg);
+  background: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color-scheme: dark;
+}
+.ad-slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+.ad-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
+  background: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+.ad-slot.is-past {
+  opacity: 0.55;
+}
+.ad-slot.is-full {
+  border-color: rgba(255, 125, 90, 0.5);
+}
+.ad-slot b {
+  font-size: 0.95rem;
+}
+.ad-slot-count {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent-2);
+  font-variant-numeric: tabular-nums;
+}
+.ad-slot-bar {
+  display: flex;
+  height: 4px;
+  overflow: hidden;
+  background: var(--line);
+  border-radius: 2px;
+}
+.ad-slot-bar i {
+  display: block;
+  height: 100%;
+  background: var(--accent-2);
+}
+.ad-slot-bar i.held {
+  background: var(--gold, #f2be67);
+}
+.ad-slot em {
+  font-size: 0.7rem;
+  font-style: normal;
+  color: var(--fg-dim);
+}
+
+/* Сеанс заказа — второй строкой под составом. */
+.ad-items em {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.72rem;
+  font-style: normal;
+}
+
 /* ── Фильтры ────────────────────────────────────────────────────────────── */
 
 .ad-controls {

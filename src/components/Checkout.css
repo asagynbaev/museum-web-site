@@ -291,6 +291,277 @@
   margin: 18px 0;
 }
 
+/* ── Сеанс: календарь и часы ───────────────────────────────────────────── */
+
+.co-skeleton-cal {
+  height: 290px;
+  margin-top: 22px;
+  border: 0;
+  border-radius: 16px;
+}
+.co-skeleton-slots {
+  height: 112px;
+  border: 0;
+  border-radius: 12px;
+}
+
+.co-cal {
+  margin-top: 22px;
+  padding: 14px 12px 12px;
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.co-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.co-cal-month {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+.co-cal-nav {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--accent-2);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.25s, color 0.25s;
+}
+.co-cal-nav:hover:not(:disabled) {
+  background: rgba(56, 180, 170, 0.14);
+}
+.co-cal-nav:disabled {
+  color: var(--fg-faint);
+  opacity: 0.4;
+  cursor: default;
+}
+
+.co-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.co-cal-wd {
+  padding: 4px 0 6px;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+.co-cal-day {
+  position: relative;
+  aspect-ratio: 1;
+  min-height: 34px;
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.25s, border-color 0.25s, color 0.25s;
+}
+.co-cal-day:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+.co-cal-day:disabled {
+  color: var(--fg-faint);
+  opacity: 0.38;
+  cursor: default;
+}
+/* Выходной перечёркнут, распроданный день — тоже, но цветом «мест нет». */
+.co-cal-day.is-closed,
+.co-cal-day.is-full {
+  text-decoration: line-through;
+}
+.co-cal-day.is-full {
+  color: var(--coral);
+}
+/* «Мало мест» — точка под числом. */
+.co-cal-day.is-few::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--coral-2, #f2be67);
+}
+.co-cal-day.on {
+  color: var(--ink);
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+}
+.co-cal-day.on::after {
+  background: var(--ink);
+}
+
+.co-slots-wrap {
+  margin-top: 22px;
+}
+.co-label {
+  font-family: var(--mono);
+  font-size: 0.63rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  margin-bottom: 10px;
+}
+.co-slots {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+@media (max-width: 420px) {
+  .co-slots {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.co-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 2px 9px;
+  color: var(--fg);
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.25s, border-color 0.25s, color 0.25s;
+}
+.co-slot strong {
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.co-slot small {
+  font-size: 0.64rem;
+  line-height: 1.2;
+  color: var(--fg-faint);
+  white-space: nowrap;
+}
+.co-slot:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.co-slot.is-few small {
+  color: var(--coral-2, #f2be67);
+}
+.co-slot:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+.co-slot.is-full strong {
+  text-decoration: line-through;
+}
+.co-slot.on {
+  color: var(--ink);
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+}
+.co-slot.on small {
+  color: var(--ink);
+}
+
+/* Выбранный сеанс над корзиной. */
+.co-visit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 12px 14px;
+  color: var(--accent-2);
+  background: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 14px;
+}
+.co-visit > div {
+  flex: 1;
+  min-width: 0;
+}
+.co-visit span {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+.co-visit strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--fg);
+}
+.co-visit-change {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.25s;
+}
+.co-visit-change:hover {
+  background: rgba(56, 180, 170, 0.12);
+}
+
+.co-note {
+  margin-top: 18px;
+  padding: 11px 14px;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--coral-2, #f2be67);
+  background: rgba(242, 190, 103, 0.08);
+  border: 1px solid rgba(242, 190, 103, 0.3);
+  border-radius: 12px;
+}
+
+.co-ticket-visit {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.co-ticket-visit strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--fg);
+}
+.co-ticket-visit span {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--fg-dim);
+}
+
 /* ── QR ────────────────────────────────────────────────────────────────── */
 
 .co-qr-plate {

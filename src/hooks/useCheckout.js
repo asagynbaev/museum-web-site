@@ -31,16 +31,19 @@ const POLL_SLOWDOWN_AFTER_MS = 90_000;
 const OPEN = new Set(['pending', 'processing']);
 const isOpen = (order) => Boolean(order) && OPEN.has(order.status);
 
+/** Первый день, на который ещё можно купить билет. */
+const firstSellingDay = (days) => days.find((d) => d.status === 'open' || d.status === 'few')?.date ?? null;
+
 /**
- * Состояние покупки билета от корзины до оплаченного билета.
+ * Состояние покупки билета от выбора сеанса до оплаченного билета.
  *
- * Шаги: cart → qr → done, плюс error как отдельная ветка.
+ * Шаги: when (дата и час) → cart → qr → done, плюс error как отдельная ветка.
  * У KICB нет вебхуков (см. доку, раздел 3.2), поэтому статус узнаём опросом —
  * сервер сам ходит в банк, а мы опрашиваем сервер.
  */
 export function useCheckout(lang) {
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState('cart');
+  const [step, setStep] = useState('when');
   const [tariffs, setTariffs] = useState([]);
   const [tariffsFailed, setTariffsFailed] = useState(false);
   const [qty, setQty] = useState({});
@@ -49,6 +52,16 @@ export function useCheckout(lang) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [now, setNow] = useState(() => Date.now());
+
+  // Сеанс: календарь на весь горизонт, часы выбранного дня и выбранный час.
+  const [days, setDays] = useState(null);
+  const [scheduleFailed, setScheduleFailed] = useState(false);
+  const [date, setDate] = useState(null);
+  const [slots, setSlots] = useState(null);
+  const [slot, setSlot] = useState(null);
+  // Счётчик перезагрузок расписания: сменился — календарь и часы перечитываются.
+  const [scheduleRev, setScheduleRev] = useState(0);
+  const refreshSchedule = useCallback(() => setScheduleRev((n) => n + 1), []);
 
   // Прайс нужен и закрытой витрине (блок «Билеты»), поэтому грузим сразу.
   useEffect(() => {
@@ -62,6 +75,71 @@ export function useCheckout(lang) {
         if (err.name !== 'AbortError') setTariffsFailed(true);
       });
     return () => ctrl.abort();
+  }, []);
+
+  // Календарь перечитываем на каждое открытие кассы: места продаются и без нас.
+  useEffect(() => {
+    if (!open) return undefined;
+    const ctrl = new AbortController();
+    api
+      .calendar(ctrl.signal)
+      .then((cal) => {
+        setScheduleFailed(false);
+        setDays(cal.days);
+        setDate((prev) => {
+          const still = prev && cal.days.find((d) => d.date === prev);
+          return still && (still.status === 'open' || still.status === 'few') ? prev : firstSellingDay(cal.days);
+        });
+      })
+      .catch((err) => {
+        if (err.name !== 'AbortError') setScheduleFailed(true);
+      });
+    return () => ctrl.abort();
+  }, [open, scheduleRev]);
+
+  useEffect(() => {
+    if (!open || !date) return undefined;
+    const ctrl = new AbortController();
+    setSlots(null);
+    api
+      .slots(date, ctrl.signal)
+      .then((list) => {
+        setSlots(list);
+        // Выбранный час мог закончиться, пока человек смотрел, — снимаем выбор.
+        setSlot((prev) => {
+          const still = list.find((x) => x.slot === prev);
+          return still && (still.status === 'open' || still.status === 'few') ? prev : null;
+        });
+      })
+      .catch((err) => {
+        if (err.name !== 'AbortError') setScheduleFailed(true);
+      });
+    return () => ctrl.abort();
+  }, [open, date, scheduleRev]);
+
+  const pickDate = useCallback((next) => {
+    setDate(next);
+    setSlot(null);
+  }, []);
+
+  const slotInfo = useMemo(() => slots?.find((x) => x.slot === slot) ?? null, [slots, slot]);
+
+  const seats = useMemo(
+    () => tariffs.reduce((sum, t) => sum + (qty[t.id] || 0) * (t.seats || 1), 0),
+    [tariffs, qty]
+  );
+  // Сколько мест ещё можно добавить в корзину в выбранном сеансе.
+  const seatsLeft = slotInfo ? slotInfo.remaining - seats : 0;
+
+  const toCart = useCallback(() => {
+    if (!slot) return;
+    setError(null);
+    setStep('cart');
+  }, [slot]);
+
+  const toWhen = useCallback(() => {
+    setError(null);
+    setStep('when');
   }, []);
 
   const total = useMemo(
@@ -185,30 +263,42 @@ export function useCheckout(lang) {
   // ── Действия ─────────────────────────────────────────────────────────────
   const openCheckout = useCallback(() => {
     setOpen(true);
-    if (step === 'cart' && !order) setError(null);
+    if ((step === 'cart' || step === 'when') && !order) setError(null);
   }, [step, order]);
 
   const submit = useCallback(async () => {
-    if (busy || count === 0) return;
+    if (busy || count === 0 || !slot) return;
 
     setBusy(true);
     setError(null);
     try {
       const items = Object.entries(qty).map(([tariff, q]) => ({ tariff, qty: q }));
-      const fresh = await api.createOrder({ items, email, lang });
+      const fresh = await api.createOrder({ items, email, lang, slot });
       sessionStorage.setItem(RESUME_KEY, fresh.id);
       setOrder(fresh);
       setNow(Date.now());
       setStep('qr');
     } catch (err) {
-      if (err instanceof ApiError && err.code === 'network') setError('network');
+      // Сеанс закончился, пока человек заполнял корзину, — назад к выбору времени
+      // со свежими остатками. Корзину не трогаем: в другой час она поместится.
+      if (err instanceof ApiError && (err.code === 'slot_full' || err.code === 'slot_closed')) {
+        setError(err.code === 'slot_full' ? 'slotFull' : 'slotClosed');
+        setSlot(null);
+        setStep('when');
+        refreshSchedule();
+      } else if (err instanceof ApiError && err.code === 'slot_invalid') {
+        setError('slotClosed');
+        setSlot(null);
+        setStep('when');
+        refreshSchedule();
+      } else if (err instanceof ApiError && err.code === 'network') setError('network');
       else if (err instanceof ApiError && err.code === 'bank_unavailable') setError('bank');
       else if (err instanceof ApiError && err.status === 429) setError('throttled');
       else setError('create');
     } finally {
       setBusy(false);
     }
-  }, [busy, count, qty, email, lang]);
+  }, [busy, count, qty, email, lang, slot, refreshSchedule]);
 
   /** Возврат к корзине: незакрытый заказ гасим, чтобы QR не жил без дела. */
   const reset = useCallback(() => {
@@ -216,8 +306,10 @@ export function useCheckout(lang) {
     sessionStorage.removeItem(RESUME_KEY);
     setOrder(null);
     setError(null);
-    setStep('cart');
-  }, [order]);
+    // Пока висел QR, сеанс мог заполниться — перечитываем остатки.
+    refreshSchedule();
+    setStep(slot ? 'cart' : 'when');
+  }, [order, slot, refreshSchedule]);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -226,7 +318,8 @@ export function useCheckout(lang) {
     if (step === 'done') {
       setOrder(null);
       setQty({});
-      setStep('cart');
+      setSlot(null);
+      setStep('when');
     }
   }, [step]);
 
@@ -238,7 +331,19 @@ export function useCheckout(lang) {
     qty,
     setTariffQty,
     count,
+    seats,
+    seatsLeft,
     total,
+    days,
+    scheduleFailed,
+    date,
+    pickDate,
+    slots,
+    slot,
+    setSlot,
+    slotInfo,
+    toCart,
+    toWhen,
     email,
     setEmail,
     order,

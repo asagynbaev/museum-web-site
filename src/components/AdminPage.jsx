@@ -36,6 +36,12 @@ const STATUS_LABEL = {
 
 const TARIFF_LABEL = { adult: 'взрослый', reduced: 'льготный', family: 'семейный' };
 
+/** Сегодня по Бишкеку — касса работает по времени музея, а не браузера. */
+const todayBishkek = () => new Date(Date.now() + 6 * 3600_000).toISOString().slice(0, 10);
+
+/** Сеанс коротко: «10.11 14:00». */
+const shortSlot = (slot) => `${slot.slice(8, 10)}.${slot.slice(5, 7)} ${slot.slice(11, 16)}`;
+
 const money = (v) => new Intl.NumberFormat('ru-RU').format(v);
 
 const when = (ms) =>
@@ -181,6 +187,8 @@ export function AdminPage() {
         </div>
       )}
 
+      <SlotBoard token={token} />
+
       <div className="ad-controls">
         <div className="ad-filters">
           {STATUSES.map((s) => (
@@ -230,6 +238,7 @@ export function AdminPage() {
             <span className="ad-dim">{when(o.createdAt)}</span>
             <span className="ad-items">
               {o.items.map((i) => `${TARIFF_LABEL[i.tariff] || i.tariff} × ${i.qty}`).join(', ')}
+              <em className="ad-dim">{o.slot ? `сеанс ${shortSlot(o.slot)}` : 'без сеанса'}</em>
             </span>
             <span className="ad-amount">{money(o.amount)} сом</span>
             <span>
@@ -284,6 +293,78 @@ export function AdminPage() {
         сервер опрашивает банк, вебхуков у него нет.
       </footer>
     </main>
+  );
+}
+
+/**
+ * Загрузка сеансов дня: сколько мест оплачено, сколько держат неоплаченные QR
+ * и сколько человек уже прошло турникет. Обновляется вместе с лентой.
+ */
+function SlotBoard({ token }) {
+  const [date, setDate] = useState(todayBishkek);
+  const [slots, setSlots] = useState(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    const load = () =>
+      api.admin
+        .slots({ token, date, signal: ctrl.signal })
+        .then((r) => {
+          setSlots(r.slots);
+          setFailed(false);
+        })
+        .catch((err) => {
+          if (err.name !== 'AbortError') setFailed(true);
+        });
+
+    load();
+    const timer = setInterval(() => {
+      if (!document.hidden) load();
+    }, REFRESH_MS);
+    return () => {
+      clearInterval(timer);
+      ctrl.abort();
+    };
+  }, [token, date]);
+
+  return (
+    <section className="ad-slots">
+      <div className="ad-slots-head">
+        <h2>Сеансы</h2>
+        <input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} />
+      </div>
+
+      {failed && <div className="ad-error">Не удалось загрузить сеансы</div>}
+      {slots && slots.length === 0 && <div className="ad-empty">В этот день музей закрыт</div>}
+
+      {slots && slots.length > 0 && (
+        <div className="ad-slot-grid">
+          {slots.map((x) => {
+            const taken = x.paid + x.held;
+            return (
+              <div className={`ad-slot is-${x.status}`} key={x.slot}>
+                <b>{x.time}</b>
+                <span className="ad-slot-count">
+                  {taken} / {x.capacity}
+                </span>
+                <span className="ad-slot-bar" aria-hidden="true">
+                  <i style={{ width: `${Math.min(100, (x.paid / x.capacity) * 100)}%` }} />
+                  <i
+                    className="held"
+                    style={{ width: `${Math.min(100, (x.held / x.capacity) * 100)}%` }}
+                  />
+                </span>
+                <em>
+                  оплачено {x.paid}
+                  {x.held > 0 ? ` · ждут ${x.held}` : ''} · прошли {x.entered}
+                </em>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
   );
 }
 

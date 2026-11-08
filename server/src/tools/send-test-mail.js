@@ -8,6 +8,7 @@
  */
 import { config } from '../config.js';
 import { mailerReady, sendTicket, verifyMailer } from '../mailer.js';
+import { localDate } from '../slots.js';
 
 const to = process.argv[2];
 
@@ -39,6 +40,8 @@ const sample = {
   lang: 'ru',
   amount: 900,
   seats: 6,
+  // Завтра в 14:00 — чтобы в письме был блок сеанса, как у настоящего билета.
+  slot: `${localDate(Date.now() + 86_400_000)}T14:00`,
   items: [
     { tariff: 'adult', qty: 1, price: 300 },
     { tariff: 'reduced', qty: 1, price: 100 },
