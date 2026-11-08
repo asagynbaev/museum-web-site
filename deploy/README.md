@@ -11,6 +11,7 @@
 | Голосовой гид `/bars` | `concierge-api.service` → `127.0.0.1:8090`, `/opt/concierge` (раздел ниже) |
 | nginx | `/etc/nginx/sites-available/museum` — только `server_name museum.eaysdev.online` |
 | Бэкапы | `/etc/cron.d/museum-backup` → `/var/backups/museum/`, 30 дней |
+| Деплой | пуш в `main` → GitHub Actions → `deploy@сервер` → `/usr/local/bin/museum-deploy` (раздел «Автодеплой») |
 
 На этой же машине живёт **другой проект — atria** (`*.eaysdev.online`, docker `atria-api`
 и `atria-db`). 80/443 общие, поэтому музей описан отдельным файлом и ловит трафик строго
@@ -197,6 +198,93 @@ sudo -u museum npm ci && sudo -u museum npm run build
 cd server && sudo -u museum npm ci --omit=dev
 sudo systemctl restart museum-api
 ```
+
+Обычно руками это делать не нужно — см. автодеплой ниже.
+
+## Автодеплой из GitHub Actions
+
+Каждый пуш в `main` запускает `.github/workflows/deploy.yml`:
+
+1. **Проверка** на машине GitHub: сборка сайта и запуск билетного API на заглушке
+   банка. Если что-то сломано, до сервера дело не доходит.
+2. **Деплой**: заход на VPS по SSH пользователем `deploy` и запуск
+   `/usr/local/bin/museum-deploy` (копия `deploy/museum-deploy.sh`): `git merge --ff-only`,
+   `npm ci` и сборка, `npm ci` API, копия базы в `/var/backups/museum/`, рестарт
+   `museum-api` и ожидание, пока `/api/health` ответит.
+3. **Проверка снаружи**: `https://museum.eaysdev.online/api/health`.
+
+Пока секреты не заданы, шаг деплоя пропускается с предупреждением, проверка работает.
+Запустить вручную: GitHub → Actions → Deploy → Run workflow.
+
+**Как устроен доступ.** Ключ деплоя в `authorized_keys` прибит к одной команде
+(`command="sudo /usr/local/bin/museum-deploy"`, без pty и форвардинга), а sudo
+разрешает пользователю `deploy` только этот скрипт. Утечка ключа из GitHub даёт
+одно: запустить деплой того, что уже лежит в `main`. Скрипт лежит вне `/opt/museum`
+и принадлежит root, поэтому коммит в репозиторий не может поменять то, что
+выполняется через sudo.
+
+### Настройка сервера (один раз, от root)
+
+```bash
+# 0. Свежий код — в нём есть сам скрипт деплоя
+sudo -u museum git -C /opt/museum pull --ff-only
+
+# 1. Пользователь для деплоя
+useradd -m -s /bin/bash deploy
+
+# 2. Скрипт деплоя: вне репозитория, владелец root
+install -o root -g root -m 755 /opt/museum/deploy/museum-deploy.sh /usr/local/bin/museum-deploy
+
+# 3. sudo — только этот скрипт и ничего больше
+echo 'deploy ALL=(root) NOPASSWD: /usr/local/bin/museum-deploy' > /etc/sudoers.d/museum-deploy
+chmod 440 /etc/sudoers.d/museum-deploy
+visudo -cf /etc/sudoers.d/museum-deploy
+
+# 4. Ключ деплоя, привязанный к команде
+ssh-keygen -t ed25519 -N '' -C github-actions-museum -f /root/museum-deploy-key
+install -d -m 700 -o deploy -g deploy /home/deploy/.ssh
+echo "command=\"sudo /usr/local/bin/museum-deploy\",no-port-forwarding,no-X11-forwarding,no-agent-forwarding,no-pty $(cat /root/museum-deploy-key.pub)" \
+  > /home/deploy/.ssh/authorized_keys
+chown deploy:deploy /home/deploy/.ssh/authorized_keys
+chmod 600 /home/deploy/.ssh/authorized_keys
+
+# 5. Пробный деплой прямо на сервере — должен закончиться «готово: API отвечает»
+sudo -u deploy sudo /usr/local/bin/museum-deploy
+
+# 6. Что положить в секреты GitHub (п. ниже)
+cat /root/museum-deploy-key                                            # → DEPLOY_SSH_KEY
+echo "84.54.12.242 $(cut -d' ' -f1,2 /etc/ssh/ssh_host_ed25519_key.pub)" # → DEPLOY_KNOWN_HOSTS
+
+# 7. Когда ключ лёг в GitHub — убрать приватную часть с сервера
+shred -u /root/museum-deploy-key
+```
+
+Проверить SSH-доступ снаружи:
+
+- **Файрвол.** Машины GitHub приходят с разных адресов, поэтому 22-й порт должен быть
+  открыт для всех (`ufw status`). Пускать по ключу, а не по паролю, sshd и так умеет.
+- **sshd.** Если в `/etc/ssh/sshd_config` есть `AllowUsers` или `AllowGroups`, туда
+  нужно добавить `deploy` и выполнить `systemctl reload ssh`.
+- **Нестандартный порт.** Тогда в known_hosts пишется `[84.54.12.242]:ПОРТ …`,
+  а сам порт уходит в секрет `DEPLOY_PORT`.
+
+### Секреты в GitHub
+
+Repository → Settings → Secrets and variables → Actions → **New repository secret**:
+
+| Секрет | Значение |
+|---|---|
+| `DEPLOY_HOST` | `84.54.12.242` |
+| `DEPLOY_USER` | `deploy` |
+| `DEPLOY_SSH_KEY` | вывод `cat /root/museum-deploy-key` целиком, вместе с `-----BEGIN…` и `-----END…` |
+| `DEPLOY_KNOWN_HOSTS` | строка из шага 6 |
+| `DEPLOY_PORT` | только если SSH не на 22 |
+
+После этого: Actions → Deploy → Run workflow. Оба шага зелёные — дальше каждый пуш
+в `main` выкатывается сам.
+
+**Если поменялся `deploy/museum-deploy.sh`**, на сервер его надо скопировать руками
+(шаг 2): автодеплой его не обновляет, и так задумано.
 
 ## Голосовой гид /bars (сервер консьержа)
 
