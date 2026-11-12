@@ -97,6 +97,12 @@
   color: var(--accent-2);
   letter-spacing: 0.05em;
 }
+.v-closed-note {
+  padding: 11px 0;
+  color: var(--fg-dim);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
 .v-cta {
   display: flex;
   gap: 14px;

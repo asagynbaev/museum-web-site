@@ -20,12 +20,21 @@ import { useCheckout } from './hooks/useCheckout.js';
 import { usePreloader } from './hooks/usePreloader.js';
 import { useScrollEffects } from './hooks/useScrollEffects.js';
 
+// Музей ещё не открыт для гостей — касса выключена на фронте (эта кнопка)
+// и на сервере (POST /api/orders, см. server/src/config.js: SALES_OPEN).
+// Когда назначат дату открытия, вернуть `true` и выполнить оба шага разом.
+const SALES_OPEN = false;
+
 export default function App() {
   const reduced = useReducedMotion();
   const { lang } = useLang();
 
   // Покупка билета живёт на уровне App: её открывают и шапка, и блок «Визит».
   const checkout = useCheckout(lang);
+  const scrollToVisit = useCallback(
+    () => document.getElementById('visit')?.scrollIntoView({ behavior: 'smooth' }),
+    []
+  );
 
   // Intro preloader — warms the media cache top-to-bottom before reveal.
   const { progress, label, finished } = usePreloader(preloadAssets);
@@ -64,7 +73,7 @@ export default function App() {
       )}
 
       <AmbientLayers progressRef={progressRef} reduced={reduced} />
-      <Header headerRef={headerRef} onBuy={checkout.openCheckout} />
+      <Header headerRef={headerRef} onBuy={SALES_OPEN ? checkout.openCheckout : scrollToVisit} />
       <WayfindingRail halls={halls} active={activeHall} railFillRef={railFillRef} />
 
       <Hero reduced={reduced} started={loaderGone} />
@@ -72,7 +81,7 @@ export default function App() {
       <div className="divider" />
       <Halls reduced={reduced} hallRefs={hallRefs} />
       <div className="divider" />
-      <Visit checkout={checkout} />
+      <Visit checkout={checkout} salesOpen={SALES_OPEN} />
       <Footer />
       <BackToTop />
       <Checkout checkout={checkout} />

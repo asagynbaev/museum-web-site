@@ -1,14 +1,19 @@
 import { Fragment, useEffect, useState } from 'react';
-import { Menu, Ticket, X } from 'lucide-react';
+import { Instagram, Menu, Ticket, X } from 'lucide-react';
 import { Logo } from './Logo.jsx';
 import { useLang } from '../i18n/LanguageProvider.jsx';
 import { LANGS } from '../i18n/translations.js';
+import { INSTAGRAM_URL } from '../lib/social.js';
 import './Header.css';
 
 /**
  * Fixed top bar. `headerRef` is owned by App so useScrollEffects can toggle the
  * condensed (`scrolled`) and hide-on-scroll (`hide`) states without re-render.
  * On mobile the nav collapses behind a burger toggle.
+ *
+ * Музей ещё не открыт для гостей — пока это так, верхняя полоса `.notice`
+ * говорит об этом прямо, а кнопка «Билеты» ведёт на секцию «Визит» вместо
+ * кассы (см. `onBuy` в App.jsx).
  */
 export function Header({ headerRef, onBuy }) {
   const { t, lang, setLang } = useLang();
@@ -31,52 +36,60 @@ export function Header({ headerRef, onBuy }) {
 
   return (
     <header id="hdr" ref={headerRef} className={open ? 'menu-open' : ''}>
-      <a className="brand" href="#top" aria-label="AI Museum" onClick={close}>
-        <Logo />
+      <a className="notice" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
+        <span className="notice-badge">{t.closed.badge}</span>
+        <span className="notice-text">{t.closed.text}</span>
+        <Instagram size={14} strokeWidth={1.75} aria-hidden className="notice-ic" />
       </a>
 
-      <button
-        type="button"
-        className="burger"
-        aria-label={open ? t.a11y.closeMenu : t.a11y.openMenu}
-        aria-expanded={open}
-        aria-controls="main-nav"
-        onClick={() => setOpen((o) => !o)}
-      >
-        {open ? <X size={26} strokeWidth={1.5} aria-hidden /> : <Menu size={26} strokeWidth={1.5} aria-hidden />}
-      </button>
+      <div className="hdr-row">
+        <a className="brand" href="#top" aria-label="AI Museum" onClick={close}>
+          <Logo />
+        </a>
 
-      <nav id="main-nav" className={open ? 'open' : ''}>
-        <a className="nl" href="#halls" onClick={close}>{t.nav.halls}</a>
-        <a className="nl" href="#visit" onClick={close}>{t.nav.visit}</a>
-        <a className="nl" href="#visit" onClick={close}>{t.nav.contacts}</a>
         <button
           type="button"
-          className="ticket"
-          onClick={() => {
-            close();
-            onBuy();
-          }}
+          className="burger"
+          aria-label={open ? t.a11y.closeMenu : t.a11y.openMenu}
+          aria-expanded={open}
+          aria-controls="main-nav"
+          onClick={() => setOpen((o) => !o)}
         >
-          <Ticket size={15} strokeWidth={1.75} aria-hidden />
-          {t.nav.tickets}
+          {open ? <X size={26} strokeWidth={1.5} aria-hidden /> : <Menu size={26} strokeWidth={1.5} aria-hidden />}
         </button>
-        <span className="lang">
-          {LANGS.map((l, i) => (
-            <Fragment key={l.code}>
-              {i > 0 && <span className="lang-sep"> · </span>}
-              <button
-                type="button"
-                className={`lang-btn${lang === l.code ? ' on' : ''}`}
-                aria-pressed={lang === l.code}
-                onClick={() => setLang(l.code)}
-              >
-                {l.label}
-              </button>
-            </Fragment>
-          ))}
-        </span>
-      </nav>
+
+        <nav id="main-nav" className={open ? 'open' : ''}>
+          <a className="nl" href="#halls" onClick={close}>{t.nav.halls}</a>
+          <a className="nl" href="#visit" onClick={close}>{t.nav.visit}</a>
+          <a className="nl" href="#visit" onClick={close}>{t.nav.contacts}</a>
+          <button
+            type="button"
+            className="ticket"
+            onClick={() => {
+              close();
+              onBuy();
+            }}
+          >
+            <Ticket size={15} strokeWidth={1.75} aria-hidden />
+            {t.nav.tickets}
+          </button>
+          <span className="lang">
+            {LANGS.map((l, i) => (
+              <Fragment key={l.code}>
+                {i > 0 && <span className="lang-sep"> · </span>}
+                <button
+                  type="button"
+                  className={`lang-btn${lang === l.code ? ' on' : ''}`}
+                  aria-pressed={lang === l.code}
+                  onClick={() => setLang(l.code)}
+                >
+                  {l.label}
+                </button>
+              </Fragment>
+            ))}
+          </span>
+        </nav>
+      </div>
     </header>
   );
 }

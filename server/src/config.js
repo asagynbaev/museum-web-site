@@ -104,6 +104,12 @@ export const config = {
 
   orderTtlMs: int('ORDER_TTL_SECONDS', 600) * 1000,
 
+  // Касса выключена по умолчанию: музей ещё не открыт для гостей. Кнопки на
+  // фронте уже скрыты (см. SALES_OPEN в src/App.jsx), это — вторая линия
+  // защиты на случай прямого запроса к /api/orders мимо сайта. Включить
+  // продажу: SALES_OPEN=true в .env (и вернуть SALES_OPEN=true во фронте).
+  salesOpen: bool('SALES_OPEN', false),
+
   // Пароль к админке. Не задан — раздел просто выключен, а не открыт всем.
   adminToken: process.env.ADMIN_TOKEN || null,
 

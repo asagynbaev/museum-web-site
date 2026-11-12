@@ -14,6 +14,12 @@ const ru = {
 
   nav: { halls: 'Залы', visit: 'Визит', contacts: 'Контакты', tickets: 'Билеты' },
 
+  closed: {
+    badge: 'Скоро',
+    text: 'Музей ещё не открыт для посетителей — мы заканчиваем подготовку залов. Дату открытия объявим в Instagram.',
+    cta: 'Мы в Instagram',
+  },
+
   hero: {
     eyebrow: 'Парк высоких технологий · Бишкек',
     title: [
@@ -124,6 +130,7 @@ const ru = {
     ],
     ticketsH: 'Билеты',
     pricePending: '— сом',
+    closedNote: 'Продажа билетов приостановлена до официального открытия.',
     buy: 'Купить билет',
     route: 'Построить маршрут',
     duration: 'Длительность · ~60 мин · 7 залов',
@@ -281,6 +288,12 @@ const ky = {
 
   nav: { halls: 'Залдар', visit: 'Баруу', contacts: 'Байланыш', tickets: 'Билеттер' },
 
+  closed: {
+    badge: 'Жакында',
+    text: 'Музей азырынча конокторду кабыл алган жок — залдарды даярдоону аяктап жатабыз. Ачылуу күнүн Instagram аркылуу жарыялайбыз.',
+    cta: 'Instagram барак',
+  },
+
   hero: {
     eyebrow: 'Жогорку технологиялар паркы · Бишкек',
     title: [
@@ -391,6 +404,7 @@ const ky = {
     ],
     ticketsH: 'Билеттер',
     pricePending: '— сом',
+    closedNote: 'Билет сатуу расмий ачылганга чейин токтотулду.',
     buy: 'Билет сатып алуу',
     route: 'Маршрут түзүү',
     duration: 'Узактыгы · ~60 мүн · 7 зал',
@@ -548,6 +562,12 @@ const en = {
 
   nav: { halls: 'Halls', visit: 'Visit', contacts: 'Contacts', tickets: 'Tickets' },
 
+  closed: {
+    badge: 'Soon',
+    text: "The museum hasn't opened to visitors yet — we're putting the final touches on the halls. We'll announce the opening date on Instagram.",
+    cta: 'Follow on Instagram',
+  },
+
   hero: {
     eyebrow: 'High Technology Park · Bishkek',
     title: [
@@ -656,6 +676,7 @@ const en = {
     ],
     ticketsH: 'Tickets',
     pricePending: '— som',
+    closedNote: 'Ticket sales are paused until the official opening.',
     buy: 'Buy a ticket',
     route: 'Get directions',
     duration: 'Duration · ~60 min · 7 halls',

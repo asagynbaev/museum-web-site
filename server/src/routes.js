@@ -145,6 +145,12 @@ export async function registerRoutes(app) {
 
   // ── Создание заказа ─────────────────────────────────────────────────────
   app.post('/api/orders', async (req, reply) => {
+    if (!config.salesOpen) {
+      return reply.code(503).send({
+        error: 'sales_closed',
+        message: 'Музей ещё не открыт: продажа билетов приостановлена до официального открытия.',
+      });
+    }
     if (!limitCreate(req.ip)) {
       return reply.code(429).send({ error: 'rate_limited', message: 'Слишком много попыток. Подождите немного.' });
     }

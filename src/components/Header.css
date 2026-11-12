@@ -5,22 +5,74 @@ header {
   right: 0;
   z-index: 50;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px clamp(20px, 5vw, 64px);
-  transition: background 0.5s, backdrop-filter 0.5s, padding 0.5s, border-color 0.5s,
-    transform 0.5s;
+  flex-direction: column;
+  transition: background 0.5s, backdrop-filter 0.5s, border-color 0.5s, transform 0.5s;
   border-bottom: 1px solid transparent;
 }
 header.scrolled {
   background: rgba(6, 7, 11, 0.72);
   backdrop-filter: blur(14px) saturate(1.2);
   border-bottom: 1px solid var(--line);
-  padding-top: 13px;
-  padding-bottom: 13px;
 }
 header.hide {
   transform: translateY(-110%);
+}
+
+/* «Музей ещё не открыт» — полоса над основной шапкой, пока это так. */
+.notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 9px clamp(16px, 5vw, 64px);
+  background: linear-gradient(90deg, rgba(242, 190, 103, 0.16), rgba(133, 104, 232, 0.16));
+  border-bottom: 1px solid rgba(242, 190, 103, 0.28);
+  color: var(--fg);
+  text-decoration: none;
+  text-align: center;
+  transition: padding 0.5s;
+}
+.notice-badge {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--ink);
+}
+.notice-text {
+  font-size: 0.78rem;
+  line-height: 1.3;
+  opacity: 0.92;
+}
+.notice-ic {
+  flex: none;
+  opacity: 0.75;
+}
+header.scrolled .notice {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+@media (max-width: 720px) {
+  .notice-text {
+    display: none;
+  }
+}
+
+.hdr-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px clamp(20px, 5vw, 64px);
+  transition: padding 0.5s;
+}
+header.scrolled .hdr-row {
+  padding-top: 13px;
+  padding-bottom: 13px;
 }
 
 .brand {
@@ -208,7 +260,11 @@ nav a.nl:hover::after {
 }
 
 @media (max-width: 460px) {
-  header {
+  .hdr-row {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .notice {
     padding-left: 18px;
     padding-right: 18px;
   }

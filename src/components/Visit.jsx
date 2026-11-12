@@ -1,7 +1,8 @@
-import { ArrowUpRight, Clock, MapPin, Navigation, Ticket } from 'lucide-react';
+import { ArrowUpRight, Clock, Instagram, MapPin, Navigation, Ticket } from 'lucide-react';
 import { Reveal } from './Reveal.jsx';
 import { useLang } from '../i18n/LanguageProvider.jsx';
 import { Rich } from '../i18n/Rich.jsx';
+import { INSTAGRAM_URL } from '../lib/social.js';
 import './Visit.css';
 
 // Маршрут до музея в 2ГИС — поиск по точному адресу.
@@ -13,7 +14,7 @@ const ROUTE_URL =
  * primary calls to action. Price placeholder (— сом) is kept until the
  * server tariffs load, so it's easy to spot if that ever fails.
  */
-export function Visit({ checkout }) {
+export function Visit({ checkout, salesOpen }) {
   const { t, lang } = useLang();
   const v = t.visit;
 
@@ -69,20 +70,31 @@ export function Visit({ checkout }) {
               <Ticket size={15} strokeWidth={1.5} aria-hidden />
               {v.ticketsH}
             </h4>
-            {priceList.map(([label, value]) => (
-              <div className="row" key={label}>
-                <span>{label}</span>
-                <span>{value}</span>
-              </div>
-            ))}
+            {salesOpen ? (
+              priceList.map(([label, value]) => (
+                <div className="row" key={label}>
+                  <span>{label}</span>
+                  <span>{value}</span>
+                </div>
+              ))
+            ) : (
+              <p className="v-closed-note">{v.closedNote}</p>
+            )}
           </div>
         </Reveal>
 
         <Reveal className="v-cta">
-          <button className="btn solid" type="button" onClick={checkout.openCheckout}>
-            <Ticket size={16} strokeWidth={1.75} aria-hidden />
-            {v.buy}
-          </button>
+          {salesOpen ? (
+            <button className="btn solid" type="button" onClick={checkout.openCheckout}>
+              <Ticket size={16} strokeWidth={1.75} aria-hidden />
+              {v.buy}
+            </button>
+          ) : (
+            <a className="btn solid" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
+              <Instagram size={16} strokeWidth={1.75} aria-hidden />
+              {t.closed.cta}
+            </a>
+          )}
           <a className="btn ghost" href={ROUTE_URL} target="_blank" rel="noopener noreferrer">
             <Navigation size={15} strokeWidth={1.75} aria-hidden />
             {v.route}
